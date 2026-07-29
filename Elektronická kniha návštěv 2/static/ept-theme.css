@@ -1,0 +1,77 @@
+/* ept connectors — brand theme override for recepce.html / sken.html
+   Hodnoty odvozené z ept-connectors.com (viz visualbook). Reuse-uje existující
+   CSS proměnné aplikace (--blue = primární akcent, --red = signální/finální akce),
+   takže se nemusí sahat na markup ani JS. */
+
+:root{
+  --ink:#141d28;
+  --ink2:#3c5063;
+  --ink3:#6b7b88;
+  --bg:#eef1f2;
+  --surface2:#f4f6f7;
+  --border:#d7dadc;
+  --border2:#c3c8cb;
+  --slate:#141d28;
+
+  --blue:#a70a1b;        /* ept primární červená — CTA, aktivní tab, focus */
+  --blue-bg:#fbeaea;
+  --blue-border:#e6b8ba;
+
+  --red:#e3051b;         /* ept signální červená — odchod / finální akce */
+  --red-bg:#fdeceb;
+  --red-border:#f6c3c2;
+
+  --r:6px;
+  --r2:8px;
+}
+
+body{font-family:'Inter',system-ui,sans-serif}
+h1,h2,h3,
+.card-head h2,
+.stat-val,
+.td-name,
+.modal h3,
+.success-name{
+  font-family:'Cairo',sans-serif;
+  font-weight:800;
+  letter-spacing:-.01em;
+}
+.topbar h1{font-family:'Cairo',sans-serif;font-weight:800}
+
+/* topbar — jemná blueprint mřížka jako v hero visualbooku */
+.topbar{position:relative;overflow:hidden}
+.topbar::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size:24px 24px;
+}
+.topbar > *{position:relative;z-index:1}
+
+/* logo chip — bílá karta s logem na tmavém topbaru */
+.topbar-logo{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#fff;padding:4px 9px;border-radius:4px;flex-shrink:0;
+  width:auto;height:auto;
+}
+.topbar-logo img{height:14px;display:block}
+
+/* CTA tlačítka → značková červená (hover stavy jsou v originále natvrdo v hex, proto override zvlášť) */
+.btn-primary:hover{background:#7d0815}
+.btn-green{background:#a70a1b}
+.btn-green:hover{background:#7d0815}
+.btn-blue{background:#a70a1b}
+.btn-blue:hover{background:#7d0815}
+
+/* info alerty necháváme neutrální (slate), aby "info" nepůsobilo jako chyba,
+   protože --blue teď nese značkovou červenou */
+.alert-info,.al-info{background:#eef1f4;color:#3c5063;border-color:#c7d0d6}
+
+/* sken.html — rámeček skeneru má barvy natvrdo v hex, ne přes proměnné */
+.sf-inner{border-color:rgba(167,10,27,.75)}
+.sf-label{color:#ff9aa0}
+.scan-anim{background:linear-gradient(90deg,transparent,#ff9aa0,transparent)}
+
+/* spinner má statický prstenec natvrdo v hex (světle modrá), sladit s červenou špičkou */
+.spinner{border-color:#f2d3d5}

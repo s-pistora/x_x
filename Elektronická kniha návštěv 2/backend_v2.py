@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import sqlite3, base64, io, re
+import sqlite3, base64, io, re, os, secrets
 from datetime import datetime
 from PIL import Image
 import pytesseract
 
 app = Flask(__name__)
 CORS(app)
- 
+
 DB_PATH = "navstevni_kniha.db"
- 
+
+# ── Přihlášení (admin / zaměstnanec) ───────────────────────────────────────────
+# Prototyp — PINy jde přepsat proměnnými prostředí ADMIN_PIN / ZAMESTNANEC_PIN.
+# Tokeny žijí jen v paměti procesu, po restartu serveru je nutné se přihlásit znovu.
+ADMIN_PIN       = os.environ.get("ADMIN_PIN", "ept-admin-2026")
+ZAMESTNANEC_PIN = os.environ.get("ZAMESTNANEC_PIN", "ept-recepce-2026")
+TOKENS = {}  # token -> "admin" | "zamestnanec"
+
+def aktualni_role():
+    return TOKENS.get(request.headers.get("X-Auth-Token"))
+
 # ── Databáze ──────────────────────────────────────────────────────────────────
 def init_db():
     with sqlite3.connect(DB_PATH) as conn:
@@ -31,7 +41,29 @@ def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
- 
+
+@app.route("/api/login", methods=["POST"])
+def api_login():
+    d = request.json or {}
+    role = d.get("role")
+    pin  = (d.get("pin") or "").strip()
+
+    if role == "admin" and pin == ADMIN_PIN:
+        pass
+    elif role == "zamestnanec" and pin == ZAMESTNANEC_PIN:
+        pass
+    else:
+        return jsonify({"error": "Nesprávné heslo."}), 401
+
+    token = secrets.token_hex(16)
+    TOKENS[token] = role
+    return jsonify({"token": token, "role": role})
+
+@app.route("/api/logout", methods=["POST"])
+def api_logout():
+    TOKENS.pop(request.headers.get("X-Auth-Token"), None)
+    return jsonify({"status": "ok"})
+
 # ── Hlavní stránka ────────────────────────────────────────────────────────────
 @app.route('/')
 def index():
@@ -131,6 +163,9 @@ def extrahuj_jmeno(text):
 # ── Statistiky ────────────────────────────────────────────────────────────────
 @app.route("/api/stats", methods=["GET"])
 def api_stats():
+    if not aktualni_role():
+        return jsonify({"error": "Přihlaste se prosím."}), 401
+
     dnes = datetime.now().strftime("%Y-%m-%d")
     with get_db() as conn:
         aktivni = conn.execute(
@@ -148,16 +183,21 @@ def api_stats():
 # ── Návštěvníci GET + POST ────────────────────────────────────────────────────
 @app.route("/api/navstevnici", methods=["GET", "POST"])
 def api_navstevnici():
+    role = aktualni_role()
+
     if request.method == "POST":
+        if role not in ("admin", "zamestnanec"):
+            return jsonify({"error": "Přihlaste se prosím."}), 401
+
         d = request.json or {}
         jmeno    = (d.get("jmeno")    or "").strip()
         prijmeni = (d.get("prijmeni") or "").strip()
- 
+
         if not jmeno or not prijmeni:
             return jsonify({"error": "Jméno a příjmení jsou povinné."}), 400
- 
+
         prichod = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
- 
+
         with get_db() as conn:
             cur = conn.execute(
                 "INSERT INTO navstevnici (jmeno, prijmeni, organizace, spz, prichod_dt) VALUES (?,?,?,?,?)",
@@ -165,35 +205,67 @@ def api_navstevnici():
             )
             new_id = cur.lastrowid
             conn.commit()
- 
+
         return jsonify({"status": "ok", "id": new_id, "prichod_dt": prichod})
- 
-    # GET — filtrování
-    filtr = request.args.get("filter", "vse")
-    dnes  = datetime.now().strftime("%Y-%m-%d")
- 
+
+    # GET — filtrování + hledání
+    if not role:
+        return jsonify({"error": "Přihlaste se prosím."}), 401
+
+    filtr     = request.args.get("filter", "aktivni")
+    q         = (request.args.get("q") or "").strip()
+    datum     = (request.args.get("datum") or "").strip()
+    hodina_od = (request.args.get("hodina_od") or "").strip()
+    hodina_do = (request.args.get("hodina_do") or "").strip()
+
+    # "Vše" a jakékoliv hledání (jméno/příjmení/den/hodina) jsou jen pro admina —
+    # zaměstnanec vidí jen aktuálně přítomné a dnešní návštěvy.
+    pokrocile = filtr == "vse" or bool(q or datum or hodina_od or hodina_do)
+    if pokrocile and role != "admin":
+        return jsonify({"error": "Tato funkce vyžaduje přihlášení admina."}), 403
+
+    dnes = datetime.now().strftime("%Y-%m-%d")
+    where  = []
+    params = []
+
+    if filtr == "aktivni":
+        where.append("odchod_dt IS NULL")
+    elif filtr == "dnes":
+        where.append("prichod_dt LIKE ?")
+        params.append(dnes + "%")
+    # filtr 'vse' / 'hledat' — bez základního omezení, jen filtry níže
+
+    if q:
+        where.append("(jmeno LIKE ? OR prijmeni LIKE ?)")
+        params.extend([f"%{q}%", f"%{q}%"])
+    if datum:
+        where.append("prichod_dt LIKE ?")
+        params.append(datum + "%")
+    if hodina_od:
+        where.append("substr(prichod_dt, 12, 5) >= ?")
+        params.append(hodina_od)
+    if hodina_do:
+        where.append("substr(prichod_dt, 12, 5) <= ?")
+        params.append(hodina_do)
+
+    sql = "SELECT * FROM navstevnici"
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY id DESC"
+
     with get_db() as conn:
-        if filtr == "aktivni":
-            rows = conn.execute(
-                "SELECT * FROM navstevnici WHERE odchod_dt IS NULL ORDER BY id DESC"
-            ).fetchall()
-        elif filtr == "dnes":
-            rows = conn.execute(
-                "SELECT * FROM navstevnici WHERE prichod_dt LIKE ? ORDER BY id DESC",
-                (dnes + "%",)
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                "SELECT * FROM navstevnici ORDER BY id DESC"
-            ).fetchall()
- 
+        rows = conn.execute(sql, params).fetchall()
+
     return jsonify([dict(r) for r in rows])
- 
+
 # ── Úprava záznamu PATCH ──────────────────────────────────────────────────────
 @app.route("/api/navstevnici/<int:nav_id>", methods=["PATCH"])
 def api_navstevnik_patch(nav_id):
+    if aktualni_role() not in ("admin", "zamestnanec"):
+        return jsonify({"error": "Přihlaste se prosím."}), 401
+
     d = request.json or {}
- 
+
     with get_db() as conn:
         row = conn.execute(
             "SELECT * FROM navstevnici WHERE id=?", (nav_id,)
