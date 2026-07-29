@@ -1,0 +1,7 @@
+flask>=3.0
+flask-cors>=4.0
+pytesseract
+pillow
+# Volitelné OCR alternativy (pokud nemáš ANTHROPIC_API_KEY):
+# easyocr
+# passporteye

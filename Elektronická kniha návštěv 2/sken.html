@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<title>Sken dokladu</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0f172a;--ink2:#475569;--ink3:#94a3b8;
+  --bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;
+  --green:#059669;--green-bg:#ecfdf5;
+  --blue:#1d4ed8;--blue-bg:#eff6ff;--blue-border:#bfdbfe;
+  --red:#dc2626;--red-bg:#fef2f2;
+  --amber:#d97706;--amber-bg:#fffbeb;
+  --slate:#334155;
+  --r:10px;--r2:16px;
+}
+body{font-family:system-ui,'Inter',sans-serif;background:var(--bg);color:var(--ink);min-height:100dvh;display:flex;flex-direction:column}
+ 
+.topbar{background:var(--slate);color:#fff;padding:0 1rem;height:52px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.topbar h1{font-size:.95rem;font-weight:600}
+.topbar .back{background:none;border:none;color:#fff;cursor:pointer;padding:4px;margin-right:4px;display:flex;align-items:center}
+ 
+.content{flex:1;padding:1rem;display:flex;flex-direction:column;gap:1rem;max-width:480px;margin:0 auto;width:100%}
+ 
+.steps{display:flex;align-items:center;gap:0;margin-bottom:.25rem}
+.step{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:500;color:var(--ink3)}
+.step.active{color:var(--blue)}
+.step.done{color:var(--green)}
+.step-num{width:22px;height:22px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 6px}
+ 
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+.card-head{padding:.875rem 1rem;border-bottom:1px solid var(--border);background:#f8fafc;display:flex;align-items:center;gap:8px}
+.card-head h2{font-size:.9rem;font-weight:600}
+.card-body{padding:1rem}
+ 
+.cam-zone{position:relative;background:#0d1117;border-radius:var(--r);overflow:hidden;width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
+#vidEl{width:100%;height:100%;object-fit:cover;display:none}
+#canvEl{display:none}
+.cam-ph{display:flex;flex-direction:column;align-items:center;gap:10px;color:#3f4f6a;padding:1.5rem}
+.cam-ph svg{opacity:.5}
+.cam-ph p{font-size:.82rem;opacity:.7;text-align:center}
+ 
+.scan-frame{position:absolute;inset:0;pointer-events:none;display:none}
+.sf-inner{position:absolute;top:8%;left:6%;right:6%;bottom:8%;border:2px solid rgba(99,179,255,.7);border-radius:8px}
+.sf-label{position:absolute;bottom:calc(8% - 26px);left:50%;transform:translateX(-50%);color:#63b3ff;font-size:.72rem;font-weight:600;white-space:nowrap;background:rgba(0,0,0,.5);padding:2px 10px;border-radius:20px}
+.scan-anim{position:absolute;left:6%;right:6%;height:2px;background:linear-gradient(90deg,transparent,#63b3ff,transparent);animation:scanAnim 2.5s ease-in-out infinite}
+@keyframes scanAnim{0%{top:10%}50%{top:88%}100%{top:10%}}
+ 
+.btn{display:inline-flex;align-items:center;gap:7px;padding:12px 20px;font-size:.95rem;font-weight:600;border-radius:var(--r);border:none;cursor:pointer;font-family:inherit;justify-content:center;width:100%;transition:all .13s;touch-action:manipulation}
+.btn:active{transform:scale(.97)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:#1e40af}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#047857}
+.btn-ghost{background:var(--surface);color:var(--ink);border:1.5px solid var(--border)}
+.btn-ghost:hover{background:var(--bg)}
+.btn-sm{padding:8px 14px;font-size:.85rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+ 
+.alert{padding:10px 13px;border-radius:var(--r);font-size:.85rem;line-height:1.45;display:flex;align-items:flex-start;gap:8px}
+.al-info{background:var(--blue-bg);color:#1e40af;border:1px solid var(--blue-border)}
+.al-success{background:var(--green-bg);color:#065f46;border:1px solid #a7f3d0}
+.al-error{background:var(--red-bg);color:#991b1b;border:1px solid #fecaca}
+.al-warn{background:var(--amber-bg);color:#92400e;border:1px solid #fde68a}
+.hidden{display:none!important}
+ 
+.result-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.875rem}
+label.lbl{display:block;font-size:.73rem;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+input[type=text]{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r);font-size:1rem;font-family:inherit;color:var(--ink);outline:none;transition:border-color .15s;background:var(--surface)}
+input[type=text]:focus{border-color:var(--blue)}
+input[type=text].big{font-size:1.15rem;font-weight:600;padding:12px}
+.preview-img{width:100%;border-radius:var(--r);border:1.5px solid var(--border);max-height:160px;object-fit:cover;display:block}
+.spinner{width:20px;height:20px;border:2px solid #bfdbfe;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+ 
+.file-label{display:flex;flex-direction:column;align-items:center;gap:8px;border:2px dashed var(--border);border-radius:var(--r);padding:1.25rem;cursor:pointer;text-align:center;transition:border-color .15s;background:var(--bg)}
+.file-label:hover{border-color:var(--blue)}
+.file-label p{font-size:.82rem;color:var(--ink2)}
+.file-label strong{font-size:.9rem;color:var(--blue)}
+#fileIn{display:none}
+ 
+.success-screen{text-align:center;padding:1.5rem .5rem}
+.success-icon{width:64px;height:64px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.success-name{font-size:1.4rem;font-weight:700;margin-bottom:.25rem}
+.success-sub{font-size:.875rem;color:var(--ink2);margin-bottom:1.5rem}
+</style>
+</head>
+<body>
+ 
+<div class="topbar">
+  <button class="back" onclick="history.back()">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+  <h1>Sken dokladu</h1>
+</div>
+ 
+<div class="content">
+ 
+  <div class="steps">
+    <div class="step active" id="stp1">
+      <div class="step-num">1</div><span>Doklad</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="stp2">
+      <div class="step-num">2</div><span>Rozpoznání</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="stp3">
+      <div class="step-num">3</div><span>Potvrzení</span>
+    </div>
+  </div>
+ 
+  <!-- KROK 1 -->
+  <div id="step1">
+    <div class="alert al-info" style="margin-bottom:.75rem">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Obrázek průkazu se <strong>nikde neukládá</strong>. Zpracuje se okamžitě a zahodí. Uloží se pouze jméno a příjmení.</span>
+    </div>
+ 
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-head">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <h2>Vyfotit doklad kamerou</h2>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+        <div class="cam-zone" id="camZone">
+          <div class="cam-ph" id="camPh">
+            <svg width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p>Klepněte na „Spustit kameru"<br/>a namiřte na doklad</p>
+          </div>
+          <video id="vidEl" autoplay playsinline muted></video>
+          <canvas id="canvEl"></canvas>
+          <div class="scan-frame" id="scanFrame">
+            <div class="sf-inner"></div>
+            <div class="sf-label">Vycentrujte doklad do rámečku</div>
+            <div class="scan-anim"></div>
+          </div>
+        </div>
+        <div id="camErr" class="alert al-error hidden"></div>
+        <button class="btn btn-blue" id="btnCam" onclick="spustKameru()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Spustit kameru
+        </button>
+        <button class="btn btn-green hidden" id="btnSnap" onclick="udelFoto()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+          Vyfotit doklad
+        </button>
+        <button class="btn btn-ghost btn-sm hidden" id="btnStopCam" onclick="stopKameru()">Zavřít kameru</button>
+      </div>
+    </div>
+ 
+    <div style="display:flex;align-items:center;gap:.75rem;margin:.25rem 0">
+      <div style="flex:1;border-top:1px solid var(--border)"></div>
+      <span style="font-size:.8rem;color:var(--ink3)">nebo</span>
+      <div style="flex:1;border-top:1px solid var(--border)"></div>
+    </div>
+ 
+    <div class="card" style="margin-top:1rem">
+      <div class="card-head">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <h2>Nahrát foto ze zařízení</h2>
+      </div>
+      <div class="card-body">
+        <label class="file-label" for="fileIn">
+          <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color:var(--ink3)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <strong>Klepněte pro výběr fotky</strong>
+          <p>Fotografie dokladu z galerie nebo z fotoaparátu</p>
+        </label>
+        <input type="file" id="fileIn" accept="image/*" capture="environment" onchange="nacistSoubor(this)"/>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- KROK 2 -->
+  <div id="step2" class="hidden">
+    <div class="card">
+      <div class="card-head">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <h2>Rozpoznávání dokladu</h2>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:.875rem">
+        <img id="prevImg" class="preview-img" src="" alt="náhled dokladu"/>
+        <div id="aOcr" class="alert al-info">
+          <div class="spinner"></div>
+          <span>Odesílám do serveru pro rozpoznání…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- KROK 3 -->
+  <div id="step3" class="hidden">
+    <div id="successScreen" class="hidden success-screen">
+      <div class="success-icon">
+        <svg width="32" height="32" fill="none" stroke="var(--green)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="success-name" id="succName"></div>
+      <div class="success-sub" id="succSub">Příchod zapsán. Můžete se vrátit na recepci.</div>
+      <button class="btn btn-ghost" style="margin-top:1rem" onclick="resetovat()">← Skenovat další doklad</button>
+    </div>
+ 
+    <div id="confirmCard" class="card">
+      <div class="card-head">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <h2>Zkontrolujte a potvrďte</h2>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:.875rem">
+        <div id="aResult" class="alert hidden"></div>
+        <div class="result-row">
+          <div>
+            <label class="lbl">Jméno</label>
+            <input type="text" id="rJmeno" class="big" placeholder="Jméno"/>
+          </div>
+          <div>
+            <label class="lbl">Příjmení</label>
+            <input type="text" id="rPrijmeni" class="big" placeholder="Příjmení"/>
+          </div>
+        </div>
+        <div>
+          <label class="lbl">Organizace (nepovinné)</label>
+          <input type="text" id="rOrg" placeholder="Firma s.r.o."/>
+        </div>
+        <div>
+          <label class="lbl">SPZ vozidla (nepovinné)</label>
+          <input type="text" id="rSpz" placeholder="1AB 2345" style="text-transform:uppercase"/>
+        </div>
+        <button class="btn btn-green" id="btnZapis" onclick="zapsat()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Zapsat příchod
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="resetovat()">← Skenovat znovu</button>
+      </div>
+    </div>
+  </div>
+ 
+</div>
+ 
+<script>
+const API = 'http://localhost:5050/api';
+let camStream = null;
+ 
+// ── Kamera ────────────────────────────────────────────────────────────────────
+async function spustKameru() {
+  document.getElementById('camErr').classList.add('hidden');
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+    });
+    const v = document.getElementById('vidEl');
+    v.srcObject = camStream;
+    v.style.display = 'block';
+    document.getElementById('camPh').style.display    = 'none';
+    document.getElementById('scanFrame').style.display = 'block';
+    document.getElementById('btnCam').classList.add('hidden');
+    document.getElementById('btnSnap').classList.remove('hidden');
+    document.getElementById('btnStopCam').classList.remove('hidden');
+  } catch (e) {
+    const err = document.getElementById('camErr');
+    err.textContent = 'Kamera není dostupná: ' + e.message + ' — použijte nahrání ze souboru níže.';
+    err.classList.remove('hidden');
+  }
+}
+ 
+function stopKameru() {
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  const v = document.getElementById('vidEl');
+  v.srcObject = null;
+  v.style.display = 'none';
+  document.getElementById('camPh').style.display     = 'flex';
+  document.getElementById('scanFrame').style.display  = 'none';
+  document.getElementById('btnCam').classList.remove('hidden');
+  document.getElementById('btnSnap').classList.add('hidden');
+  document.getElementById('btnStopCam').classList.add('hidden');
+}
+ 
+function udelFoto() {
+  const v = document.getElementById('vidEl');
+  const c = document.getElementById('canvEl');
+  if (!v.videoWidth) {
+    alert('Kamera ještě není připravena, zkuste znovu.');
+    return;
+  }
+  c.width  = v.videoWidth;
+  c.height = v.videoHeight;
+  c.getContext('2d').drawImage(v, 0, 0);
+ 
+  // Získáme base64 BEZ hlavičky — backend to zvládne oběma způsoby
+  const dataUrl = c.toDataURL('image/jpeg', 0.92);
+  const b64 = dataUrl.split(',')[1];
+ 
+  stopKameru();
+  zpracovatObrazek(b64, dataUrl);
+}
+ 
+// ── Soubor ────────────────────────────────────────────────────────────────────
+function nacistSoubor(inp) {
+  const f = inp.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    const b64 = dataUrl.split(',')[1];
+    zpracovatObrazek(b64, dataUrl);
+  };
+  reader.readAsDataURL(f);
+}
+ 
+// ── OCR ───────────────────────────────────────────────────────────────────────
+async function zpracovatObrazek(b64, previewSrc) {
+  setStep(2);
+  document.getElementById('prevImg').src = previewSrc;
+ 
+  try {
+    const res = await fetch(API + '/ocr', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ image: b64 })
+    });
+ 
+    const d = await res.json();
+ 
+    setStep(3);
+ 
+    if (!res.ok || d.error) {
+      zobrazAlert('aResult', 'warn', 'Automatické rozpoznání selhalo – zadejte jméno ručně. (' + (d.error || '') + ')');
+      return;
+    }
+ 
+    document.getElementById('rJmeno').value    = d.jmeno    || '';
+    document.getElementById('rPrijmeni').value = d.prijmeni || '';
+ 
+    if (d.jmeno && d.prijmeni) {
+      zobrazAlert('aResult', 'success', '✓ Jméno rozpoznáno – zkontrolujte správnost');
+    } else {
+      zobrazAlert('aResult', 'warn', 'Jméno se nepodařilo rozpoznat – doplňte ručně');
+    }
+ 
+  } catch (e) {
+    setStep(3);
+    zobrazAlert('aResult', 'error', 'Backend není dostupný. Zadejte jméno ručně nebo spusťte server.');
+  }
+}
+ 
+// ── Zápis ─────────────────────────────────────────────────────────────────────
+async function zapsat() {
+  const jmeno    = document.getElementById('rJmeno').value.trim();
+  const prijmeni = document.getElementById('rPrijmeni').value.trim();
+ 
+  if (!jmeno || !prijmeni) {
+    zobrazAlert('aResult', 'error', '⚠ Vyplňte jméno i příjmení před zápisem.');
+    // Zvýrazni prázdná pole
+    if (!jmeno)    document.getElementById('rJmeno').style.borderColor    = 'var(--red)';
+    if (!prijmeni) document.getElementById('rPrijmeni').style.borderColor = 'var(--red)';
+    return;
+  }
+ 
+  // Odstraň červené zvýraznění
+  document.getElementById('rJmeno').style.borderColor    = '';
+  document.getElementById('rPrijmeni').style.borderColor = '';
+ 
+  const btn = document.getElementById('btnZapis');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="border-top-color:#fff;border-color:#ffffff55;flex-shrink:0"></div> Ukládám…';
+ 
+  try {
+    const payload = {
+      jmeno,
+      prijmeni,
+      organizace: document.getElementById('rOrg').value.trim(),
+      spz:        document.getElementById('rSpz').value.trim()
+    };
+ 
+    const res = await fetch(API + '/navstevnici', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload)
+    });
+ 
+    let d = {};
+    try { d = await res.json(); } catch(e) { d = {}; }
+ 
+    if (res.ok) {
+      document.getElementById('confirmCard').classList.add('hidden');
+      document.getElementById('successScreen').classList.remove('hidden');
+      document.getElementById('succName').textContent = jmeno + ' ' + prijmeni;
+      const cas = d.prichod_dt ? d.prichod_dt.slice(11, 16) : new Date().toLocaleTimeString('cs-CZ');
+      document.getElementById('succSub').textContent = 'Příchod zapsán v ' + cas + '.';
+    } else {
+      zobrazAlert('aResult', 'error', '⚠ Chyba ' + res.status + ': ' + (d.error || 'Neznámá chyba serveru.'));
+    }
+ 
+  } catch (e) {
+    zobrazAlert('aResult', 'error', '⚠ Nelze se připojit k serveru: ' + e.message + ' — je spuštěný backend_v2.py?');
+  }
+ 
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Zapsat příchod';
+}
+ 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function setStep(n) {
+  [1, 2, 3].forEach(i => {
+    document.getElementById('step' + i).classList.toggle('hidden', i !== n);
+    const s = document.getElementById('stp' + i);
+    s.classList.remove('active', 'done');
+    if (i < n)  s.classList.add('done');
+    if (i === n) s.classList.add('active');
+    if (i < n) s.querySelector('.step-num').innerHTML =
+      '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+    else s.querySelector('.step-num').textContent = i;
+  });
+}
+ 
+function zobrazAlert(id, typ, msg) {
+  const m = { success: 'al-success', error: 'al-error', warn: 'al-warn', info: 'al-info' };
+  const el = document.getElementById(id);
+  el.className = 'alert ' + (m[typ] || 'al-info');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+ 
+function resetovat() {
+  ['rJmeno','rPrijmeni','rOrg','rSpz'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fileIn').value = '';
+  document.getElementById('confirmCard').classList.remove('hidden');
+  document.getElementById('successScreen').classList.add('hidden');
+  setStep(1);
+}
+</script>
+</body>
+</html>
+
