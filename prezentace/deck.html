@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Digitální kniha návštěv — ept connectors</title>
+<link rel="stylesheet" href="assets/ept-fonts.css">
+<style>
+/* ── Brand vrstva EPT ─────────────────────────────────────────────────────────
+   Barvy i typografie shodné s aplikací (static/ept-theme.css), aby deck a
+   produkt vypadaly jako jedna věc. Fonty jsou v ept-fonts.css jako base64,
+   takže PDF nepotřebuje internet ani nainstalované fonty. */
+:root{
+  --cervena:#a70a1b;      /* značková */
+  --signal:#e3051b;       /* signální */
+  --tmava:#0d131b;
+  --tmava2:#141d28;
+  --ink:#141d28;
+  --ink2:#3c5063;
+  --ink3:#6b7b88;
+  --linka:#d7dadc;
+  --bg-svetla:#eef1f2;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.cislo,.stat-c{font-family:'Cairo',sans-serif;font-weight:800;letter-spacing:-.015em}
+
+/* Jedna strana = jeden slide. Pevná velikost A4 na šířku při 96 dpi. */
+.s{
+  width:297mm;height:209.5mm;   /* 0.5mm rezerva proti přetečení na další stranu */
+  padding:14mm 16mm;position:relative;overflow:hidden;
+  page-break-after:always;break-after:page;
+  display:flex;flex-direction:column;
+}
+.s:last-child{page-break-after:auto;break-after:auto}
+
+/* jemná blueprint mřížka — stejný motiv jako topbar aplikace */
+.mrizka{
+  background-color:var(--tmava);
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size:28px 28px;
+  color:#fff;
+}
+.mrizka h1,.mrizka h2,.mrizka h3{color:#fff}
+.mrizka .pod{color:rgba(255,255,255,.62)}
+
+/* ── hlavička slidu ─────────────────────────────────────────────────────── */
+.hl{display:flex;align-items:center;gap:10px;margin-bottom:9mm;flex-shrink:0}
+.hl .kicker{
+  font-size:8.5pt;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;
+  color:var(--cervena);
+}
+.hl .cara{flex:1;height:2px;background:var(--cervena);opacity:.25}
+.mrizka .hl .kicker{color:#ff8f99}
+.mrizka .hl .cara{background:#ff8f99;opacity:.3}
+h2{font-size:23pt;line-height:1.12;margin-bottom:3.5mm}
+h3{font-size:12pt;margin-bottom:2mm}
+.pod{font-size:10.5pt;color:var(--ink2);line-height:1.5;max-width:210mm}
+
+/* pata s logem a číslem strany */
+.pata{
+  position:absolute;left:16mm;right:16mm;bottom:7mm;
+  display:flex;align-items:center;gap:8px;
+  font-size:7.5pt;color:var(--ink3);
+  border-top:1px solid var(--linka);padding-top:2.5mm;
+}
+.mrizka .pata{color:rgba(255,255,255,.45);border-top-color:rgba(255,255,255,.15)}
+.pata img{height:11px}
+.pata .cis{margin-left:auto;font-variant-numeric:tabular-nums}
+.logo-chip{background:#fff;padding:3px 7px;border-radius:3px;display:inline-flex}
+
+/* tři tečky z loga — značkový motiv */
+.tecky{display:inline-flex;gap:5px;align-items:center}
+.tecky i{width:8px;height:8px;border-radius:2px;background:currentColor;display:block}
+.tecky i.r{background:var(--signal)}
+
+/* ── obsahové bloky ─────────────────────────────────────────────────────── */
+.telo{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
+.dva{display:grid;grid-template-columns:1fr 1fr;gap:9mm;align-items:center}
+.dva.uzky-vlevo{grid-template-columns:.85fr 1.15fr}
+.tri{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm}
+.ctyri{display:grid;grid-template-columns:repeat(4,1fr);gap:5mm}
+
+.karta{
+  border:1px solid var(--linka);border-radius:8px;padding:5mm 5.5mm;
+  background:#fff;
+}
+.karta.akcent{border-top:3px solid var(--cervena)}
+.karta h3{font-size:11pt;margin-bottom:1.5mm}
+.karta p{font-size:9pt;color:var(--ink2);line-height:1.45}
+.mrizka .karta{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.14)}
+.mrizka .karta p{color:rgba(255,255,255,.66)}
+
+.stat{text-align:center}
+.stat-c{font-size:30pt;color:var(--cervena);line-height:1}
+.stat-p{font-size:8.5pt;color:var(--ink2);text-transform:uppercase;letter-spacing:.6px;margin-top:1mm}
+.mrizka .stat-c{color:#ff8f99}
+.mrizka .stat-p{color:rgba(255,255,255,.6)}
+
+ul.body{list-style:none}
+ul.body li{
+  font-size:10pt;color:var(--ink2);line-height:1.5;margin-bottom:2.6mm;
+  padding-left:7mm;position:relative;
+}
+ul.body li::before{
+  content:"";position:absolute;left:0;top:.52em;
+  width:7px;height:7px;border-radius:2px;background:var(--cervena);
+}
+ul.body li strong{color:var(--ink);font-weight:600}
+.mrizka ul.body li{color:rgba(255,255,255,.7)}
+.mrizka ul.body li strong{color:#fff}
+.mrizka ul.body li::before{background:var(--signal)}
+
+.snimek{
+  width:100%;border:1px solid var(--linka);border-radius:7px;
+  display:block;box-shadow:0 8px 24px -12px rgba(20,29,40,.3);
+}
+.snimek.tmavy{border-color:rgba(255,255,255,.16)}
+.snimek.mobil{max-height:150mm;width:auto;margin:0 auto}
+
+table.tb{width:100%;border-collapse:collapse;font-size:8.5pt}
+table.tb th{
+  text-align:left;padding:2.2mm 3mm;border-bottom:2px solid var(--ink);
+  font-size:7.5pt;text-transform:uppercase;letter-spacing:.5px;
+}
+table.tb td{padding:2.2mm 3mm;border-bottom:1px solid var(--linka);color:var(--ink2)}
+table.tb td strong{color:var(--ink)}
+table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cervena)}
+
+.znacka{
+  display:inline-block;padding:1px 7px;border-radius:20px;font-size:7.5pt;
+  font-weight:700;border:1px solid var(--linka);color:var(--ink2);white-space:nowrap;
+}
+.znacka.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+.znacka.chybi{background:#fef3c7;border-color:#fde68a;color:#92400e}
+.znacka.ne{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+
+/* ── titulní strana ─────────────────────────────────────────────────────── */
+.titul{justify-content:center;align-items:flex-start;padding-left:24mm}
+.titul .nadtitul{
+  font-size:9.5pt;font-weight:700;letter-spacing:2.4px;text-transform:uppercase;
+  color:#ff8f99;margin-bottom:6mm;
+}
+.titul h1{font-size:40pt;line-height:1.06;margin-bottom:5mm;max-width:215mm}
+.titul .claim{font-size:13.5pt;color:rgba(255,255,255,.72);max-width:170mm;line-height:1.45}
+.titul .meta{margin-top:11mm;font-size:9.5pt;color:rgba(255,255,255,.5)}
+.zare{
+  position:absolute;top:-30%;right:-12%;width:75%;height:150%;
+  background:radial-gradient(ellipse at center, rgba(167,10,27,.42), transparent 62%);
+  pointer-events:none;
+}
+
+/* ── tok / diagram ──────────────────────────────────────────────────────── */
+.tok{display:flex;align-items:stretch;gap:0;margin-top:2mm}
+.tok-krok{
+  flex:1;border:1px solid var(--linka);border-radius:7px;padding:4mm;
+  position:relative;background:#fff;
+}
+.tok-krok .n{
+  width:20px;height:20px;border-radius:50%;background:var(--cervena);color:#fff;
+  font-size:8.5pt;font-weight:700;display:flex;align-items:center;justify-content:center;
+  margin-bottom:2.5mm;font-family:'Cairo',sans-serif;
+}
+.tok-krok h3{font-size:9.5pt;margin-bottom:1.2mm}
+.tok-krok p{font-size:8pt;color:var(--ink2);line-height:1.4}
+.tok-sipka{
+  align-self:center;color:var(--cervena);font-size:15pt;padding:0 2.5mm;flex-shrink:0;
+}
+
+/* ── scénář dema ────────────────────────────────────────────────────────── */
+.scen{counter-reset:k}
+.scen-r{
+  display:grid;grid-template-columns:11mm 1fr 1.15fr;gap:4mm;align-items:start;
+  padding:2.8mm 0;border-bottom:1px solid var(--linka);
+}
+.scen-r:last-child{border-bottom:none}
+.scen-r .kr{
+  counter-increment:k;font-family:'Cairo',sans-serif;font-weight:800;
+  font-size:13pt;color:var(--cervena);
+}
+.scen-r .kr::before{content:counter(k)}
+.scen-r .co{font-size:9.5pt;font-weight:600;color:var(--ink)}
+.scen-r .vidi{font-size:9pt;color:var(--ink2);line-height:1.4}
+
+.upoz{
+  border-left:3px solid var(--signal);background:#fef2f2;
+  padding:3.5mm 5mm;border-radius:0 6px 6px 0;margin-top:5mm;
+}
+.upoz p{font-size:9pt;color:#7f1d1d;line-height:1.45}
+.upoz strong{font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- 1 ─ titul -->
+<section class="s mrizka titul">
+  <div class="zare"></div>
+  <div class="nadtitul">ept connectors · Habartov</div>
+  <h1>Digitální kniha návštěv</h1>
+  <p class="claim">Papírová kniha u vrátnice nahrazená systémem, který ví, kdo je právě
+  v budově — a dokáže to vytisknout do třiceti sekund od poplachu.</p>
+  <div class="meta">Prezentace pro vedení společnosti · 31. 7. 2026</div>
+  <div class="pata">
+    <span class="logo-chip"><img src="assets/ept_logo.png" alt="ept connectors"></span>
+    <span class="tecky" style="color:rgba(255,255,255,.8)"><i></i><i class="r"></i><i></i></span>
+    <span class="cis">1</span>
+  </div>
+</section>
+
+<!-- 2 ─ problém -->
+<section class="s">
+  <div class="hl"><span class="kicker">Výchozí stav</span><span class="cara"></span></div>
+  <h2>Papírová kniha není evidence. Je to riziko.</h2>
+  <div class="telo">
+    <div class="tri">
+      <div class="karta akcent">
+        <h3>Nepřečtete ji</h3>
+        <p>Ručně psané jméno v knize u vrátnice je po měsíci nedohledatelné. Kdo tu byl
+        3. dubna odpoledne? Odpověď zabere hodiny listování — pokud vůbec.</p>
+      </div>
+      <div class="karta akcent">
+        <h3>Při evakuaci selže</h3>
+        <p>Kniha zůstane na recepci, tedy v budově, kterou právě opouštíte. Seznam osob
+        uvnitř nikdo nemá. To je bezpečnostní i právní problém.</p>
+      </div>
+      <div class="karta akcent">
+        <h3>Porušuje GDPR</h3>
+        <p>Otevřená kniha ukazuje každému příchozímu jména a firmy všech předchozích
+        návštěv. Osobní údaje leží na pultu, viditelné komukoli.</p>
+      </div>
+    </div>
+    <div class="upoz">
+      <p><strong>Zásadní otázka:</strong> kdyby dnes v 10:15 zazněl požární poplach,
+      jak dlouho by trvalo zjistit, kolik lidí je v areálu a kdo to je?</p>
+    </div>
+  </div>
+  <div class="pata">
+    <span class="tecky" style="color:var(--ink3)"><i></i><i class="r"></i><i></i></span>
+    <span>Digitální kniha návštěv · ept connectors</span>
+    <span class="cis">2</span>
+  </div>
+</section>
+
+<!-- 3 ─ řešení jednou obrazovkou -->
+<section class="s">
+  <div class="hl"><span class="kicker">Řešení</span><span class="cara"></span></div>
+  <h2>Jedna obrazovka, na kterou se recepce dívá celý den</h2>
+  <p class="pod">Vlevo zápis návštěvníka, vpravo kdo je v budově a jak dlouho. Doba
+  pobytu se počítá živě, přehled se sám obnovuje.</p>
+  <div class="telo">
+    <img class="snimek" src="snimky/dashboard-dark.png" alt="Dashboard recepce">
+  </div>
+  <div class="pata">
+    <span class="tecky" style="color:var(--ink3)"><i></i><i class="r"></i><i></i></span>
+    <span>Digitální kniha návštěv · ept connectors</span>
+    <span class="cis">3</span>
+  </div>
+</section>
+
+<!-- 4 ─ jak to funguje -->
+<section class="s">
+  <div class="hl"><span class="kicker">Jak to funguje</span><span class="cara"></span></div>
+  <h2>Od QR kódu k zápisu ve čtyřech krocích</h2>
+  <div class="telo">
+    <div class="tok">
+      <div class="tok-krok">
+        <div class="n">1</div><h3>Recepce ukáže QR</h3>
+        <p>Kód je trvale na obrazovce recepce. Míří na adresu skenu v místní síti.</p>
+      </div>
+      <div class="tok-sipka">→</div>
+      <div class="tok-krok">
+        <div class="n">2</div><h3>Návštěvník ho naskenuje</h3>
+        <p>Vlastním telefonem. Nic neinstaluje, otevře se mu stránka skenu.</p>
+      </div>
+      <div class="tok-sipka">→</div>
+      <div class="tok-krok">
+        <div class="n">3</div><h3>Vyfotí doklad</h3>
+        <p>Systém vybere z série snímků ty nejostřejší a přečte z nich jméno.</p>
+      </div>
+      <div class="tok-sipka">→</div>
+      <div class="tok-krok">
+        <div class="n">4</div><h3>Potvrdí příchod</h3>
+        <p>Jméno zkontroluje, doplní firmu a odešle. Recepce ho hned vidí.</p>
+      </div>
+    </div>
+    <div class="dva" style="margin-top:8mm">
+      <div class="karta">
+        <h3>Fotka dokladu se nikdy neukládá</h3>
+        <p>Snímek se zpracuje v paměti a zahodí. Na disk ani do databáze se nedostane —
+        uloží se výhradně jméno a příjmení. To je zásadní rozdíl proti kopírování dokladů.</p>
+      </div>
+      <div class="karta">
+        <h3>Recepce zůstává plnohodnotnou cestou</h3>
+        <p>Kdo nechce použít telefon, nadiktuje jméno obsluze. Samoobsluha je zkratka,
+        ne podmínka — nikdo se u vrátnice nezasekne.</p>
+      </div>
+    </div>
+  </div>
+  <div class="pata">
+    <span class="tecky" style="color:var(--ink3)"><i></i><i class="r"></i><i></i></span>
+    <span>Digitální kniha návštěv · ept connectors</span>
+    <span class="cis">4</span>
+  </div>
+</section>
+
+<!-- 5 ─ scénář živého dema -->
+<section class="s">
+  <div class="hl"><span class="kicker">Živé demo</span><span class="cara"></span></div>
+  <h2>Co uvidíte za pár minut</h2>
+  <div class="telo">
+    <div class="scen">
+      <div class="scen-r"><div class="kr"></div>
+        <div class="co">Naskenujete QR z obrazovky recepce</div>
+        <div class="vidi">Na telefonu se otevře stránka skenu. Bez instalace čehokoli.</div></div>
+      <div class="scen-r"><div class="kr"></div>
+        <div class="co">Vyfotíte doklad</div>
+        <div class="vidi">Formulář se sám vyplní jménem z dokladu. Fotka se zahodí.</div></div>
+      <div class="scen-r"><div class="kr"></div>
+        <div class="co">Potvrdíte příchod</div>
+        <div class="vidi">Na obrazovce recepce se do dvaceti sekund objeví nový řádek.</div></div>
+      <div class="scen-r"><div class="kr"></div>
+        <div class="co">Zkusíte se zapsat podruhé</div>
+        <div class="vidi">Systém to odmítne: „je již přítomen/a od 14:22“. Žádné duplicity.</div></div>
+      <div class="scen-r"><div class="kr"></div>
+        <div class="co">Stisknete Evakuace</div>
+        <div class="vidi">Vyjede tištěný seznam všech osob v budově, s místem na podpis.</div></div>
+      <div class="scen-r"><div class="kr"></div>
+        <div class="co">Otevřete Audit</div>
+        <div class="vidi">Historie akcí — kdo, co a kdy, včetně pokusů o duplicitní zápis.</div></div>
+    </div>
+    <div class="upoz">
+      <p><strong>Poznámka k prostředí:</strong> demo běží celé v místní síti, bez internetu
+      a bez cloudu. Žádný osobní údaj neopustí tuhle budovu.</p>
+    </div>
+  </div>
+  <div class="pata">
+    <span class="tecky" style="color:var(--ink3)"><i></i><i class="r"></i><i></i></span>
+    <span>Digitální kniha návštěv · ept connectors</span>
+    <span class="cis">5</span>
+  </div>
+</section>
+
+<!-- 6 ─ samoobslužný sken -->
+<section class="s">
+  <div class="hl"><span class="kicker">Klíčový prvek</span><span class="cara"></span></div>
+  <h2>Návštěvník se zapíše sám, vlastním telefonem</h2>
+  <div class="telo">
+    <div class="dva uzky-vlevo">
+      <div>
+        <ul class="body">
+          <li><strong>Nic se neinstaluje.</strong> QR otevře běžnou webovou stránku.</li>
+          <li><strong>Fronta u vrátnice se rozpustí.</strong> Zapisovat se může několik
+          lidí zároveň, každý na svém telefonu.</li>
+          <li><strong>Recepce se nemusí ptát na jméno.</strong> Přečte se z dokladu,
+          takže nevznikají přepisy typu „Nowak“ místo „Novák“.</li>
+          <li><strong>Kdo telefon nemá</strong>, zapíše ho obsluha ručně jako dosud.</li>
+        </ul>
+      </div>
+      <div style="display:flex;gap:6mm;align-items:flex-start;justify-content:center">
+        <img class="snimek" src="snimky/qr-detail.png" alt="QR panel na recepci" style="width:44%">
+        <img class="snimek mobil" src="snimky/sken-mobil.png" alt="Sken na telefonu" style="width:44%">
+      </div>
+    </div>
+  </div>
+  <div class="pata">
+    <span class="tecky" style="color:var(--ink3)"><i></i><i class="r"></i><i></i></span>
+    <span>Digitální kniha návštěv · ept connectors</span>
+    <span class="cis">6</span>
+  </div>
+</section>
+
+<!-- 7 ─ evakuace -->
+<section class="s">
+  <div class="hl"><span class="kicker">Bezpečnost</span><span class="cara"></span></div>
+  <h2>Evakuační seznam na jedno stisknutí</h2>
+  <p class="pod">Jediné tlačítko vytiskne, kdo je právě v budově, od kdy a z jaké firmy —
+  včetně sloupce na podpis pro kontrolu na shromaždišti.</p>
+  <div class="telo">
+    <div class="dva uzky-vlevo">
+      <div>
+        <ul class="body">
+          <li><strong>Papír, který má u sebe požární hlídka</strong>, ne obrazovka
+          v budově, kterou opouštíte.</li>
+          <li><strong>Čitelné i ve stresu:</strong> velké písmo, tvrdé linky, žádné barvy
+          potřebné k porozumění.</li>
+          <li><strong>Podpisový sloupec</strong> slouží k odškrtání osob na shromaždišti.</li>
+          <li><strong>Hlavička se opakuje</strong> na každé straně, když je seznam delší.</li>
+        </ul>
+      </div>
+      <img class="snimek" src="snimky/evakuace.png" alt="Vytištěný evakuační seznam"
+           style="max-height:132mm;width:auto;margin:0 auto">
+    </div>
+  </div>
+  <div class="pata">
+    <span class="tecky" style="color:var(--ink3)"><i></i><i class="r"></i><i></i></span>
+    <span>Digitální kniha návštěv · ept connectors</span>
+    <span class="cis">7</span>
+  </div>
+</section>
+
+<!-- 8 ─ audit -->
+<section class="s">
+  <div class="hl"><span class="kicker">Dohledatelnost</span><span class="cara"></span></div>
+  <h2>Každá změna je zaznamenaná</h2>
+  <p class="pod">Nový návštěvník, opakovaná návštěva, zapsaný odchod, změna telefonu,
+  pokus o duplicitní zápis i selhání rozpoznání dokladu — vše s časem a jménem.</p>
+  <div class="telo">
+    <img class="snimek" src="snimky/audit.png" alt="Historie akcí" style="max-height:126mm;width:auto;margin:0 auto">
+  </div>
+  <div class="pata">
+    <span class="tecky" style="color:var(--ink3)"><i></i><i class="r"></i><i></i></span>
+    <span>Digitální kniha návštěv · ept connectors</span>
+    <span class="cis">8</span>
+  </div>
+</section>
+
+<!-- 9 ─ chytré detaily -->
+<section class="s mrizka">
+  <div class="hl"><span class="kicker">Detaily, které rozhodují</span><span class="cara"></span></div>
+  <h2>Věci, které papír neumí</h2>
+  <div class="telo">
+    <div class="ctyri">
+      <div class="karta">
+        <h3>Žádné duplicity</h3>
+        <p>Když už je někdo v budově, druhý příchod se nezaloží. Systém řekne, od kdy
+        je přítomen.</p>
+      </div>
+      <div class="karta">
+        <h3>„Vítejte zpět“</h3>
+        <p>U vracejícího se návštěvníka ukáže datum poslední návštěvy. Malá věc,
+        která dělá dojem.</p>
+      </div>
+      <div class="karta">
+        <h3>Hledání za chodu</h3>
+        <p>Podle jména, dne i časového rozmezí. Výsledky se zobrazují průběžně,
+        bez potvrzování.</p>
+      </div>
+      <div class="karta">
+        <h3>Export do Excelu</h3>
+        <p>Celá evidence jedním kliknutím, s dobou pobytu a správnou diakritikou.</p>
+      </div>
+    </div>
+    <div class="tri" style="margin-top:9mm">
+      <div class="stat"><div class="stat-c">2&nbsp;s</div>
+        <div class="stat-p">přečtení dokladu</div></div>
+      <div class="stat"><div class="stat-c">20&nbsp;s</div>
+        <div class="stat-p">než se příchod objeví na recepci</div></div>
+      <div class="stat"><div class="stat-c">0</div>
+        <div class="stat-p">uložených fotek dokladů</div></div>
+    </div>
+  </div>
+  <div class="pata">
+    <span class="logo-chip"><img src="assets/ept_logo.png" alt="ept connectors"></span>
+    <span>Digitální kniha návštěv</span>
+    <span class="cis">9</span>
+  </div>
+</section>
+
+<!-- 10 ─ architektura -->
+<section class="s">
+  <div class="hl"><span class="kicker">Technické řešení</span><span class="cara"></span></div>
+  <h2>Architektura</h2>
+  <p class="pod">Záměrně jednoduchá: jeden proces, jedna databáze v souboru, dvě webové
+  stránky bez frameworku. Méně dílů znamená méně věcí, které se rozbijí.</p>
+  <div class="telo">
+    <svg viewBox="0 0 980 300" style="width:100%;height:auto">
+      <defs>
+        <marker id="a" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#a70a1b"/>
+        </marker>
+        <style>
+          .bx{fill:#fff;stroke:#d7dadc;stroke-width:1.5;rx:8}
+          .bx-d{fill:#141d28;stroke:#141d28}
+          .t{font-family:'Inter',sans-serif;font-size:13px;fill:#141d28;font-weight:600}
+          .t-w{fill:#fff}
+          .ts{font-family:'Inter',sans-serif;font-size:11px;fill:#6b7b88}
+          .ts-w{fill:rgba(255,255,255,.66)}
+          .ln{stroke:#a70a1b;stroke-width:1.8;fill:none;marker-end:url(#a)}
+          .lbl{font-family:'Inter',sans-serif;font-size:10px;fill:#a70a1b;font-weight:600}
+        </style>
+      </defs>
+
+      <rect class="bx" x="4" y="26" width="176" height="72"/>
+      <text class="t" x="20" y="54">Telefon návštěvníka</text>
+      <text class="ts" x="20" y="74">sken.html — kamera</text>
+
+      <rect class="bx" x="4" y="188" width="176" height="72"/>
+      <text class="t" x="20" y="216">Recepce</text>
+      <text class="ts" x="20" y="236">recepce.html — dashboard</text>
+
+      <rect class="bx bx-d" x="330" y="96" width="200" height="96"/>
+      <text class="t t-w" x="350" y="128">Flask · backend_v2.py</text>
+      <text class="ts ts-w" x="350" y="148">REST API, autentizace</text>
+      <text class="ts ts-w" x="350" y="166">port 5051 (za TLS proxy)</text>
+
+      <rect class="bx" x="672" y="16" width="200" height="76"/>
+      <text class="t" x="692" y="44">ocr_processor.py</text>
+      <text class="ts" x="692" y="64">EasyOCR → Tesseract</text>
+      <text class="ts" x="692" y="80">běží lokálně, bez cloudu</text>
+
+      <rect class="bx" x="672" y="112" width="200" height="76"/>
+      <text class="t" x="692" y="140">db_manager.py</text>
+      <text class="ts" x="692" y="160">SQLite — návštěvy</text>
+      <text class="ts" x="692" y="176">a audit log</text>
+
+      <rect class="bx" x="672" y="208" width="200" height="66"/>
+      <text class="t" x="692" y="236">sms_notifier.py</text>
+      <text class="ts" x="692" y="256">volitelné, zatím vypnuté</text>
+
+      <!-- Popisky sedí nad/pod křivkami, ne na nich — jinak je linka přetíná
+           a v PDF to vypadá jako chyba sazby. -->
+      <path class="ln" d="M180 62 C255 62 255 120 328 128"/>
+      <text class="lbl" x="192" y="48">https · QR</text>
+      <path class="ln" d="M180 224 C255 224 255 172 328 162"/>
+      <text class="lbl" x="192" y="252">https</text>
+      <path class="ln" d="M530 128 C600 128 600 58 670 54"/>
+      <text class="lbl" x="546" y="76">foto → jméno</text>
+      <path class="ln" d="M530 144 L670 148"/>
+      <path class="ln" d="M530 160 C600 160 600 236 670 240"/>
+    </svg>
+    <div class="tri" style="margin-top:6mm">
+      <div class="karta"><h3>Bez cloudu</h3>
+        <p>Rozpoznávání dokladu běží na stejném stroji jako aplikace. Žádný snímek
+        neodchází do internetu.</p></div>
+      <div class="karta"><h3>Bez frameworku</h3>
+        <p>Frontend jsou dvě statické stránky. Není co aktualizovat, není co propadnout
+        bezpečnostní chybou v cizí knihovně.</p></div>
+      <div class="karta"><h3>Přenositelné</h3>
+        <p>Celá evidence je jeden soubor SQLite. Záloha je kopie souboru.</p></div>
+    </div>
+  </div>
+  <div class="pata">
+    <span class="tecky" style="color:var(--ink3)"><i></i><i class="r"></i><i></i></span>
+    <span>Digitální kniha návštěv · ept connectors</span>
+    <span class="cis">10</span>
+  </div>
+</section>
+
+<!-- 11 ─ data a API -->
+<section class="s">
+  <div class="hl"><span class="kicker">Data</span><span class="cara"></span></div>
+  <h2>Co se ukládá a jak se k tomu chodí</h2>
+  <div class="telo">
+    <div class="dva">
+      <div>
+        <h3 style="margin-bottom:3mm">Evidence návštěv</h3>
+        <table class="tb">
+          <tr><th>Údaj</th><th>Povinný</th><th>Poznámka</th></tr>
+          <tr><td><strong>Jméno, příjmení</strong></td><td><span class="znacka">ano</span></td><td>z dokladu nebo ručně</td></tr>
+          <tr><td>Organizace</td><td><span class="znacka">ne</span></td><td>dodavatel, auditor…</td></tr>
+          <tr><td>SPZ vozidla</td><td><span class="znacka">ne</span></td><td>pro parkování v areálu</td></tr>
+          <tr><td>Telefon</td><td><span class="znacka">ne</span></td><td>jen pro notifikace</td></tr>
+          <tr><td><strong>Čas příchodu</strong></td><td><span class="znacka">ano</span></td><td>automaticky</td></tr>
+          <tr><td>Čas odchodu</td><td><span class="znacka">ne</span></td><td>prázdný = osoba je v budově</td></tr>
+        </table>
+        <div class="karta" style="margin-top:5mm">
+          <h3>Neukládá se</h3>
+          <p>Fotka dokladu, číslo dokladu, datum narození, adresa. Ze snímku se vezme
+          jméno a snímek se zahodí.</p>
+        </div>
+      </div>
+      <div>
+        <h3 style="margin-bottom:3mm">Rozhraní</h3>
+        <table class="tb">
+          <tr><th>Endpoint</th><th>Přístup</th></tr>
+          <tr><td><code>POST /api/login</code></td><td>PIN</td></tr>
+          <tr><td><code>POST /api/ocr</code></td><td>i bez přihlášení (kiosek)</td></tr>
+          <tr><td><code>POST /api/navstevnici</code></td><td>i bez přihlášení (kiosek)</td></tr>
+          <tr><td><code>GET /api/navstevnici</code></td><td>admin / správce</td></tr>
+          <tr><td><code>PATCH /api/navstevnici/&lt;id&gt;</code></td><td>admin / správce</td></tr>
+          <tr><td><code>GET /api/stats</code></td><td>admin / správce</td></tr>
+          <tr><td><code>GET /api/audit</code></td><td>admin / správce</td></tr>
+          <tr><td><code>GET /api/export.csv</code></td><td>admin / správce</td></tr>
+          <tr><td><code>GET /api/qr</code></td><td>veřejné</td></tr>
+        </table>
+        <div class="karta" style="margin-top:5mm">
+          <h3>Proč je sken bez přihlášení</h3>
+          <p>Zapisuje se u vrátnice, kde návštěvník žádný účet nemá a mít nemůže.
+          Čtení evidence je naopak vždy za přihlášením.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pata">
+    <span class="tecky" style="color:var(--ink3)"><i></i><i class="r"></i><i></i></span>
+    <span>Digitální kniha návštěv · ept connectors</span>
+    <span class="cis">11</span>
+  </div>
+</section>
+
+<!-- 12 ─ GDPR -->
+<section class="s mrizka">
+  <div class="hl"><span class="kicker">GDPR a bezpečnost</span><span class="cara"></span></div>
+  <h2>Méně údajů než papírová kniha, ne více</h2>
+  <div class="telo">
+    <div class="dva">
+      <div>
+        <ul class="body">
+          <li><strong>Fotka dokladu se nikdy neukládá.</strong> Zpracuje se v paměti
+          a zahodí — na disk se nedostane.</li>
+          <li><strong>Evidence není veřejně vidět.</strong> Na rozdíl od otevřené knihy
+          na pultu je za přihlášením.</li>
+          <li><strong>Rozpoznávání běží lokálně.</strong> Žádný snímek dokladu neopustí
+          budovu, nepoužívá se cloudová služba.</li>
+          <li><strong>Vše je dohledatelné.</strong> Audit log doloží, kdo co kdy udělal.</li>
+          <li><strong>Přenositelnost a výmaz</strong> jsou triviální — jedna databáze,
+          jeden dotaz.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="karta">
+          <h3>Co je ještě potřeba dořešit</h3>
+          <p style="margin-bottom:2.5mm">Mluvíme o prototypu v testovacím provozu.
+          Do ostrého nasazení patří:</p>
+          <p>· doba uchování záznamů a automatické mazání starších<br>
+             · informační cedule u vrátnice (informační povinnost)<br>
+             · zápis do evidence činností zpracování<br>
+             · šifrování databáze na disku<br>
+             · role a hesla pro skutečné pracovníky recepce</p>
+        </div>
+        <div class="karta" style="margin-top:5mm">
+          <h3>Rozpoznávání omezené na dvě osoby</h3>
+          <p>V testovacím provozu systém zapíše jméno jen tehdy, jde-li o jednoho ze dvou
+          předem známých lidí. U jakéhokoli jiného dokladu vrátí prázdno a vyzve
+          k ručnímu doplnění — radši nic než špatné jméno.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pata">
+    <span class="logo-chip"><img src="assets/ept_logo.png" alt="ept connectors"></span>
+    <span>Digitální kniha návštěv</span>
+    <span class="cis">12</span>
+  </div>
+</section>
+
+<!-- 13 ─ kvalita -->
+<section class="s">
+  <div class="hl"><span class="kicker">Kvalita</span><span class="cara"></span></div>
+  <h2>Ověřeno, ne odhadnuto</h2>
+  <p class="pod">Každá obrazovka a každý stav aplikace byl vyfocen a nezávisle
+  ohodnocen podle designových kritérií. Nálezy jsou doložené v repozitáři.</p>
+  <div class="telo">
+    <div class="ctyri">
+      <div class="stat"><div class="stat-c">45</div><div class="stat-p">obrazovek a stavů</div></div>
+      <div class="stat"><div class="stat-c">3</div><div class="stat-p">kola nezávislého review</div></div>
+      <div class="stat"><div class="stat-c">100</div><div class="stat-p">hodnocení celkem</div></div>
+      <div class="stat"><div class="stat-c">0</div><div class="stat-p">kritických nálezů na konci</div></div>
+    </div>
+    <div style="margin-top:9mm">
+      <table class="tb">
+        <tr><th>Kolo</th><th>Obrazovek</th><th>Kritických</th><th>Důležitých</th><th>Výsledek</th></tr>
+        <tr><td>První</td><td>45</td><td>6</td><td>58</td><td>13 skutečných defektů opraveno</td></tr>
+        <tr><td>Druhé</td><td>45</td><td>5</td><td>57</td><td>všechny opravy potvrzeny, zbytek falešné nálezy</td></tr>
+        <tr><td>Třetí</td><td>10</td><td><strong>0</strong></td><td>9</td><td>bez regresí</td></tr>
+      </table>
+    </div>
+    <div class="dva" style="margin-top:7mm">
+      <div class="karta"><h3>Co se opravilo</h3>
+        <p>Technické chyby prosakující k uživateli, nápověda odkazující na neexistující
+        tlačítko, dotykové cíle pod normou, rozpadlý rytmus formuláře na mobilu.</p></div>
+      <div class="karta"><h3>Co se zamítlo</h3>
+        <p>Nálezy o kontrastu — ověřeno výpočtem, hodnoty vycházejí 8,1 až 8,8 : 1,
+        tedy s rezervou nad normou. Doměnky se neopravovaly.</p></div>
+    </div>
+  </div>
+  <div class="pata">
+    <span class="tecky" style="color:var(--ink3)"><i></i><i class="r"></i><i></i></span>
+    <span>Digitální kniha návštěv · ept connectors</span>
+    <span class="cis">13</span>
+  </div>
+</section>
+
+<!-- 14 ─ co chybí do produkce -->
+<section class="s">
+  <div class="hl"><span class="kicker">Poctivě</span><span class="cara"></span></div>
+  <h2>Co ještě chybí do ostrého provozu</h2>
+  <p class="pod">Dnešní stav je funkční prototyp v testovacím provozu. Tohle jsou známé
+  mezery — žádná z nich není překvapení a všechny jsou řešitelné.</p>
+  <div class="telo">
+    <table class="tb">
+      <tr><th>Oblast</th><th>Stav</th><th>Co je potřeba</th></tr>
+      <tr><td><strong>Rozpoznávání dokladů</strong></td><td><span class="znacka chybi">omezené</span></td>
+          <td>Zatím jen dva známí lidé. Rozšíření na kohokoli vyžaduje víc testovacích dokladů.</td></tr>
+      <tr><td><strong>Databáze</strong></td><td><span class="znacka chybi">nešifrovaná</span></td>
+          <td>SQLite bez šifrování na disku. Pro ostrý provoz zašifrovat nebo přesunout na server.</td></tr>
+      <tr><td><strong>Přihlašování</strong></td><td><span class="znacka chybi">PINy</span></td>
+          <td>Dva společné PINy místo osobních účtů. Bez rozlišení, který pracovník co udělal.</td></tr>
+      <tr><td><strong>Přihlášení po restartu</strong></td><td><span class="znacka chybi">nepřežije</span></td>
+          <td>Tokeny žijí v paměti. Po restartu se recepce musí přihlásit znovu.</td></tr>
+      <tr><td><strong>Certifikát</strong></td><td><span class="znacka chybi">vlastní</span></td>
+          <td>Telefon při prvním otevření potvrzuje varování. V ostrém provozu firemní certifikát.</td></tr>
+      <tr><td><strong>Doba uchování</strong></td><td><span class="znacka ne">neřešeno</span></td>
+          <td>Záznamy se nemažou. Potřeba nastavit lhůtu a automatický výmaz.</td></tr>
+      <tr><td><strong>Zálohování</strong></td><td><span class="znacka ne">neřešeno</span></td>
+          <td>Zatím ruční kopie souboru. Potřeba pravidelná automatická záloha.</td></tr>
+      <tr><td>Evidence, audit, export, evakuace</td><td><span class="znacka ok">hotovo</span></td>
+          <td>Funkční a otestované.</td></tr>
+    </table>
+  </div>
+  <div class="pata">
+    <span class="tecky" style="color:var(--ink3)"><i></i><i class="r"></i><i></i></span>
+    <span>Digitální kniha návštěv · ept connectors</span>
+    <span class="cis">14</span>
+  </div>
+</section>
+
+<!-- 15 ─ roadmap a rozhodnutí -->
+<section class="s mrizka">
+  <div class="hl"><span class="kicker">Co dál</span><span class="cara"></span></div>
+  <h2>Návrh dalších kroků</h2>
+  <div class="telo">
+    <div class="tri">
+      <div class="karta akcent">
+        <h3>Krok 1 — Pilot na vrátnici</h3>
+        <p style="margin-bottom:2mm">Dva až tři týdny, papírová kniha běží paralelně
+        jako záloha.</p>
+        <p>· osobní účty místo společných PINů<br>
+           · firemní certifikát<br>
+           · automatická záloha databáze<br>
+           · informační cedule u vstupu</p>
+      </div>
+      <div class="karta akcent">
+        <h3>Krok 2 — Ostrý provoz</h3>
+        <p style="margin-bottom:2mm">Papír se odloží, systém je jediná evidence.</p>
+        <p>· rozpoznávání pro libovolný doklad<br>
+           · šifrovaná databáze<br>
+           · doba uchování a automatický výmaz<br>
+           · zaškolení všech na recepci</p>
+      </div>
+      <div class="karta akcent">
+        <h3>Krok 3 — Rozšíření</h3>
+        <p style="margin-bottom:2mm">Až základ běží spolehlivě.</p>
+        <p>· SMS nebo e-mail hostiteli při příchodu<br>
+           · tisk jmenovky návštěvníka<br>
+           · více vstupů a budov<br>
+           · reporty pro management</p>
+      </div>
+    </div>
+    <div class="karta" style="margin-top:9mm;border-top:3px solid var(--signal)">
+      <h3>Co potřebujeme rozhodnout dnes</h3>
+      <p style="font-size:9.5pt">
+        <strong>1.</strong> Jdeme do pilotu na vrátnici, a od kdy?&nbsp;&nbsp;
+        <strong>2.</strong> Kdo je vlastníkem na straně EPT (IT, bezpečnost, provoz)?&nbsp;&nbsp;
+        <strong>3.</strong> Jaká je požadovaná doba uchování záznamů?&nbsp;&nbsp;
+        <strong>4.</strong> Má systém běžet na serveru EPT, nebo na vyhrazeném stroji u vrátnice?
+      </p>
+    </div>
+  </div>
+  <div class="pata">
+    <span class="logo-chip"><img src="assets/ept_logo.png" alt="ept connectors"></span>
+    <span class="tecky" style="color:rgba(255,255,255,.8)"><i></i><i class="r"></i><i></i></span>
+    <span>Děkuji za pozornost</span>
+    <span class="cis">15</span>
+  </div>
+</section>
+
+</body>
+</html>

@@ -256,6 +256,19 @@ tr:hover td{background:#fafafa}
         </div>
       </div>
 
+      <div class="card" id="qrCard">
+        <div class="card-head">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM19 19h2v2h-2z"/></svg>
+          <h2>Samoobslužný sken</h2>
+        </div>
+        <div class="card-body qr-body">
+          <p class="qr-vyzva">Naskenujte telefonem a vyfoťte doklad</p>
+          <img id="qrImg" class="qr-img" src="/api/qr" alt="QR kód na samoobslužný sken"/>
+          <p class="qr-url" id="qrUrl">—</p>
+          <p class="qr-note" id="qrNote"></p>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-head">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -272,10 +285,24 @@ tr:hover td{background:#fafafa}
         <div class="card-head">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           <h2>Přehled návštěv</h2>
-          <button class="btn btn-ghost btn-sm" onclick="nactiData()" style="margin-left:auto;font-size:.75rem">
-            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.31-5.26"/></svg>
-            Obnovit
-          </button>
+          <div class="head-akce">
+            <button class="btn btn-ghost btn-sm" onclick="tiskEvakuace()" title="Vytisknout seznam právě přítomných — pro evakuaci">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Evakuace
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="otevriAudit()" title="Historie akcí — dohledatelnost">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+              Audit
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="exportCsv()" title="Stáhnout všechny návštěvy do Excelu">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="nactiData()">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.31-5.26"/></svg>
+              Obnovit
+            </button>
+          </div>
         </div>
         <div class="card-body" style="padding:.875rem 1.25rem">
           <div class="tabs">
@@ -411,6 +438,31 @@ tr:hover td{background:#fafafa}
   </div>
 </div>
 
+<div id="auditModal" class="modal-bg hidden">
+  <div class="modal audit-modal">
+    <h3>Historie akcí</h3>
+    <p class="confirm-text">Každá změna v evidenci je zaznamenaná — kdo, co a kdy.</p>
+    <div class="audit-wrap"><table class="audit-tbl"><tbody id="auditTbody"></tbody></table></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeAudit()">Zavřít</button>
+    </div>
+  </div>
+</div>
+
+<!-- Evakuační seznam: samostatný blok, na obrazovce skrytý, do tisku jediný
+     viditelný. Recepční ho nemusí nikam hledat — jedno kliknutí a tiskne. -->
+<div id="evakuace" class="evak-only">
+  <div class="evak-head">
+    <h1>Evakuační seznam — osoby v budově</h1>
+    <p id="evakCas"></p>
+  </div>
+  <table class="evak-tbl">
+    <thead><tr><th>Jméno a příjmení</th><th>Organizace</th><th>SPZ</th><th>Příchod</th><th>Podpis</th></tr></thead>
+    <tbody id="evakTbody"></tbody>
+  </table>
+  <p class="evak-foot">ept connectors · Habartov — vytištěno z Digitální knihy návštěv</p>
+</div>
+
 <script>
 // ── Denní / noční režim ─────────────────────────────────────────────────────
 function toggleTheme() {
@@ -419,7 +471,11 @@ function toggleTheme() {
   localStorage.setItem('ept_theme', next);
 }
 
-const API = 'http://localhost:5050/api';
+// Relativní adresa, ne absolutní. Natvrdo zapsané 'http://localhost:5050/api'
+// mělo dva fatální důsledky: přes https prohlížeč volání zablokoval jako mixed
+// content, a na telefonu by 'localhost' znamenalo telefon sám — sken by nikdy
+// nic nezapsal. Relativní '/api' funguje na localhostu, na LAN IP i přes https.
+const API = '/api';
 let filter = 'aktivni';
 let modalId = null;
 let data = [];
@@ -447,6 +503,7 @@ function applyRole() {
     authStatus.classList.remove('hidden');
     dashboard.classList.remove('hidden');
     lock.classList.add('hidden');
+    nactiQr();          // adresa se může změnit s jinou sítí, tak až po přihlášení
   } else {
     authArea.classList.remove('hidden');
     authStatus.classList.add('hidden');
@@ -1042,6 +1099,94 @@ async function zapisOdchod() {
     if (res.ok) { closeModal(); if (filter === 'hledat') hledat(); else nactiData(); }
     else { const d = await res.json(); showModalAlert('error', d.error || 'Chyba.'); }
   } catch (e) { showModalAlert('error', 'Spojení se systémem selhalo. Zkuste to prosím znovu.'); }
+}
+
+// ── QR na samoobslužný sken ─────────────────────────────────────────────────
+// Adresu bere ze serveru, ne z window.location — recepce může běžet na
+// localhostu, ale telefon potřebuje síťovou IP, jinak QR nikam nevede.
+async function nactiQr() {
+  try {
+    const r = await fetch(API + '/sken-url');
+    const d = await r.json();
+    document.getElementById('qrUrl').textContent = d.url;
+    const note = document.getElementById('qrNote');
+    if (d.url.startsWith('http://') && !d.url.includes('127.0.0.1')) {
+      // Bez HTTPS prohlížeč na telefonu kameru nepovolí — ať to recepční ví
+      // dřív, než se návštěvník marně snaží naskenovat doklad.
+      note.textContent = 'Server běží bez HTTPS — kamera na telefonu nebude fungovat.';
+      note.classList.add('qr-warn');
+    } else {
+      note.textContent = 'Při prvním otevření telefon potvrdí certifikát.';
+      note.classList.remove('qr-warn');
+    }
+  } catch (e) { document.getElementById('qrUrl').textContent = '—'; }
+}
+
+// ── Evakuační seznam ────────────────────────────────────────────────────────
+async function tiskEvakuace() {
+  try {
+    const res = await fetch(API + '/navstevnici?filter=aktivni', { headers: authHeaders() });
+    const lidi = await res.json();
+    document.getElementById('evakCas').textContent =
+      'Stav k ' + new Date().toLocaleString('cs-CZ') + ' — celkem ' + lidi.length + ' osob v budově';
+    document.getElementById('evakTbody').innerHTML = lidi.length
+      ? lidi.map(r => `<tr>
+            <td><strong>${esc(r.jmeno)} ${esc(r.prijmeni)}</strong></td>
+            <td>${esc(r.organizace || '—')}</td>
+            <td>${esc(r.spz || '—')}</td>
+            <td>${fmtDT(r.prichod_dt)}</td>
+            <td class="evak-podpis"></td>
+          </tr>`).join('')
+      : '<tr><td colspan="5">V budově není nikdo evidovaný.</td></tr>';
+    document.body.classList.add('tisk-evakuace');
+    // Tisk až po vykreslení, jinak by dialog zachytil prázdnou tabulku.
+    setTimeout(() => {
+      window.print();
+      document.body.classList.remove('tisk-evakuace');
+    }, 80);
+  } catch (e) {
+    showAlert('fAlert', 'error', '⚠ Seznam se nepodařilo připravit. Zkuste to prosím znovu.');
+  }
+}
+
+// ── Audit log ───────────────────────────────────────────────────────────────
+async function otevriAudit() {
+  const tb = document.getElementById('auditTbody');
+  tb.innerHTML = '<tr><td colspan="4" class="empty">Načítám…</td></tr>';
+  document.getElementById('auditModal').classList.remove('hidden');
+  try {
+    const res = await fetch(API + '/audit?limit=100', { headers: authHeaders() });
+    const zapisy = await res.json();
+    tb.innerHTML = zapisy.length
+      ? zapisy.map(z => `<tr>
+            <td class="au-cas">${fmtDT(z.cas)}</td>
+            <td><span class="au-akce au-${esc(z.akce)}">${esc(z.akce_text)}</span></td>
+            <td>${esc(z.osoba)}</td>
+            <td class="au-detail">${esc(z.detail)}</td>
+          </tr>`).join('')
+      : '<tr><td colspan="4" class="empty">Zatím žádné záznamy.</td></tr>';
+  } catch (e) {
+    tb.innerHTML = '<tr><td colspan="4" class="empty">Historii se nepodařilo načíst.</td></tr>';
+  }
+}
+function closeAudit() { document.getElementById('auditModal').classList.add('hidden'); }
+
+// ── Export ──────────────────────────────────────────────────────────────────
+// Stahování přes fetch + blob, protože prostý odkaz by neposlal auth hlavičku.
+async function exportCsv() {
+  try {
+    const res = await fetch(API + '/export.csv', { headers: authHeaders() });
+    if (!res.ok) throw new Error();
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'navstevy-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(a.href);
+    showAlert('fAlert', 'success', '✓ Export stažen.');
+  } catch (e) {
+    showAlert('fAlert', 'error', '⚠ Export se nepodařilo stáhnout. Zkuste to prosím znovu.');
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

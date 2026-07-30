@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, Response
 from flask_cors import CORS
-import base64, io, os, secrets
+import base64, csv, io, os, secrets, socket
 from datetime import datetime
 from PIL import Image
+
+# .env načítáme explicitně a jako první. Dřív se to dělo jen jako vedlejší efekt
+# importu sms_notifier — fungovalo to díky pořadí importů, ale stačilo je přehodit
+# a PINy z .env by se přestaly načítat, aniž by to cokoliv nahlásilo.
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv je nepovinné – bez něj se čte jen z prostředí
 
 import db_manager as db
 import ocr_processor as ocr
@@ -11,6 +20,20 @@ from sms_notifier import validace_telefonu, send_sms_notification
 
 app = Flask(__name__)
 CORS(app)
+
+# Schéma zakládáme při IMPORTU, ne v __main__. Pod WSGI (waitress) se __main__
+# nespustí, takže by aplikace běžela nad databází bez tabulek a každý endpoint
+# by vracel 500. Není to teorie — přesně tohle se stalo, když git smazal DB
+# souboru a sqlite3.connect() ho vyrobil prázdný.
+db.init_db()
+
+# OCR model se načítá LÍNĚ, až při prvním skenu. Načítat ho dopředu v tomhle
+# procesu nelze: torch si inicializuje vlastní vlákna a ve spojení s vláknovým
+# serverem to zablokovalo i TLS handshake — server poslouchal, ale neodpověděl
+# vůbec, bez chyby a bez záznamu v logu. Zkoušeno na pozadí i synchronně, obojí
+# stejně. Cena líného načtení je ~3 s u prvního snímku (model je na disku
+# v cache); sken jich posílá víc, takže se to schová do průběhu skenování.
+# Rozpoznávání jde přes zámek v ocr_processor, aby nikdy neběželo dvakrát zaráz.
 
 # ── Přihlášení (admin / správce) ──────────────────────────────────────────
 # Řadoví zaměstnanci se do tohohle rozhraní vůbec nepřihlašují — ti se jen
@@ -56,6 +79,56 @@ def index():
 def sken():
     return send_from_directory('.', 'sken.html')
 
+# ── QR kód na samoobslužný sken ───────────────────────────────────────────────
+# Tímhle celý tok začíná: recepce ukáže QR, návštěvník ho naskenuje telefonem.
+# Adresa se MUSÍ složit ze síťové IP tohohle stroje — localhost by telefon
+# poslal na sebe sama. A schéma musí být https, protože prohlížeče pustí kameru
+# jen na zabezpečeném původu; na http:// z telefonu sken nefunguje.
+
+def lan_adresa():
+    """IP tohohle stroje v místní síti. Necháme OS vybrat rozhraní, kterým by
+    ven odcházel provoz — spolehlivější než hádat en0/en1. Spojení se reálně
+    neotevírá, jde jen o zjištění zdrojové adresy."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+    finally:
+        s.close()
+
+
+def zakladni_url():
+    """Adresa, na kterou má mířit QR — tedy ta, kterou uvidí telefon.
+
+    Za TLS proxy to není adresa aplikace: aplikace poslouchá na 5051 na
+    localhostu, ale navenek se chodí na 5050 přes https. Proto se veřejný port
+    a schéma berou zvlášť (EPT_PUBLIC_PORT / EPT_HTTPS), ne z PORT.
+    """
+    port = os.environ.get("EPT_PUBLIC_PORT") or os.environ.get("PORT", "5050")
+    schema = "https" if os.environ.get("EPT_HTTPS") == "1" else "http"
+    return f"{schema}://{lan_adresa()}:{port}"
+
+
+@app.route("/api/qr")
+def api_qr():
+    import segno
+    cil = zakladni_url() + "/sken"
+    buf = io.BytesIO()
+    # scale/border nastavené tak, aby byl kód čitelný i z metru od monitoru
+    segno.make(cil, error="m").save(buf, kind="png", scale=8, border=2,
+                                    dark="#141d28", light="#ffffff")
+    resp = Response(buf.getvalue(), mimetype="image/png")
+    resp.headers["Cache-Control"] = "no-store"   # IP se může změnit mezi sítěmi
+    return resp
+
+
+@app.route("/api/sken-url")
+def api_sken_url():
+    """Adresa textem — kdyby QR nešel naskenovat, dá se přepsat ručně."""
+    return jsonify({"url": zakladni_url() + "/sken"})
+
 # ── OCR ───────────────────────────────────────────────────────────────────────
 # Bez přihlášení – používá to i samoobslužný sken-kiosek (/sken). Obrázek se
 # nikde neukládá, jen se z něj vytáhne text.
@@ -99,6 +172,75 @@ def api_ocr():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# ── Audit log ─────────────────────────────────────────────────────────────────
+# Akce se logovaly od začátku, ale nebylo je kde vidět. Pro dohledatelnost
+# (a pro GDPR doložení „kdo, co, kdy") je potřeba na ně vidět z rozhraní.
+AUDIT_POPISKY = {
+    "novy_navstevnik":    "Nový návštěvník",
+    "opakovana_navsteva": "Opakovaná návštěva",
+    "jiz_prihlasen":      "Pokus o duplicitní příchod",
+    "odchod_zapsan":      "Zapsán odchod",
+    "telefon_zmenen":     "Změna telefonu",
+    "ocr_selhani":        "OCR nerozpoznalo doklad",
+}
+
+
+@app.route("/api/audit", methods=["GET"])
+def api_audit():
+    if aktualni_role() not in ("admin", "spravce"):
+        return jsonify({"error": "Přihlaste se prosím."}), 401
+
+    limit = min(int(request.args.get("limit", 100)), 500)
+    with db.get_db() as conn:
+        rows = conn.execute(
+            "SELECT a.*, n.jmeno, n.prijmeni FROM audit_log a "
+            "LEFT JOIN navstevnici n ON n.id = a.navstevnik_id "
+            "ORDER BY a.timestamp DESC, a.id DESC LIMIT ?", (limit,)
+        ).fetchall()
+
+    return jsonify([{
+        "id":        r["id"],
+        "cas":       r["timestamp"],
+        "akce":      r["action"],
+        "akce_text": AUDIT_POPISKY.get(r["action"], r["action"]),
+        "osoba":     f'{r["jmeno"]} {r["prijmeni"]}' if r["jmeno"] else "—",
+        "detail":    r["details"] or "",
+    } for r in rows])
+
+
+# ── Export do CSV ─────────────────────────────────────────────────────────────
+@app.route("/api/export.csv", methods=["GET"])
+def api_export_csv():
+    if aktualni_role() not in ("admin", "spravce"):
+        return jsonify({"error": "Přihlaste se prosím."}), 401
+
+    with db.get_db() as conn:
+        rows = conn.execute(
+            "SELECT jmeno, prijmeni, organizace, spz, phone_number, prichod_dt, odchod_dt "
+            "FROM navstevnici ORDER BY prichod_dt DESC"
+        ).fetchall()
+
+    buf = io.StringIO()
+    # Excel v české lokalizaci čeká středník, ne čárku
+    w = csv.writer(buf, delimiter=";", quoting=csv.QUOTE_MINIMAL)
+    w.writerow(["Jméno", "Příjmení", "Organizace", "SPZ", "Telefon",
+                "Příchod", "Odchod", "Doba (min)"])
+    for r in rows:
+        doba = ""
+        if r["odchod_dt"]:
+            d = (datetime.strptime(r["odchod_dt"], "%Y-%m-%d %H:%M:%S")
+                 - datetime.strptime(r["prichod_dt"], "%Y-%m-%d %H:%M:%S"))
+            doba = int(d.total_seconds() // 60)
+        w.writerow([r["jmeno"], r["prijmeni"], r["organizace"] or "", r["spz"] or "",
+                    r["phone_number"] or "", r["prichod_dt"], r["odchod_dt"] or "", doba])
+
+    # BOM: bez něj Excel na Windows rozsype diakritiku (Nováková → NovÃ¡kovÃ¡)
+    data = "﻿" + buf.getvalue()
+    nazev = f"navstevy-{datetime.now().strftime('%Y-%m-%d')}.csv"
+    return Response(data, mimetype="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="{nazev}"'})
+
 
 # ── Statistiky ────────────────────────────────────────────────────────────────
 @app.route("/api/stats", methods=["GET"])
@@ -269,10 +411,22 @@ def api_navstevnik_patch(nav_id):
     return jsonify({"status": "ok"})
 
 # ── Start ─────────────────────────────────────────────────────────────────────
+# init_db() se volá výš, při importu — pod WSGI se tenhle blok nespustí.
 if __name__ == "__main__":
-    db.init_db()
-    print("=" * 45)
-    print("  Návštěvní kniha – backend")
-    print("  http://localhost:5050")
-    print("=" * 45)
-    app.run(port=5050, host="0.0.0.0", debug=False)
+    # TLS tady záměrně NEřešíme. Werkzeug s ssl_context se ukázal jako
+    # nespolehlivý (po restartu přestal odpovídat na handshake, na plain HTTP
+    # jel dál), takže https ukončuje tls_proxy.py. Pro celé demo: ./start_demo.sh
+    port = int(os.environ.get("PORT", "5050"))
+
+    print("=" * 58)
+    print("  Návštěvní kniha – aplikace")
+    print(f"  poslouchá na portu {port} (HTTP)")
+    print(f"  veřejná adresa:  {zakladni_url()}/")
+    print(f"  sken:            {zakladni_url()}/sken")
+    if os.environ.get("EPT_HTTPS") != "1":
+        print()
+        print("  Bez HTTPS kamera na telefonu nepojede.")
+        print("  Celé demo naráz: ./start_demo.sh")
+    print("=" * 58)
+
+    app.run(port=port, host="0.0.0.0", debug=False)

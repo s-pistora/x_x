@@ -261,7 +261,10 @@ function toggleTheme() {
   localStorage.setItem('ept_theme', next);
 }
 
-const API = 'http://localhost:5050/api';
+// Relativní adresa je tady ještě důležitější než na recepci: sken běží na
+// telefonu, kde by 'localhost' ukazoval na telefon sám a žádné volání by
+// nedošlo. Přes https by to navíc bylo blokované jako mixed content.
+const API = '/api';
 let camStream = null;
  
 // ── Kamera ────────────────────────────────────────────────────────────────────
