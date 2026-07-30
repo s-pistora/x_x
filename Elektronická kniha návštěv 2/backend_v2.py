@@ -4,7 +4,7 @@ from flask_cors import CORS
 import sqlite3, base64, io, re, os, secrets
 from datetime import datetime
 from PIL import Image
-import pytesseract
+import ocr_processor as ocr
 
 app = Flask(__name__)
 CORS(app)
@@ -99,70 +99,25 @@ def api_ocr():
         if image.mode not in ("RGB", "L"):
             image = image.convert("RGB")
  
-        # OCR — čeština, fallback angličtina
-        try:
-            text = pytesseract.image_to_string(image, lang='ces')
-        except Exception:
-            text = pytesseract.image_to_string(image)
- 
-        jmeno, prijmeni = extrahuj_jmeno(text)
- 
+        # OCR: EasyOCR (lokální neuronová síť) cílí přímo na pole PŘÍJMENÍ/JMÉNO
+        # podle rozvržení občanky; fallback Tesseract. Detaily v ocr_processor.py.
+        jmeno, prijmeni, text, engine = ocr.precti_doklad(image)
+
         return jsonify({
             "text":     text,
             "jmeno":    jmeno,
-            "prijmeni": prijmeni
+            "prijmeni": prijmeni,
+            "engine":   engine
         })
  
     except Exception as e:
         return jsonify({"error": str(e)}), 500
- 
- 
-def extrahuj_jmeno(text):
-    """
-    Extrahuje jméno a příjmení z OCR textu české občanky.
-    Tesseract občas vrátí vše na jednom řádku a klíčová slova zkomolí,
-    proto používáme fuzzy regex pro Příjmení/Surname a Jméno/Given names.
-    """
-    # Strategie 1: fuzzy hledání klíčových slov (funguje i na zkomolené OCR)
-    prijmeni_re = re.compile(
-        r'(?:p[rř][íi]jmen[íi]|surname|svaname)[^A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]*'
-        r'([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž\-]+)',
-        re.IGNORECASE
-    )
-    jmeno_re = re.compile(
-        r'(?:jm[eé]no|given\s*names?|grvex\s*names?|given)[^A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]*'
-        r'([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž\-]+)',
-        re.IGNORECASE
-    )
- 
-    mp = prijmeni_re.search(text)
-    mj = jmeno_re.search(text)
- 
-    prijmeni_val = mp.group(1).strip() if mp else ""
-    jmeno_val    = mj.group(1).strip() if mj else ""
- 
-    if jmeno_val and prijmeni_val:
-        return jmeno_val, prijmeni_val
- 
-    # Strategie 2: dva kapitalizovaná slova na řádku (přeskočit řádky s čísly)
-    lines = [l.strip() for l in text.splitlines() if l.strip()]
-    vzor  = re.compile(r'[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]{1,}')
-    for line in lines:
-        if re.search(r'\d{5,}', line): continue
-        slova = vzor.findall(line)
-        if len(slova) >= 2:
-            return slova[0], slova[1]
- 
-    # Strategie 3: fallback — první dvě kapitalizovaná slova v celém textu
-    vsechna = []
-    for line in lines:
-        if re.search(r'\d{5,}', line): continue
-        vsechna.extend(vzor.findall(line))
-    if len(vsechna) >= 2:
-        return vsechna[0], vsechna[1]
- 
-    return "", ""
- 
+
+
+# Extrakce jména se přesunula do ocr_processor.extrahuj_jmeno — umí navíc čtení
+# podle rozvržení dokladu z EasyOCR boxů, filtrování hlavičkových výrazů
+# a porovnání bez diakritiky.
+
 # ── Statistiky ────────────────────────────────────────────────────────────────
 @app.route("/api/stats", methods=["GET"])
 def api_stats():
