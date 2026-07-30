@@ -230,6 +230,10 @@ input[type=text].big{font-size:1.15rem;font-weight:600;padding:12px}
           <label class="lbl">SPZ vozidla (nepovinné)</label>
           <input type="text" id="rSpz" placeholder="1AB 2345" style="text-transform:uppercase"/>
         </div>
+        <div>
+          <label class="lbl">Telefon (nepovinné, pro SMS potvrzení)</label>
+          <input type="text" id="rTelefon" placeholder="+420 123 456 789"/>
+        </div>
         <button class="btn btn-green" id="btnZapis" onclick="zapsat()">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
           Zapsat příchod
@@ -279,23 +283,134 @@ function stopKameru() {
   document.getElementById('btnStopCam').classList.add('hidden');
 }
  
-function udelFoto() {
+// Po kliknutí na „Vyfotit" NEuděláme jen jednu fotku, ale sérii 30 snímků,
+// vybereme z nich ten nejostřejší a pošleme je na OCR (od nejostřejšího),
+// dokud nenajdeme snímek, kde je čitelné jméno i příjmení. Tím se výrazně
+// zvýší šance na dobrý záběr oproti jedinému cvaknutí.
+const POCET_SNIMKU   = 30;   // kolik snímků série nasbírá
+const PAUZA_MS        = 130;  // rozestup mezi snímky (~4 s celkem) – dá ruce/autofocusu
+                               // čas na přirozenou variaci mezi snímky
+const MAX_OCR_POKUSU = 12;   // nejvýš tolik nejostřejších snímků pošleme na OCR
+
+function pauza(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Míra ostrosti snímku = energie gradientu na šedotónu (vyšší = ostřejší).
+// Počítá se na zmenšeném plátně, aby to bylo rychlé.
+function ostrostSnimku(ctx, w, h) {
+  const px = ctx.getImageData(0, 0, w, h).data;
+  let suma = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w - 1; x++) {
+      const i = (y * w + x) * 4;
+      const j = i + 4;
+      const g1 = 0.299 * px[i]   + 0.587 * px[i+1] + 0.114 * px[i+2];
+      const g2 = 0.299 * px[j]   + 0.587 * px[j+1] + 0.114 * px[j+2];
+      const dx = g1 - g2;
+      suma += dx * dx;
+    }
+  }
+  return suma;
+}
+
+// Pošle jeden snímek na OCR, vrátí rozpoznaná data nebo null.
+async function ocrSnimek(dataUrl) {
+  try {
+    const b64 = dataUrl.split(',')[1];
+    const res = await fetch(API + '/ocr', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ image: b64 })
+    });
+    if (!res.ok) return null;
+    const d = await res.json();
+    return d.error ? null : d;
+  } catch (e) { return null; }
+}
+
+// Porovnávání proti seznamu známých lidí (fuzzy shoda) dělá SERVER –
+// backend_v2.py -> ocr_processor.uroci_znamou_osobu(). Vrací už hotové,
+// kanonické d.jmeno/d.prijmeni, takže tu na klientovi žádnou vlastní kopii
+// téhle logiky nemáme (aby se oprava udělala jen jednou, na jednom místě,
+// a fungovala automaticky na sken.html i recepce.html zároveň).
+
+async function udelFoto() {
   const v = document.getElementById('vidEl');
   const c = document.getElementById('canvEl');
   if (!v.videoWidth) {
     alert('Kamera ještě není připravena, zkuste znovu.');
     return;
   }
+
   c.width  = v.videoWidth;
   c.height = v.videoHeight;
-  c.getContext('2d').drawImage(v, 0, 0);
- 
-  // Získáme base64 BEZ hlavičky — backend to zvládne oběma způsoby
-  const dataUrl = c.toDataURL('image/jpeg', 0.92);
-  const b64 = dataUrl.split(',')[1];
- 
+  const ctx = c.getContext('2d');
+
+  // Zmenšené plátno jen pro rychlé měření ostrosti
+  const maleC = document.createElement('canvas');
+  const mw = 240, mh = Math.max(1, Math.round(240 * c.height / c.width));
+  maleC.width = mw; maleC.height = mh;
+  const maleCtx = maleC.getContext('2d');
+
+  setStep(2);
+  const ocrText = document.getElementById('aOcr').querySelector('span');
+
+  // Ostrost měříme jen ve VÝŘEZU rámečku (kam se má karta vycentrovat), ne
+  // z celého záběru – jinak vzorovaný podklad/hologram na kartě nebo stůl
+  // v pozadí vyjde "ostřejší" (hodně kontrastních hran) než samotný rozmazaný
+  // text, a vybíraly by se snímky, které vůbec nejsou nejlepší na čtení.
+  // Odpovídá CSS .sf-inner: top 8%, left 6%, right 6%, bottom 8%.
+  const vyrezX = v.videoWidth  * 0.06, vyrezY = v.videoHeight * 0.08;
+  const vyrezW = v.videoWidth  * 0.88, vyrezH = v.videoHeight * 0.84;
+
+  // 1) Nasbírej sérii snímků + změř jejich ostrost
+  const snimky = [];
+  for (let i = 0; i < POCET_SNIMKU; i++) {
+    ctx.drawImage(v, 0, 0);
+    maleCtx.drawImage(v, vyrezX, vyrezY, vyrezW, vyrezH, 0, 0, mw, mh);
+    const ostrost = ostrostSnimku(maleCtx, mw, mh);
+    const dataUrl = c.toDataURL('image/jpeg', 0.92);
+    snimky.push({ dataUrl, ostrost });
+    document.getElementById('prevImg').src = dataUrl;   // živý náhled během sbírání
+    ocrText.textContent = `Sbírám snímky z kamery… ${i + 1}/${POCET_SNIMKU}`;
+    await pauza(PAUZA_MS);
+  }
+
   stopKameru();
-  zpracovatObrazek(b64, dataUrl);
+
+  // 2) Seřaď od nejostřejšího
+  snimky.sort((a, b) => b.ostrost - a.ostrost);
+
+  // 3) OCR nejostřejších snímků. Server (backend_v2.py) u každého snímku
+  // sám zkusí porovnat OCR text proti seznamu známých lidí a vrátí rovnou
+  // správné jméno/příjmení, když si je jistý. My tu jen sbíráme napříč
+  // snímky – jeden snímek dobře přečte jméno, jiný příjmení, proto bereme
+  // první neprázdnou hodnotu KAŽDÉHO pole zvlášť, ne z jednoho snímku najednou.
+  let jmeno = '', prijmeni = '', pokusu = 0;
+
+  for (let i = 0; i < Math.min(MAX_OCR_POKUSU, snimky.length); i++) {
+    ocrText.textContent = `Rozpoznávám a porovnávám snímky… (${i + 1})`;
+    const d = await ocrSnimek(snimky[i].dataUrl);
+    pokusu++;
+    if (!d) continue;
+    if (!jmeno && d.jmeno) jmeno = d.jmeno;
+    if (!prijmeni && d.prijmeni) prijmeni = d.prijmeni;
+    if (jmeno && prijmeni) break;
+  }
+
+  // 4) Zobraz výsledek (náhled = nejostřejší snímek ze série)
+  setStep(3);
+  document.getElementById('prevImg').src = snimky[0].dataUrl;
+
+  document.getElementById('rJmeno').value    = jmeno;
+  document.getElementById('rPrijmeni').value = prijmeni;
+
+  if (jmeno && prijmeni) {
+    zobrazAlert('aResult', 'success', `✓ Rozpoznáno: ${jmeno} ${prijmeni} (z ${pokusu} snímků) – zkontrolujte a zapište příchod.`);
+  } else if (jmeno || prijmeni) {
+    zobrazAlert('aResult', 'warn', 'Podařilo se přečíst jen část – doplňte zbytek ručně.');
+  } else {
+    zobrazAlert('aResult', 'warn', 'Jméno se ze snímků nepodařilo rozpoznat – doplňte ručně.');
+  }
 }
  
 // ── Soubor ────────────────────────────────────────────────────────────────────
@@ -348,10 +463,13 @@ async function zpracovatObrazek(b64, previewSrc) {
 }
  
 // ── Zápis ─────────────────────────────────────────────────────────────────────
+const TELEFON_RE = /^(\+420)?\d{9}$/;
+
 async function zapsat() {
   const jmeno    = document.getElementById('rJmeno').value.trim();
   const prijmeni = document.getElementById('rPrijmeni').value.trim();
- 
+  const telefon  = document.getElementById('rTelefon').value.trim().replace(/\s+/g, '');
+
   if (!jmeno || !prijmeni) {
     zobrazAlert('aResult', 'error', '⚠ Vyplňte jméno i příjmení před zápisem.');
     // Zvýrazni prázdná pole
@@ -359,46 +477,55 @@ async function zapsat() {
     if (!prijmeni) document.getElementById('rPrijmeni').style.borderColor = 'var(--red)';
     return;
   }
- 
+  if (telefon && !TELEFON_RE.test(telefon)) {
+    zobrazAlert('aResult', 'error', '⚠ Telefon musí být ve formátu +420xxxxxxxxx nebo 9 číslic.');
+    document.getElementById('rTelefon').style.borderColor = 'var(--red)';
+    return;
+  }
+
   // Odstraň červené zvýraznění
   document.getElementById('rJmeno').style.borderColor    = '';
   document.getElementById('rPrijmeni').style.borderColor = '';
- 
+  document.getElementById('rTelefon').style.borderColor  = '';
+
   const btn = document.getElementById('btnZapis');
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner" style="border-top-color:#fff;border-color:#ffffff55;flex-shrink:0"></div> Ukládám…';
- 
+
   try {
     const payload = {
       jmeno,
       prijmeni,
-      organizace: document.getElementById('rOrg').value.trim(),
-      spz:        document.getElementById('rSpz').value.trim()
+      organizace:   document.getElementById('rOrg').value.trim(),
+      spz:          document.getElementById('rSpz').value.trim(),
+      phone_number: telefon
     };
- 
+
     const res = await fetch(API + '/navstevnici', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(payload)
     });
- 
+
     let d = {};
     try { d = await res.json(); } catch(e) { d = {}; }
- 
+
     if (res.ok) {
       document.getElementById('confirmCard').classList.add('hidden');
       document.getElementById('successScreen').classList.remove('hidden');
       document.getElementById('succName').textContent = jmeno + ' ' + prijmeni;
       const cas = d.prichod_dt ? d.prichod_dt.slice(11, 16) : new Date().toLocaleTimeString('cs-CZ');
-      document.getElementById('succSub').textContent = 'Příchod zapsán v ' + cas + '.';
+      document.getElementById('succSub').textContent = d.vitejte_zpet && d.zprava
+        ? d.zprava
+        : 'Příchod zapsán v ' + cas + '.';
     } else {
-      zobrazAlert('aResult', 'error', '⚠ Chyba ' + res.status + ': ' + (d.error || 'Neznámá chyba serveru.'));
+      zobrazAlert('aResult', 'error', '⚠ ' + (d.error || ('Chyba ' + res.status + ': Neznámá chyba serveru.')));
     }
- 
+
   } catch (e) {
     zobrazAlert('aResult', 'error', '⚠ Nelze se připojit k serveru: ' + e.message + ' — je spuštěný backend_v2.py?');
   }
- 
+
   btn.disabled = false;
   btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Zapsat příchod';
 }
@@ -426,7 +553,7 @@ function zobrazAlert(id, typ, msg) {
 }
  
 function resetovat() {
-  ['rJmeno','rPrijmeni','rOrg','rSpz'].forEach(id => document.getElementById(id).value = '');
+  ['rJmeno','rPrijmeni','rOrg','rSpz','rTelefon'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('fileIn').value = '';
   document.getElementById('confirmCard').classList.remove('hidden');
   document.getElementById('successScreen').classList.add('hidden');
