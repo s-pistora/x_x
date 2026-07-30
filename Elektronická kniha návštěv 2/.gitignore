@@ -1,2 +1,11 @@
-*.db.bak
+.venv/
 __pycache__/
+*.pyc
+.env
+navstevni_kniha.db
+*.db.bak
+backend.log
+backend_run.log
+tessdata/
+.DS_Store
+._*
