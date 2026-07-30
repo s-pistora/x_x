@@ -77,9 +77,17 @@ def najdi_aktivni_navstevu(conn, jmeno, prijmeni):
 
 
 def najdi_posledni_navstevu(conn, jmeno, prijmeni):
-    """Vrátí poslední (uzavřenou) návštěvu té samé osoby, pokud existuje – pro 'vítejte zpět'."""
+    """Vrátí poslední (uzavřenou) návštěvu té samé osoby, pokud existuje – pro 'vítejte zpět'.
+
+    Řadí se podle prichod_dt, ne podle id: „poslední“ je otázka na čas, a pořadí
+    vkládání se s časem krylo jen dokud data vznikala výhradně za provozu. Při
+    importu nebo naplnění demo daty mimo chronologické pořadí vracelo id DESC
+    nejstarší návštěvu, takže hláška ukazovala špatné datum. Formát
+    "YYYY-MM-DD HH:MM:SS" se řadí lexikograficky = chronologicky.
+    """
     nj, npr = _normalizuj(jmeno, prijmeni)
-    for row in conn.execute("SELECT * FROM navstevnici WHERE odchod_dt IS NOT NULL ORDER BY id DESC"):
+    for row in conn.execute("SELECT * FROM navstevnici WHERE odchod_dt IS NOT NULL "
+                            "ORDER BY prichod_dt DESC"):
         if _normalizuj(row["jmeno"], row["prijmeni"]) == (nj, npr):
             return row
     return None
