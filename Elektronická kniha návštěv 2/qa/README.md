@@ -14,6 +14,20 @@ node qa/shots.mjs           # 45 snímků do qa/shots/
 node qa/measure.mjs         # změří rytmus mezer a velikost dotykových cílů
 ```
 
+## Dva různé skripty na data — nepleť si je
+
+| skript | k čemu | čas |
+|---|---|---|
+| `qa/seed.py` | **regresní snímky.** Záměrně deterministický, 12 záznamů, kotví čas na 14:30 — `shots.mjs` na tu hodnotu zmrazuje hodiny prohlížeče. | fixní 14:30 |
+| `qa/demo_data.py` | **ruční proklikání a demo.** 54 záznamů, doba od minut po hodiny, telefony, audit, vracející se lidé. | relativně k „teď“ |
+
+Spuštěním `seed.py` se demo data přepíšou zpátky na deterministickou dvanáctku a naopak.
+Pro demo pouštěj `demo_data.py`, pro snímky `seed.py`.
+
+`demo_data.py` si schéma vytvoří sám přes `db_manager.init_db()` — nezávisí na tom, že
+backend někdy nastartoval. Je to potřeba: `sqlite3.connect()` na neexistující cestě vyrobí
+prázdný soubor **bez tabulek**, takže „soubor existuje“ nic nezaručuje.
+
 ## Na co si dát pozor
 
 `shots.mjs` zmrazuje hodiny prohlížeče na `reference_epoch_ms` ze `seed-manifest.json`.
