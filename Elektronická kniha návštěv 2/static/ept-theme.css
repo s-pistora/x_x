@@ -11,7 +11,7 @@
   --surface2:#f4f6f7;
   --border:#d7dadc;
   --border2:#c3c8cb;
-  --slate:#141d28;
+  --slate:#0d131b; /* stejný tón jako pozadí lock-hero — topbar a hero drží pohromadě, žádný švík */
 
   --blue:#a70a1b;        /* ept primární červená — CTA, aktivní tab, focus */
   --blue-bg:#fbeaea;
@@ -21,11 +21,42 @@
   --red-bg:#fdeceb;
   --red-border:#f6c3c2;
 
+  /* sken.html si tyhle proměnné nedefinuje sám — bez nich by mu ve světlém
+     režimu zmizely okraje hlášek */
+  --green-border:#a7f3d0;
+  --amber-border:#fde68a;
+
+  --focus:#e3051b;       /* prstenec při ovládání klávesnicí, čitelný na obou pozadích */
+
   --r:6px;
   --r2:8px;
 }
 
-body{font-family:'Inter',system-ui,sans-serif}
+/* ── Viditelný focus stav ───────────────────────────────────────────────────
+   Aplikace měla plošně outline:none na všech polích a nikde nedefinovaný
+   focus — kdo ovládá recepci klávesnicí, neviděl, kde stojí. !important je
+   tu na místě: přebíjí právě ta plošná outline:none pravidla. */
+:focus-visible{
+  outline:2px solid var(--focus) !important;
+  outline-offset:2px;
+}
+/* Samotný červený prstenec se na poli čte jako chybový border (signální červená
+   je v téhle paletě i barva chyby). Jemné halo ho odliší — prstenec+halo je
+   univerzální jazyk fokusu, plný červený rám je jazyk validační chyby. */
+input:focus-visible,
+.seg-input:focus-within{box-shadow:0 0 0 4px rgba(227,5,27,.16)}
+.seg-input:focus-within{border-color:var(--focus)}
+
+/* velmi jemná blueprint mřížka na pozadí — stejný motiv jako topbar a lock
+   screen, ale téměř neviditelná, ať nesoutěží s daty v kartách a tabulce */
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background-color:var(--bg);
+  background-image:
+    linear-gradient(rgba(20,29,40,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20,29,40,.03) 1px, transparent 1px);
+  background-size:32px 32px;
+}
 h1,h2,h3,
 .card-head h2,
 .stat-val,
@@ -52,10 +83,10 @@ h1,h2,h3,
 /* logo chip — bílá karta s logem na tmavém topbaru */
 .topbar-logo{
   display:inline-flex;align-items:center;justify-content:center;
-  background:#fff;padding:4px 9px;border-radius:4px;flex-shrink:0;
+  background:#fff;padding:5px 11px;border-radius:4px;flex-shrink:0;
   width:auto;height:auto;
 }
-.topbar-logo img{height:14px;display:block}
+.topbar-logo img{height:19px;display:block}
 
 /* CTA tlačítka → značková červená (hover stavy jsou v originále natvrdo v hex, proto override zvlášť) */
 .btn-primary:hover{background:#7d0815}
@@ -68,6 +99,24 @@ h1,h2,h3,
    protože --blue teď nese značkovou červenou */
 .alert-info,.al-info{background:#eef1f4;color:#3c5063;border-color:#c7d0d6}
 
+/* Tři statistické karty měly tři různé barvy čísel (zelená / šedá / ink) a k tomu
+   červený rámeček jen na první — čtyři akcenty na tři čísla, takže žádné z nich
+   nebylo hrdina. Jeden akcent stačí: rámeček nahoře vyznačí nejdůležitější kartu,
+   čísla zůstanou jednotná a plně čitelná v obou režimech. */
+.stat-green .stat-val,
+.stat-blue .stat-val{color:var(--ink)}
+
+/* živý čítač doby v tabulce má pulsující tečku, ať je na první pohled vidět,
+   že se opravdu počítá, ne že je to jen statický údaj */
+.td-duration-live::before{
+  content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:#059669;margin-right:6px;animation:eptLivePulse 2s ease-in-out infinite;
+}
+@keyframes eptLivePulse{0%,100%{opacity:1}50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){
+  .td-duration-live::before{animation:none}
+}
+
 /* sken.html — rámeček skeneru má barvy natvrdo v hex, ne přes proměnné */
 .sf-inner{border-color:rgba(167,10,27,.75)}
 .sf-label{color:#ff9aa0}
@@ -75,3 +124,222 @@ h1,h2,h3,
 
 /* spinner má statický prstenec natvrdo v hex (světle modrá), sladit s červenou špičkou */
 .spinner{border-color:#f2d3d5}
+
+/* ── Značkový motiv (tři tečky z loga) — stejný jazyk jako ve visualbooku ── */
+.dot-mark{display:inline-flex;align-items:center;gap:5px;vertical-align:middle}
+.dot-mark .d{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.dot-mark .dk{background:currentColor}
+.dot-mark .dr{background:var(--red)}
+.dot-mark.dot-anim .d{opacity:0;transform:translateY(-8px);animation:eptDotSeat .5s cubic-bezier(.2,.9,.3,1.3) forwards}
+.dot-mark.dot-anim .d:nth-child(1){animation-delay:.05s}
+.dot-mark.dot-anim .d:nth-child(2){animation-delay:.16s}
+.dot-mark.dot-anim .d:nth-child(3){animation-delay:.27s}
+@keyframes eptDotSeat{60%{opacity:1}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){
+  .dot-mark.dot-anim .d{animation:none;opacity:1;transform:none}
+}
+.topbar-mark{color:#fff}
+
+/* Nejdůležitější číslo na obrazovce — "Aktuálně přítomní" — dostane značkový akcent */
+.stat-green{border-top:3px solid #a70a1b}
+
+/* ── Oprava přetékání layoutu ───────────────────────────────────────────────
+   Položky gridu mají implicitně min-width:auto, takže se sloupec s tabulkou
+   nedokáže zúžit pod její vlastní šířku → celá stránka přetékala vodorovně
+   na všech šířkách pod ~1480px (tedy i na běžném notebooku a úplně na mobilu).
+   min-width:0 to pustí a .tbl-wrap{overflow-x:auto} konečně zabere. */
+.main-grid > *{min-width:0}
+.left-col{min-width:0}
+.tbl-wrap{max-width:100%}
+
+/* Tabulka: SPZ se lámala na dva řádky a akční tlačítka se skládala pod sebe,
+   takže každý řádek měl jinou výšku a oko ztratilo rytmus. */
+#tbl td:nth-child(3){white-space:nowrap}
+.td-actions{flex-wrap:nowrap}
+.td-org{max-width:190px}
+/* osm sloupců × 2 strany: každý ušetřený pixel odsazení vrací tabulku do
+   kontejneru, aby se tlačítko „Odejít" neusekávalo o pár pixelů */
+th,td{padding-left:11px;padding-right:11px}
+
+/* Topbar na úzkých displejích: název se nesmí lámat do tří řádků a vytlačovat
+   tlačítka mimo obrazovku */
+.topbar h1{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:820px){
+  .topbar .clock{display:none}
+}
+@media(max-width:560px){
+  .topbar{padding:0 .875rem;gap:8px}
+  .topbar h1 span{display:none}          /* "· Habartov" — na mobilu zbytečné */
+  .topbar-mark{display:none}             /* tři tečky ustoupí, logo zůstává */
+  .topbar-right{gap:8px}
+}
+
+/* ── Lock screen jako plnokrevné hero, stejné jako titulka visualbooku ──
+   Ve výchozím (tmavém) stavu je to stejný tón jako topbar (var(--slate)),
+   takže mezi nimi není žádný švík. Přepínač den/noc funguje i tady, bez
+   přihlášení — pro světlý režim je níž samostatná varianta. */
+.lock-hero{
+  position:relative;overflow:hidden;
+  min-height:calc(100vh - 56px);
+  display:flex;align-items:center;justify-content:center;
+  background:
+    radial-gradient(ellipse 900px 480px at 50% -8%, rgba(167,10,27,.25), transparent 62%),
+    var(--slate);
+}
+.lock-hero::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size:32px 32px;
+  mask-image:radial-gradient(ellipse 70% 60% at 50% 20%, rgba(0,0,0,.9), transparent 75%);
+}
+.lock-hero-inner{
+  position:relative;z-index:1;max-width:420px;width:100%;padding:2.5rem 2rem;text-align:center;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:14px;
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.5);
+}
+.lock-hero-mark{justify-content:center;margin-bottom:1.75rem;color:rgba(255,255,255,.85)}
+.lock-hero h2{color:#fff;font-size:1.9rem;margin-bottom:.6rem}
+.lock-hero p{color:rgba(255,255,255,.6);margin-bottom:2rem;font-size:1.05rem}
+
+/* Světlý režim lock screenu — stejný layout, obrácená paleta */
+html[data-theme="light"] .lock-hero{
+  background:
+    radial-gradient(ellipse 900px 480px at 50% -8%, rgba(167,10,27,.1), transparent 62%),
+    #eef1f2;
+}
+html[data-theme="light"] .lock-hero::before{
+  background-image:
+    linear-gradient(rgba(20,29,40,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20,29,40,.06) 1px, transparent 1px);
+}
+html[data-theme="light"] .lock-hero-inner{
+  background:#fff;
+  border-color:#d7dadc;
+  box-shadow:0 20px 50px -20px rgba(20,29,40,.18);
+}
+html[data-theme="light"] .lock-hero-mark{color:#141d28}
+html[data-theme="light"] .lock-hero h2{color:#141d28}
+html[data-theme="light"] .lock-hero p{color:#3c5063}
+
+/* ── Úspěšný zápis na mobilu — značkový moment místo generické fajfky ── */
+.success-mark{justify-content:center;margin-bottom:1.1rem;color:var(--ink3)}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NOČNÍ REŽIM — přepínač v topbaru. Topbar a lock screen jsou už napevno
+   tmavé (brandová "chrome" vrstva, ta se nemění), přepíná se jen pracovní
+   plocha — karty, tabulka, formuláře. Stejná tmavá paleta jako lock hero.
+   ══════════════════════════════════════════════════════════════════════════ */
+html[data-theme="dark"]{
+  --ink:#e9edf0;
+  --ink2:#a9b7c2;
+  --ink3:#7c8b97;
+  --bg:#0f151d;
+  --surface:#161f2a;
+  --surface2:#1c2632;
+  --border:#2a3542;
+  --border2:#38434f;
+
+  --green-bg:#0f2a20;
+  --green-border:#1f5c40;
+  --red-bg:#341316;
+  --red-border:#6b2530;
+  --amber-bg:#332708;
+  --amber-border:#6b5320;
+  --blue-bg:#341316;
+  --blue-border:#6b2530;
+}
+
+html[data-theme="dark"] body{
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+}
+html[data-theme="dark"] tr:hover td{background:#1c2632}
+html[data-theme="dark"] .modal{box-shadow:0 20px 60px rgba(0,0,0,.6)}
+html[data-theme="dark"] input[type=text],
+html[data-theme="dark"] input[type=password],
+html[data-theme="dark"] input[type=date],
+html[data-theme="dark"] input[type=time]{color-scheme:dark}
+
+/* hlášky mají text natvrdo v hex (napsané pro světlé pozadí) — v noční verzi
+   potřebují jasnější odstín, ať to nesplyne s tmavým podkladem */
+html[data-theme="dark"] .alert-success,html[data-theme="dark"] .al-success{color:#4ade80}
+html[data-theme="dark"] .alert-error,html[data-theme="dark"] .al-error{color:#fca5a5}
+html[data-theme="dark"] .alert-amber,html[data-theme="dark"] .al-warn{color:#fbbf24}
+html[data-theme="dark"] .alert-info,html[data-theme="dark"] .al-info{background:#1c2632;color:#a9b7c2;border-color:#38434f}
+
+/* ── Přepínač den/noc — malé kolečko v topbaru, stejný jazyk jako auth-btn ── */
+.theme-toggle{
+  width:32px;height:32px;padding:0;flex-shrink:0;
+  border-radius:50%;border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.08);color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .13s;
+}
+.theme-toggle:hover{background:rgba(255,255,255,.18)}
+.theme-toggle svg{width:16px;height:16px}
+.theme-toggle .i-moon{display:block}
+.theme-toggle .i-sun{display:none}
+html[data-theme="dark"] .theme-toggle .i-moon{display:none}
+html[data-theme="dark"] .theme-toggle .i-sun{display:block}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Opravy z vizuálního QA (45 snímků, nezávislý review každého stavu)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Na zamčené obrazovce vedly ke stejné akci dvě cesty: tlačítka Admin/Správce
+   v topbaru a tlačítka v hero kartě. Dva prostředky pro jedno rozhodnutí = váhání.
+   Dokud je vidět lock screen, volí se rolí jen v kartě. */
+body:has(#lockScreen:not(.hidden)) #authArea{display:none}
+
+/* Prázdné stavy (nic nenalezeno, zadejte dotaz) byly nejmenším a nejsvětlejším
+   textem na obrazovce, přitom v tu chvíli nesou jedinou informaci, která platí. */
+.empty{font-size:.95rem;color:var(--ink2)}
+
+/* Panel se jmenuje „Příchody za poslední hodinu", takže „před 47 min" je jeho
+   pointa — a přesto byl nejsvětlejším textem v kartě (ink3, pod názvem firmy).
+   Kontrast sám prošel, hierarchie ne: údaj, pro který panel existuje, nemá být
+   potlačený. */
+.hh-ago{color:var(--ink2)}
+
+/* Skupina polí pro datum a čas: .seg-input je flex, který se ve svém gridovém
+   sloupci roztáhl na celou šířku, ale segmenty mají pevnou šířku a drží se vlevo —
+   za rokem tak zbýval mrtvý orámovaný prostor, který vypadal jako nedokončené pole.
+   Rámeček teď obepíná jen svůj obsah. */
+.seg-input{width:max-content;max-width:100%}
+
+/* Uvnitř skupiny svítil prstenec dvakrát: jednou kolem celé skupiny
+   (:focus-within) a jednou kolem samotného segmentu. Fokus patří skupině — je to
+   jedno pole rozdělené na tři části, ne tři samostatná pole. */
+.seg-input .seg:focus-visible{outline:none !important;box-shadow:none}
+
+/* Breakpoint 600px záměrně stejný jako v recepce.html — jinak by mezi 561 a 600 px
+   vzniklo pásmo, kde se .form-row už stackuje, ale rytmus se ještě neopravuje. */
+@media(max-width:600px){
+  /* Po stacknutí .form-row do jednoho sloupce se svislé mezery rozpadly:
+     mezi Jméno a Příjmení 1,625rem (gap + margin), pod Příjmením 0 —
+     protože .form-group:last-child{margin-bottom:0} (recepce.html:94) zasáhne
+     i druhé pole uvnitř .form-row. Na desktopu to maskovala výška gridové řádky.
+     Svislý rytmus proto řídí jen margin, gap se vypne a margin se vrátí i
+     poslednímu poli v řádku. */
+  .form-row{gap:0}
+  .form-row .form-group{margin-bottom:.875rem}
+
+  /* Dotykové cíle: pole měla ~37 px, doporučené minimum je 44. Sken se reálně
+     používá na telefonu, takže tohle není kosmetika. font-size:1rem navíc brání
+     iOS v automatickém přiblížení stránky při zaostření pole. Segmenty datumu
+     (.seg) mají pevnou šířku na dvě číslice, těm se velikost písma nemění. */
+  input[type=text]:not(.seg),
+  input[type=password],
+  input[type=date],
+  input[type=time]{padding:12px;font-size:1rem;min-height:44px}
+  .btn{min-height:44px}
+
+  /* „Zrušit" a „Ano, odejít" stály na mobilu 12 px od sebe. U potvrzení, které
+     zapisuje odchod, je omyl palcem drahý — víc místa mezi nimi je pojistka. */
+  .modal-footer{gap:1rem}
+}

@@ -11,12 +11,15 @@ CORS(app)
 
 DB_PATH = "navstevni_kniha.db"
 
-# ── Přihlášení (admin / zaměstnanec) ───────────────────────────────────────────
-# Prototyp — PINy jde přepsat proměnnými prostředí ADMIN_PIN / ZAMESTNANEC_PIN.
+# ── Přihlášení (admin / správce) ──────────────────────────────────────────
+# Řadoví zaměstnanci se do tohohle rozhraní vůbec nepřihlašují — ti se jen
+# naskenují u vchodu přes /sken (bez účtu). Recepční dashboard je jen pro
+# admina a správce, oba mají plný přístup ke všem záznamům a hledání.
+# Prototyp — PINy jde přepsat proměnnými prostředí ADMIN_PIN / SPRAVCE_PIN.
 # Tokeny žijí jen v paměti procesu, po restartu serveru je nutné se přihlásit znovu.
-ADMIN_PIN       = os.environ.get("ADMIN_PIN", "ept-admin-2026")
-ZAMESTNANEC_PIN = os.environ.get("ZAMESTNANEC_PIN", "ept-recepce-2026")
-TOKENS = {}  # token -> "admin" | "zamestnanec"
+ADMIN_PIN   = os.environ.get("ADMIN_PIN", "ept-admin-2026")
+SPRAVCE_PIN = os.environ.get("SPRAVCE_PIN", "ept-spravce-2026")
+TOKENS = {}  # token -> "admin" | "spravce"
 
 def aktualni_role():
     return TOKENS.get(request.headers.get("X-Auth-Token"))
@@ -50,7 +53,7 @@ def api_login():
 
     if role == "admin" and pin == ADMIN_PIN:
         pass
-    elif role == "zamestnanec" and pin == ZAMESTNANEC_PIN:
+    elif role == "spravce" and pin == SPRAVCE_PIN:
         pass
     else:
         return jsonify({"error": "Nesprávné heslo."}), 401
@@ -186,7 +189,7 @@ def api_navstevnici():
     role = aktualni_role()
 
     if request.method == "POST":
-        if role not in ("admin", "zamestnanec"):
+        if role not in ("admin", "spravce"):
             return jsonify({"error": "Přihlaste se prosím."}), 401
 
         d = request.json or {}
@@ -208,8 +211,8 @@ def api_navstevnici():
 
         return jsonify({"status": "ok", "id": new_id, "prichod_dt": prichod})
 
-    # GET — filtrování + hledání
-    if not role:
+    # GET — filtrování + hledání (admin i správce vidí úplně vše)
+    if role not in ("admin", "spravce"):
         return jsonify({"error": "Přihlaste se prosím."}), 401
 
     filtr     = request.args.get("filter", "aktivni")
@@ -217,12 +220,6 @@ def api_navstevnici():
     datum     = (request.args.get("datum") or "").strip()
     hodina_od = (request.args.get("hodina_od") or "").strip()
     hodina_do = (request.args.get("hodina_do") or "").strip()
-
-    # "Vše" a jakékoliv hledání (jméno/příjmení/den/hodina) jsou jen pro admina —
-    # zaměstnanec vidí jen aktuálně přítomné a dnešní návštěvy.
-    pokrocile = filtr == "vse" or bool(q or datum or hodina_od or hodina_do)
-    if pokrocile and role != "admin":
-        return jsonify({"error": "Tato funkce vyžaduje přihlášení admina."}), 403
 
     dnes = datetime.now().strftime("%Y-%m-%d")
     where  = []
@@ -233,6 +230,8 @@ def api_navstevnici():
     elif filtr == "dnes":
         where.append("prichod_dt LIKE ?")
         params.append(dnes + "%")
+    elif filtr == "historie":
+        where.append("odchod_dt IS NOT NULL")
     # filtr 'vse' / 'hledat' — bez základního omezení, jen filtry níže
 
     if q:
@@ -261,7 +260,7 @@ def api_navstevnici():
 # ── Úprava záznamu PATCH ──────────────────────────────────────────────────────
 @app.route("/api/navstevnici/<int:nav_id>", methods=["PATCH"])
 def api_navstevnik_patch(nav_id):
-    if aktualni_role() not in ("admin", "zamestnanec"):
+    if aktualni_role() not in ("admin", "spravce"):
         return jsonify({"error": "Přihlaste se prosím."}), 401
 
     d = request.json or {}

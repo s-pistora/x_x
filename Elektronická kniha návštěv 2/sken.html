@@ -4,6 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
 <title>Sken dokladu</title>
+<script>
+document.documentElement.dataset.theme = localStorage.getItem('ept_theme') || 'dark';
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -32,7 +35,7 @@ body{font-family:system-ui,'Inter',sans-serif;background:var(--bg);color:var(--i
 .step-line{flex:1;height:1px;background:var(--border);margin:0 6px}
  
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
-.card-head{padding:.875rem 1rem;border-bottom:1px solid var(--border);background:#f8fafc;display:flex;align-items:center;gap:8px}
+.card-head{padding:.875rem 1rem;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;gap:8px}
 .card-head h2{font-size:.9rem;font-weight:600}
 .card-body{padding:1rem}
  
@@ -62,9 +65,9 @@ body{font-family:system-ui,'Inter',sans-serif;background:var(--bg);color:var(--i
  
 .alert{padding:10px 13px;border-radius:var(--r);font-size:.85rem;line-height:1.45;display:flex;align-items:flex-start;gap:8px}
 .al-info{background:var(--blue-bg);color:#1e40af;border:1px solid var(--blue-border)}
-.al-success{background:var(--green-bg);color:#065f46;border:1px solid #a7f3d0}
-.al-error{background:var(--red-bg);color:#991b1b;border:1px solid #fecaca}
-.al-warn{background:var(--amber-bg);color:#92400e;border:1px solid #fde68a}
+.al-success{background:var(--green-bg);color:#065f46;border:1px solid var(--green-border)}
+.al-error{background:var(--red-bg);color:#991b1b;border:1px solid var(--red-border)}
+.al-warn{background:var(--amber-bg);color:#92400e;border:1px solid var(--amber-border)}
 .hidden{display:none!important}
  
 .result-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.875rem}
@@ -97,7 +100,12 @@ input[type=text].big{font-size:1.15rem;font-weight:600;padding:12px}
     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <span class="topbar-logo"><img src="/static/ept_logo.png" alt="ept"/></span>
+  <span class="dot-mark topbar-mark"><span class="d dk"></span><span class="d dr"></span><span class="d dk"></span></span>
   <h1>Sken dokladu</h1>
+  <button class="theme-toggle" onclick="toggleTheme()" style="margin-left:auto" title="Přepnout denní/noční režim" aria-label="Přepnout denní/noční režim">
+    <svg class="i-moon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="i-sun" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+  </button>
 </div>
  
 <div class="content">
@@ -197,6 +205,7 @@ input[type=text].big{font-size:1.15rem;font-weight:600;padding:12px}
   <!-- KROK 3 -->
   <div id="step3" class="hidden">
     <div id="successScreen" class="hidden success-screen">
+      <div class="dot-mark success-mark dot-anim"><span class="d dk"></span><span class="d dr"></span><span class="d dk"></span></div>
       <div class="success-icon">
         <svg width="32" height="32" fill="none" stroke="var(--green)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
@@ -228,7 +237,7 @@ input[type=text].big{font-size:1.15rem;font-weight:600;padding:12px}
         </div>
         <div>
           <label class="lbl">SPZ vozidla (nepovinné)</label>
-          <input type="text" id="rSpz" placeholder="1AB 2345" style="text-transform:uppercase"/>
+          <input type="text" id="rSpz" placeholder="1AB 2345" oninput="this.value=this.value.toUpperCase()"/>
         </div>
         <button class="btn btn-green" id="btnZapis" onclick="zapsat()">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -242,6 +251,12 @@ input[type=text].big{font-size:1.15rem;font-weight:600;padding:12px}
 </div>
  
 <script>
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem('ept_theme', next);
+}
+
 const API = 'http://localhost:5050/api';
 let camStream = null;
  
@@ -261,9 +276,23 @@ async function spustKameru() {
     document.getElementById('btnSnap').classList.remove('hidden');
     document.getElementById('btnStopCam').classList.remove('hidden');
   } catch (e) {
+    // Prohlížeč hlásí důvod anglicky a technicky ("Requested device not found.").
+    // Uživatel u vrátnice s tím nic neudělá — potřebuje vědět, co má zkusit místo toho.
+    const duvody = {
+      NotAllowedError: 'Přístup ke kameře je zakázaný.',
+      NotFoundError:   'Zařízení žádnou kameru nenašlo.',
+      NotReadableError:'Kameru už používá jiná aplikace.',
+    };
     const err = document.getElementById('camErr');
-    err.textContent = 'Kamera není dostupná: ' + e.message + ' — použijte nahrání ze souboru níže.';
+    err.textContent = (duvody[e.name] || 'Kameru se nepodařilo spustit.')
+      + ' Nahrajte foto dokladu ze zařízení níže.';
     err.classList.remove('hidden');
+    // Cesta dál teď vede nahráním souboru, ne kamerou. Kdyby „Spustit kameru"
+    // zůstalo plnou červenou CTA hned pod červenou chybou, dvě stejně silné
+    // červené by si konkurovaly a uživatel by zkoušel to, co právě selhalo.
+    const b = document.getElementById('btnCam');
+    b.classList.remove('btn-blue');
+    b.classList.add('btn-ghost');
   }
 }
  
@@ -337,13 +366,17 @@ async function zpracovatObrazek(b64, previewSrc) {
  
     if (d.jmeno && d.prijmeni) {
       zobrazAlert('aResult', 'success', '✓ Jméno rozpoznáno – zkontrolujte správnost');
+    } else if (!d.jmeno && !d.prijmeni) {
+      // Dřív se i při úplně prázdném výsledku hlásilo jen „Jméno se nepodařilo
+      // rozpoznat", takže uživatel nevěděl, že musí vyplnit obě pole.
+      zobrazAlert('aResult', 'warn', 'Z dokladu se nepodařilo přečíst nic – vyplňte jméno i příjmení ručně');
     } else {
-      zobrazAlert('aResult', 'warn', 'Jméno se nepodařilo rozpoznat – doplňte ručně');
+      zobrazAlert('aResult', 'warn', 'Přečetlo se jen ' + (d.jmeno ? 'jméno' : 'příjmení') + ' – doplňte druhé pole ručně');
     }
- 
+
   } catch (e) {
     setStep(3);
-    zobrazAlert('aResult', 'error', 'Backend není dostupný. Zadejte jméno ručně nebo spusťte server.');
+    zobrazAlert('aResult', 'error', 'Rozpoznávání není dostupné. Vyplňte prosím jméno a příjmení ručně.');
   }
 }
  
@@ -396,7 +429,7 @@ async function zapsat() {
     }
  
   } catch (e) {
-    zobrazAlert('aResult', 'error', '⚠ Nelze se připojit k serveru: ' + e.message + ' — je spuštěný backend_v2.py?');
+    zobrazAlert('aResult', 'error', '⚠ Spojení se systémem selhalo. Zkuste to prosím znovu, nebo se zapište u recepce.');
   }
  
   btn.disabled = false;

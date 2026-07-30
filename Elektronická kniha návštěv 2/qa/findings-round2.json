@@ -1,0 +1,2120 @@
+{
+  "pocet_agentu": 45,
+  "vraceno": 44,
+  "pocty": {
+    "critical": 5,
+    "important": 57,
+    "polish": 27
+  },
+  "reviews": [
+    {
+      "snimek": "01-lock-dark-desktop",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Profesionální, moderní design s jasnou invitací. Centrovaný dialog box na tmavém pozadí je elegantní a bezprostředně vybízí ke kliknutí. Branding a funkce jsou v dokonalé rovnováze. Věřit bych dal své peníze.",
+      "co_funguje": [
+        "Jasná vizuální hierarchie — nadpis, instrukce, dvě akce bez zbytečného hluku",
+        "Výtečný kontrast a čitelnost na všech úrovních textu",
+        "Konzistentní spacing a rytmické mezery kolem i uvnitř dialog boxu",
+        "Jasné rozlišení primární (červené) vs sekundární (modrá/šedá) akce",
+        "Minimalistický design bez dekorace — pouze to, co je nutné",
+        "Centrální zarovnání a pixel-perfect čistota bez roztřepení",
+        "Přátelský tón 'Vítejte' není formální, ale profesionální"
+      ],
+      "nalezy": []
+    },
+    {
+      "snimek": "02-lock-light-desktop",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Čistý lock screen s minimalistickým designem a jasnou hierarchií. Obrazovka vyzývá k jednoznačné volbě bez zbytečného šumu a profesionálně se představí na plátně. Jediné, co zarazí, je potenciálně chybná signalizace pomocí barvy primárního tlačítka.",
+      "co_funguje": [
+        "Minimalistický design bez zbytečných prvků — jen to podstatné",
+        "Výborná čitelnost a kontrast v denním režimu (tmavý text na bílém pozadí modalu)",
+        "Jasná vizuální hierarchie: nadpis dominuje, pak popis, pak akce",
+        "Intuitivní layout — dva role jsou okamžitě rozlišitelné",
+        "Vyvážený spacing a dostatek bílého prostoru kolem centrálního modalu",
+        "Konzistentní typografie s cítitelným rytmem (velikost a váha se liší adekvátně)",
+        "Centrální modal je připravený na responzivní adaptaci",
+        "Subtilní shadow pod modálem zvyšuje hloubku a oddělení od pozadí",
+        "Header (logo, čas, datum, controls) je diskrétní a nenarušuje hlavní obsah"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Červené tlačítko 'Přihlásit se jako admin' je stylováno jako primární/dominantní akce (urgentní, nejviditelější barva), zatímco 'správce' je v sekundární tmavomodré barvě. Bez znalosti business logiky není zřejmé, zda admin role by měla být primární volbou — obvykle jsou admin funkce méně přístupné a měly by signalizovat sekundární variantu, nikoliv výchozí doporučení.",
+          "selektor_nebo_prvek": "Tlačítko 'Přihlásit se jako admin' (první tlačítko, červené pozadí, styles button-primary)",
+          "navrhovana_oprava": "Přehodnotit barvy podle business logiky: pokud je admin méně užívaná role, měla by být sekundární (tmavomodrá), a 'správce' by měl být primární (červený). Barva musí odpovídat skutečné hierarchii a preferenci uživatelů."
+        }
+      ]
+    },
+    {
+      "snimek": "03-lock-dark-mobile",
+      "verdikt": "Needs Work",
+      "skore": 6,
+      "prvni_dojem": "Čistá, minimalistická, profesionální obrazovka s elegantním tmavým režimem a jasným CTA. Ale asymetrický negativní prostor a vysvětlené indikátory uprostřed ji zaneřáďují. Je to funkční, ale nejsou tu detaily dokonalé.",
+      "co_funguje": [
+        "Logo a název aplikace jsou zřetelně vidět v záhlaví",
+        "Dvě CTA tlačítka jsou dostatečně velká a dostupná jedním palcem",
+        "Typografie je čistá a jasně hierarchizovaná",
+        "Tmavý režim je elegantní a lesklý",
+        "Zarovnání a mřížka jsou konzistentní",
+        "Layout je přizpůsobený mobilu bez zbytečné složitosti"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "story",
+          "popis": "Tři indikátory (malé čtverečky - červený, bílý, modrý) uprostřed snímku nemají kontextu ani vysvětlení. Není jasné, zda jde o kroky procesu, progress indikátor, nebo dekorativní prvek. Na login obrazovce bez popisu vypadají jako nedokončený design a matou uživatele.",
+          "selektor_nebo_prvek": "Tři `.indicator-dot` prvky v `.indicator-row` nebo `.stepper` kontejneru uprostřed (aproximativně y: 300px)",
+          "navrhovana_oprava": "Buď přidat popis jako 'Krok 1 ze 3' či 'Výběr přístupu', nebo prvky z obrazovky úplně odstranit, pokud nejsou součástí klíčového toku"
+        },
+        {
+          "severity": "important",
+          "category": "spacing",
+          "popis": "Asymetrický a nadměrný negativní prostor: horní část mezi logem a hlavním obsahem obsahuje více než 150px prázdného místa (přibližně 18% výšky). Obsah je seskupený dolů, horní třetina snímku zůstává nekomunikativně prázdná. To vytváří disharmonii a dojem nezvládnutého plánování prostoru.",
+          "selektor_nebo_prvek": "Margin-top nebo padding na `.main-content` sekci (prostor mezi `.header` obsahujícím logo a nadpisem 'Vítejte v návštěvní knize')",
+          "navrhovana_oprava": "Zmenšit horní padding na 60-80px. Přesunout obsah výše a vyvážit prostor tak, aby login část nebyla suspenzivně zavěšena v dolní polovině"
+        },
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Dvě login tlačítka 'Přihlášt se jako admin' a 'Přihlášt se jako správce' nejsou dostatečně diferenciována. Uživatel bez domény neví, jaký je mezi rolemi rozdíl a kdy má na které kliknout. Jsou rozlišena pouze barvou a textem, bez vysvětlujícího kontextu nebo ikonografiky.",
+          "selektor_nebo_prvek": "Text na tlačítcích nebo prázdný prostor pod/vedle ně - `<button>` prvky s textem 'Přihlášt se jako admin' a 'Přihlášt se jako správce'",
+          "navrhovana_oprava": "Přidat krátký popis pod tlačítky nebo jako ikony, které vysvětlují roli (např. '👑 Admin: Všechny funkce' vs '👤 Správce: Řízení návštěv')"
+        },
+        {
+          "severity": "polish",
+          "category": "prvni-dojem",
+          "popis": "Obrazovka postrádá kontext. 'Návštěvní kniha' jako název je abstraktní - nový uživatel neví, co je to za aplikaci, na co se připravuje, a proč se zde právě přihlašuje. Chybí zde jednořádkový účel, který by vytvořil důvěru a orientaci.",
+          "selektor_nebo_prvek": "Text 'Návštěvní kniha' v `.header` jako primární nadpis nebo `<h1>`",
+          "navrhovana_oprava": "Přidat krátký popis účelu pod názvem (např. 'Správa návštěv firemního areálu' nebo 'Přístupový systém návštěvnické knihy')"
+        }
+      ]
+    },
+    {
+      "snimek": "04-lock-dark-tablet",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Čistý, profesionální přihlašovací dialog na tmavém pozadí. Návštěvník ví, co má udělat. Centrální fokus, dobrá typografie, příjemný whitespace. Dvě nejasné prvky však brání plné dokonalosti: neidentifikovatelné puntíky a matoucí rozdíl mezi dvěma podobně znějícími rolemi.",
+      "co_funguje": [
+        "Jasně strukturovaný centrální modal s viditelnou vizuální hierarchií",
+        "Čitelná typografie s dobrým kontrastem v nočním režimu",
+        "Konzistentní styling primárního (červené) a sekundárního (modré) tlačítka",
+        "Vhodný whitespace a breathing room kolem modalu",
+        "Logo aplikace a kontextový nadpis (Návštění kniha - Habartov) v horní liště",
+        "Profesionální celkový dojem vzbuzující důvěru",
+        "Přehlédací ergonomie na tabletu 768×1024"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "story",
+          "selektor_nebo_prvek": "Tři puntíky (bílá-červená-bílá) v centru modalu",
+          "popis": "V centru modalu jsou tři puntíky, které se podobají page/carousel indikátorům. Bez dalšího textu, vizuálních šipek nebo vysvětlení není jasné, jaký je jejich účel. Vytváří kognitivní nejasnost — návštěvník si položí otázku \"co to je?\" místo aby plynule postupoval dál.",
+          "navrhovana_oprava": "Pokud jde o page indicators, přidat textový hint (\"1 / 3\") nebo smazat prvek úplně. Pokud mají jiný účel (status indicator), jasně je označit nebo odebrat."
+        },
+        {
+          "severity": "important",
+          "category": "data",
+          "selektor_nebo_prvek": "Dvě CTA tlačítka: \"Přihlásit se jako admin\" a \"Přihlásit se jako správce\"",
+          "popis": "Oba termíny jsou si v češtině příliš podobné. \"Správce\" je v podstatě synonym pro \"administrátora\". Návštěvník se chvíli kouká na obrazovku a neví, jaký je mezi nimi rozdíl. Pokud jsou to různé role, měly by být jasně diferencovány.",
+          "navrhovana_oprava": "Přejmenovat na výrazně odlišnější páry, např. \"Vedoucí návštěv\" + \"Host\" nebo \"Admin\" + \"Uživatel\". Pokud je rozdíl malý, zvážit slučit na jedno tlačítko s后续ím výběrem role."
+        },
+        {
+          "severity": "polish",
+          "category": "konzistence",
+          "selektor_nebo_prvek": "Červené tlačítko \"Přihlásit se jako admin\"",
+          "popis": "V UI konvencích je červená barva rezervována pro destruktivní nebo varující akce (delete, warning). Primární CTA se obvykle značí neutrálněji (modrá, zelená). Červená pro admin login vytváří podvědomý dojem, že je to nějaké riziko nebo problém, přestože je to pouze role.",
+          "navrhovana_oprava": "Zvážit swap na modrou (primární) a šedou (sekundární). Případně ponechat červenou, pouze pokud je to záměrné signalizování odpovědnosti — pak by měl být vedle text typu \"(zvýšená odpovědnost)\"."
+        }
+      ]
+    },
+    {
+      "snimek": "05-login-admin-dark",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Profesionální noční režim s čistou hierarchií a intuitivní kompozicí. Modal je vyvážený, prvky jsou na mřížce, interakční prvky jasně designované. Věřil bych téhle obrazovce.",
+      "co_funguje": [
+        "Jasná vizuální hierarchie - nadpis, label, input, tlačítko jsou dobře seřazeny a mají správný vizuální váhu",
+        "Elegantní noční režim - tmavé pozadí s čistými bílými texty a červeným akcenterem",
+        "Intuitivní interakce - červené tlačítko jasně signalizuje primární akci přihlášení",
+        "Správné zarovnání a spacing - všechno je na mřížce, prvky mají vhodný bílý prostor",
+        "Dobrý kontrast hlavního obsahu - nadpis, label, placeholder, button text jsou snadno čitelné",
+        "Profesionální barevná paleta - konzistentní použití červené, bílé, šedé a tmavé",
+        "Input pole má správné vizuální status - červené ohraničení signalizuje focus a bezpečnost"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "typografie",
+          "popis": "Text pod 'Zrušit' má velmi nízký kontrast (šedá na téměř černé) a je prakticky nečitelný. Pokud to je důležitá informace, měla by ji vidět každý uživatel bez úsilí.",
+          "selektor_nebo_prvek": "Helper text / secondary information pod tlačítkem 'Zrušit'",
+          "navrhovana_oprava": "Zvýšit kontrast na alespoň 70-80% jasnost (z aktuálních ~30-40%), ideálně na stejný kontrast jako placeholder text v inputu. Alternativě: zvětšit font nebo zvýšit opacity textu."
+        }
+      ]
+    },
+    {
+      "snimek": "06-login-spravce-light",
+      "verdikt": "Good",
+      "skore": 6,
+      "prvni_dojem": "Minimalistická, čistá přihlašovací obrazovka s jasným příběhem a profesionálním designem. Silná vizuální hierarchie a štědrý spacing vyzývají důvěru. Avšak dva matoucí prvky — červený border na heslovém poli bez viditelné chyby a částečně viditelný obsah za modalem — vnášejí vizuální šum a snižují eleganci jinak čistého designu.",
+      "co_funguje": [
+        "Minimalistický, profesionální design bez zbytečných prvků",
+        "Jasná vizuální hierarchie — titulek dominuje, CTA je okamžitě evidentní",
+        "Konzistentní a štědrý spacing — bílý prostor pracuje, nic není sevřené",
+        "Čistá typografie s dobrou čitelností — kontrast textu a pozadí je vysoký",
+        "Logické zarovnání všech prvků — modal je symetricky centrován, bez roztřepených hran",
+        "Jasné vizuální CTA — velké červené tlačítko je evidentně to, co mám dělat",
+        "Sekundární akce je jasná — Zrušit je srozumitelně menší a umístěné pod tlačítkem",
+        "Jednoduchý, lineární flow — zadat heslo, přihlásit, nebo zrušit — bez zbytečných kroků"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "konzistence",
+          "selektor_nebo_prvek": "Textové pole pro heslo (input s placeholder 'Zadejte heslo')",
+          "popis": "Červený border na heslovém poli evokuje signalizaci chyby nebo varovného stavu, ale žádná chybová zpráva ani varování není viditelné. Pole je v normálním (prázdném) stavu, bez předchozího pokusu o přihlášení. To vytváří rozpor mezi vizuálním signálem a skutečným stavem — uživatel si nemusí být jistý, jestli něco udělal špatně, nebo je to jen estetický prvek. Tato inkonsistence mezi sémantickou barvou a stavem snižuje čitelnost UI.",
+          "navrhovana_oprava": "Změnit border textového pole na neutrální barvu (např. šedá, černá, nebo jemná stříbrná), která nesignalizuje chybu. Pokud má být červený border záměrný designový prvek, přidat vizuální nebo textový indikátor (label, ikonu, nebo subtle zprávu), aby bylo jasné, co border znamená."
+        },
+        {
+          "severity": "important",
+          "category": "prvni-dojem",
+          "selektor_nebo_prvek": "Text 'Přihlásit se jako správce' viditelný za/pod modalem",
+          "popis": "Obsah za modalem (text 'Přihlásit se jako správce') je částečně viditelný, což vytváří vizuální rozptylení a nejasnost. Uživatel si není jistý, jestli je to součást aktuálního dialogu, druhý dialog pod tím, nebo pozadí. Tato částečná viditelnost narušuje soustředění na primární úkol (zadání hesla) a snižuje pocit, že je modal jasně oddělený od zbytku UI.",
+          "navrhovana_oprava": "Zajistit, aby modal zcela maskoval pozadí — buď zesílit overlay pozadí (tmavší, nepropustný), nebo změnit layout tak, aby obsah za modalem nebyl vůbec viditelný. Pokud je obsah za modalem součástí workflow (alternativní přihlášení), umístit jej jasně mimo modal do viditelné vzdálenosti nebo oddělit vizuálně."
+        }
+      ]
+    },
+    {
+      "snimek": "07-login-chyba-dark",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Modal je čistý, čitelný a profesionální. Chybová hláška se hned vidí díky červenému zvýraznění. Design funguje logicky, ale má dvě viditelné slabiny: input pole bez vizuálního signálu chyby a matoucí používání červené barvy na chybě i primárním tlačítku.",
+      "co_funguje": [
+        "Chybová hláška je okamžitě viditelná s varovnou ikonou a jasným textem",
+        "Layout je čistý a vyrovnaný s dobrým využitím bílého prostoru",
+        "Typografie je čitelná s dobrým kontrastem v dark mode",
+        "Zarovnání je přesné - všechno je na mřížce bez roztřepených hran",
+        "Story je jasná: uživatel vidí co se stalo a jaká je akce",
+        "Modal je dokonale centrován na obrazovce",
+        "Hlas jakosti je konzistentní - zaoblené rohy, jednotný spacing"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Input pole se špatným heslem nemá žádný vizuální signál chyby (červený border, shadow, background tint). Pouze textová zpráva pod ním o chybě existuje. Uživatel tak nevidí od prvního pohledu, KTERÉ pole má problém - musí si to domyslet z textu níže. Správný UX má vždy vizuální indikátor chyby přímo na poli.",
+          "selektor_nebo_prvek": "input[type=password] v chybovém stavu",
+          "navrhovana_oprava": "Přidat červený border (1-2px) nebo jemný красный shadow na input pole. Možně i změní background nebo text color. Příklad: border: 2px solid #dc3545 nebo border-left: 4px solid #ef5350."
+        },
+        {
+          "severity": "important",
+          "category": "konzistence",
+          "popis": "Chybová hláška i primární tlačítko Přihlásit se mají stejné červené pozadí. Toto je matoucí signalizace barev: červená obvykle znamená destruktivní/varovnou akci, ne primární akci kterou chcete aby uživatel udělal. Vizuálně se zdá, že jsou stejně důležité nebo mají stejný účel, což je zavádějící.",
+          "selektor_nebo_prvek": ".error-alert (červené pozadí s textem Nesprávné heslo) a button.primary (Přihlásit se)",
+          "navrhovana_oprava": "Либо: 1) Změnit chybovou zprávu - místo plného červeného pozadí použít červený border nebo ikonu s bílým pozadím; NEBO 2) Změnit barvu tlačítka na neutrální (modrá, tmavá šedá, nebo aplikační primární barva). Doporučení: ponechat chybu s border + white background a tlačítko udělat jednotnou aplikační barvou."
+        }
+      ]
+    },
+    {
+      "snimek": "08-dash-pritomni-dark-desktop",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Profesionální a důvěryhodný design. Tmavý režim je čitelný se silnými kontrasty, červené akcenty jasně signalizují důležité akce. Recepční má na jedné obrazovce všechno, co potřebuje: živý přehled přítomných, formulář pro nové návštěvníky a kontextové informace o příchodech za poslední hodinu.",
+      "co_funguje": [
+        "Jasná vizuální hierarchie — první stat karta s červeným rámečkem (4 AKTUÁLNĚ PŘÍTOMNÍ) stojí mimo ostatní dvě",
+        "Tabulka je skenabilní — řádky se rozlišují, sloupce jsou zarovnané, data se čtou bez úsilí",
+        "Konsistentní barevná paleta — tmavý background, červené CTA, zelené status značky (Přítomní/a), jednotný jazyk across prvky",
+        "Rozvržení sluhuje workflow — formulář vlevo pro zápis, tabulka vpravo pro monitoring, obě vidět současně",
+        "Prostor k dýchání — řádky v tabulce nejsou stísnuté, pole ve formuláři mají dostatek mezer, nejsou vizuálně nahnaná",
+        "Tlačítka mají jasnou sémantiku — bílá pro sekundární akce (Upravit, Nahrát), červená pro finální/konfirmační (Zápsat příchod, Odejít, Odhlásit)",
+        "Časy a doby trvání jsou čitelně formátovány — ‚2 h 10 min' je ihned srozumitelné, bez dekódování",
+        "Formulář je intuitivní — pole jsou logicky seřazena (jméno, příjmení, firma, SPZ), placeholder texty jsou užitečné",
+        "Dolní panel (Příchody za poslední hodinu) poskytuje užitečný kontext bez přetížení hlavní obsah",
+        "Ikony na tlačítkách — jasné vizuální stopy (upload, fotoaparát, checkmark, X, tužka)"
+      ],
+      "nalezy": []
+    },
+    {
+      "snimek": "09-dash-pritomni-light-desktop",
+      "verdikt": "Excellent",
+      "skore": 9,
+      "prvni_dojem": "Cistota a jednoduchost bez zbytecneho украšování. Hierarchie je krystalclear - vis hned, co je duleziite. Zve, ne zavaluje. Profesionalni design, kteremu verim.",
+      "co_funguje": [
+        "Metricke karty nahore jasne zobrazuji stav - 4 pritomni, 7 dnes, 12 celkem",
+        "Tabulka je velmi dobre scanovatelna - sloupce jasne, zarovnani konzistentni",
+        "Levy panel pro noveho navstevnika je logicky oddeleny a jasne vymezeny",
+        "Cervena barva je konzistentne pouzivana pro primarni akce",
+        "Spacing a white space jsou spravne - neni to tesne, je dost mista k dychani",
+        "Vse je na mrizi - ostre hrany, zarovnane prvky",
+        "Zelena tecka u doby pritomnosti je hezka vizualni zpetna vazba",
+        "Typografie ma rytmus, velikosti odpovida rolim",
+        "Data-ink ratio je spravny - jen informace, nic zbytecneho"
+      ],
+      "nalezy": []
+    },
+    {
+      "snimek": "10-dash-pritomni-dark-wide",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Čisté, tmavé rozhraní s jasnou hierarchií. KPI karty okamžitě komunikují stav, levý panel nabízí bezambiguózní akce, tabulka je čitelná a dobře řádkovaná. Profesionální dojem – bez trapnosti, připraveno na plátno vedení. Věřím tomu.",
+      "co_funguje": [
+        "Čistý dark mode se správným kontrastem – bílý text na tmavém pozadí je pohodlný na čtení",
+        "KPI karty komunikují stav na jeden pohled (4 přítomní, 7 dnes celkem, 12 záznamů)",
+        "Typografie má rytmus: velká čísla → popisky → bold jména → detaily",
+        "Tabulka je skenatelná: jména jasně oddělena od organizací, časy ve správném kontextu, zelená barva pro dobu je intuitivní",
+        "Tlačítka jsou rozlišena (červená primární, modrá sekundární, red pro destruct) – konzistentně",
+        "Spacing je konzistentní a proporční, design má prostor k dýchání",
+        "Layout na 1920px se neumazí do prázdna – levý panel a tabulka jsou vhodně vyváženy",
+        "Zarovnání je čisté, všechno na mřížce, bez pixel-levých chyb",
+        "Paleta je soudržná: tmavá, bílá, červená, zelená – koherentní systém",
+        "Story je jasné: KPI → akce → seznam – pracovník vidí hned, co dělat"
+      ],
+      "nalezy": []
+    },
+    {
+      "snimek": "11-dash-pritomni-dark-tablet",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Profesionální, čisté a moderní. Tmavý režim sedí. Ale hned skáče do očí zvláštný červený levý rámec na metrikách a nejasná hierarchie mezi tlačítky pro přidání návštěvníka.",
+      "co_funguje": [
+        "Metriky v horní části jsou čitelné a přehledné",
+        "Formulář je logicky seřazený a snadný k vyplnění",
+        "Časy v seznamu příchodů mají užitečný formát 'před X min'",
+        "Paleta a kontrast jsou vhodné pro noční režim",
+        "Celkový prostor a spacing nejsou přehuštěné",
+        "Nadpisy v kapitálu jsou hierarchicky čitelné"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Tři metriky (4/7/12) v horní části mají zvláštní červený rámec jen na levé straně. Není jasné, co tento prvek znamená — je to aktivní stav, dekorace, či náhodná nedokončenost? Vypadá to matoucí a snižuje důvěru v preciznost designu.",
+          "selektor_nebo_prvek": "Levý rámec na kartách metrik (AKTUÁLNĚ PŘÍTOMNÍ, DNES CELKEM, CELKEM ZÁZNAMŮ)",
+          "navrhovana_oprava": "Buď rámec zcela odstranit a ponechat čisté karty, nebo jej rozšířit po všech stranách. Pokud chce být akcentem, měl by mít jasný účel — např. zvýraznit jen jednu metriku."
+        },
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Dvě tlačítka v sekci 'Nový návštěvník' ('Nahrát doklad ze souboru' a 'Použít webkameru') nemají jasně definovanou primární/sekundární pozici. Obě řeší stejný úkol, ale není vidět, která je preferovaná. Červené 'Nahrát doklad' je viditelné, 'Webkamera' (tmavá, bez vyraznění) zaostává.",
+          "selektor_nebo_prvek": "Tlačítka v sekci 'Nový návštěvník' — 'Nahrát doklad ze souboru' (červené) a 'Použít webkameru' (tmavé)",
+          "navrhovana_oprava": "Jasně definovat primární akci jedinou barvou/stylem, druhou učinit explicitně sekundární (např. outline button, menší, jiná barva). Nebo je vertikálně odd"
+        },
+        {
+          "severity": "important",
+          "category": "typografie",
+          "popis": "Text 'nebo zadejte ručně' pod tlačítkem 'Použít webkameru' je velmi slabý, malý a neurčitý. Není jasné, co to znamená — je to instrukce, upozornění, či fallback možnost? Sled logiky uživatele je nejasný.",
+          "selektor_nebo_prvek": "Text 'nebo zadejte ručně' pod ikonou fotoaparátu",
+          "navrhovana_oprava": "Přepracovat na jasnější, čitelnější instrukci nebo jej přesunout do více viditelné pozice. Zvážit, zda je text vůbec nutný, či zda by měl být součástí tooltip/help textu."
+        },
+        {
+          "severity": "polish",
+          "category": "spacing",
+          "popis": "Seznam v sekci 'Příchody za poslední hodinu' obsahuje tři položky (jména, společnosti, časy) oddělené jen vertikálním prostorem. Bez vizuálních dělících čar či subtilního background barev seznam vypadá ploše a těžko se proskenuje na tabletě.",
+          "selektor_nebo_prvek": "Položky v seznamu pod nadpisem 'Příchody za poslední hodinu' (Martin Dvořák, Jana Svobodová, Petr Novák)",
+          "navrhovana_oprava": "Přidat jemné dělící čáry (1px, subtilní barva) mezi položkami nebo lehkou background barvu (alternovat řádky). Zvýší se čitelnost a skenování seznamu."
+        }
+      ]
+    },
+    {
+      "snimek": "12-dash-pritomni-dark-mobile",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Čisté a profesionální. Temný režim je elegantní, hierarchie je vidět hned. Metriky dominují, formulář je jasně strukturovaný. Věřil bych tomuto designu.",
+      "co_funguje": [
+        "Jasná vizuální hierarchie — metriky na vrcholu, akce viditelná",
+        "Profesionální a jednotná barevná paleta v noční režimu",
+        "Optimalizace pro mobil — obsah se neprelijí ani nepřetéká",
+        "Čitelnost a kontrast — bílý text na tmavém pozadí je čitelný",
+        "Formulář je logicky strukturovaný a skenatelný",
+        "Metriky jsou snadno porovnatelné"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "typografie",
+          "popis": "Slovo 'nepovinnné' v textu u polí ORGANIZACE a SPZ VOZIDLA obsahuje typografickou chybu (zdvojená n). Mělo by být 'nepovinné'. V produkční kvalitě na velkém plátně se to vidí a není přijatelné.",
+          "selektor_nebo_prvek": "Text '(nepovinnné)' v Labels polí ORGANIZACE a SPZ VOZIDLA",
+          "navrhovana_oprava": "Opravit na '(nepovinné)'"
+        },
+        {
+          "severity": "polish",
+          "category": "hierarchie",
+          "popis": "Text 'nebo zadejte ručně' pod tlačítky je velmi malý a snadno přehlédnutelný. Uživatel si nemusí všimnout, že může vyplnit formulář ručně bez uploadování dokladu, přestože je to alternativa.",
+          "selektor_nebo_prvek": "Text 'nebo zadejte ručně' pod tlačítky",
+          "navrhovana_oprava": "Zvětšit font nebo vylepšit vizuální odlišení, aby byla instrukce jasnější"
+        }
+      ]
+    },
+    {
+      "snimek": "13-dash-pritomni-light-mobile",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Čistý, profesionální dashboard s jasnou vizuální hierarchií. Metriky nahoře okamžitě komunikují klíčové informace, formulář je logicky strukturován dole. Design signalizuje péči o detaily a respektuje inteligenci uživatele — nic zbytečného, všechno má účel.",
+      "co_funguje": [
+        "Jasná vizuální hierarchie: metriky → akce → formulář progrese má smysl",
+        "Akcentní čáry na kartách metriky (vínová barva vlevo) přidávají rytmus bez nepořádku",
+        "Primární (červená) vs. sekundární (šedá) akce jsou bez chyby rozlišené",
+        "Typografie má sílu: velká čísla pro metriky, správná velikost labelů, kontrast podporuje čitelnost",
+        "Spacing je konzistentní a dává obrazovce prostor k dýchání — není to těsnit",
+        "Ikony (osoba u 'Nový návštěvník', stahování, kamera) doplňují text a zvedají srozumitelnost",
+        "Formulář: labely jsou pevně umístěné (ne jen placeholders), pole mají jasný kontrast a padding",
+        "Responsivní layout — obsah je přeuspořádán pro mobil, není to jen zmenšená desktopová verze"
+      ],
+      "nalezy": [
+        {
+          "severity": "polish",
+          "category": "spacing",
+          "popis": "Tlačítka 'Nahrát doklad ze souboru' a 'Použít webkameru' jsou umístěna vedle sebe. Na velmi úzkých zařízeních (sub-375px) by tato konfiguraci mohla vést k vypínání textu nebo bezdrátovým dotykovým cílům. Vidím, že to aktuálně funguje, ale na hranici.",
+          "selektor_nebo_prvek": "sekce tlačítek pod 'Nový návštěvník' (dois boutons côte à côte)",
+          "navrhovana_oprava": "Zvážit vertikální stack (pod sebou) tlačítek na breakpointu pod ~375px šířky, aby se zachovaly dotykové cíle v minimu 44x44px a text byl vždy čitelný bez zkrácení."
+        }
+      ]
+    },
+    {
+      "snimek": "14-dash-dnes-dark",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Profesionální, strukturované, moderní. Tmavý theme s jasnými červenými akcemi a zeleným stavovým označením. Tři metriky na vrchu, tabulka se návštěvami je čitelná, levá strana nabízí filtry a event log. Jedná se o solidní podnikovou aplikaci bez zjevných chyb nebo wow momentu.",
+      "co_funguje": [
+        "Tmavý theme je moderní a profesionální se vhodným kontrastem",
+        "Tři metriky na vrchu poskytují rychlý přehled (přítomní, dnes, celkem)",
+        "Tabulka se návštěvami je čitelná se zřetelným sloupcem STAV",
+        "Zelená barva pro 'Přítomen/a' je dobrým vizuálním prvkem",
+        "Červená tlačítka (Nový návštěvník, Zapsat příchod, Odejít) jsou jasně vidět",
+        "Data v tabulce jsou konzistentní — návštěvy s ODCHODEM mají status 'Odešel/a', bez ODCHODU mají 'Přítomen/a'",
+        "Levá strana nabízí intuitivní filtry a event log",
+        "Tab 'Dnes' je jasně zvýrazněn červeně oproti ostatním"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Tři metriky nahoře (4 Aktuálně přítomní, 7 Dnes celkem, 12 Celkem záznamů) mají všechny stejnou velikost a vizuální váhu. 'Aktuálně přítomní' by měla být jasně nejdůležitější — to je nejnaléhavější informace pro správce budovy v daný moment.",
+          "selektor_nebo_prvek": "Tři metrické karty v horní části — .metric-card nebo similar",
+          "navrhovana_oprava": "Zvýraznit 'AKTUÁLNĚ PŘÍTOMNÍ' — větší font (např. 48px vs 36px), zelenavá či kontrast nější barva (korespondující s 'Přítomen/a' stavem), nebo pozice (přesunout dopředu). Ostatní metriky zmenšit nebo udělat vizuálně druhotné."
+        },
+        {
+          "severity": "polish",
+          "category": "spacing",
+          "popis": "Levá strana má čtyři funkční sekce (akce: Nový návštěvník, filtry: Jméno/Organizace/SPZ, další akce: Webkamera/Zapsat příchod, event log: Příchody za poslední hodinu), ale nejsou jasně vizuálně odděleny. Zdá se to jako jeden dlouhý seznam prvků bez průduchů.",
+          "selektor_nebo_prvek": "Levý panel (.sidebar) — skupiny: 'Nový návštěvník', filtry, 'Použít webkameru', 'Zapsat příchod', 'Příchody za poslední hodinu'",
+          "navrhovana_oprava": "Přidat jasné vizuální dělítko (horizontální čára, subtle border, nebo padding) mezi sekcemi. Zvýšit spacing/margin mezi skupinami tak, aby bylo zřejmé, kde jedna sekce končí a druhá začíná."
+        },
+        {
+          "severity": "polish",
+          "category": "typografie",
+          "popis": "V sloupci STAV má 'Přítomen/a' zelenou barvu (skvělé), ale 'Odešel/a' je jen normální šedý text bez vizuálního vyznačení. Při rychlém skenování tabulky není stav 'Odešel/a' tak jasně viditelný.",
+          "selektor_nebo_prvek": "STAV sloupec v tabulce — buňky s textem 'Odešel/a'",
+          "navrhovana_oprava": "Přidat vizuální označení 'Odešel/a' — například šedé či průsvitné pozadí (badge/chip), ikonu (✓, kruh, nebo jiný glyph), nebo subtilní text styl (nižší opacity, kurzíva). Tím bude stav jasně rozlišitelný bez nutnosti číst text."
+        }
+      ]
+    },
+    {
+      "snimek": "15-dash-historie-dark",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Elegantní dark mode interface s čistou strukturou. Formulář vlevo, tabulka vpravo – jasné rozdělení. Červené CTA prvky jsou agilní a přitahují pozornost. Bez přetížení, bez zbytečného designu. Profesionální a věrohodné.",
+      "co_funguje": [
+        "Dark mode design je moderní a elegantní, kontrast je výborný",
+        "Vizuální hierarchie je jasná – tabulka je dominantní prvek",
+        "Struktura je soudržná: metriky (kontext) → formulář (akce) / tabulka (obsah)",
+        "Tabulka se skenuje snadno, sloupce jsou čisté a zarovnané",
+        "Konzistence v designu – všechna CTA tlačítka jsou stejně stylizována",
+        "Spacing je konzistentní a pohodný, nic není těsné",
+        "Typografie má rytmus a čitelnost je na úrovni",
+        "Zarovnání a mřížka jsou přesné, bez vizuálních bugů",
+        "Design vybízí k interakci a respektuje inteligenci uživatele"
+      ],
+      "nalezy": []
+    },
+    {
+      "snimek": "16-dash-vse-dark",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Profesionální, čistý tmavý design s jasnou strukturou. Levo-pravo layout je okamžitě pochopitelný. Nejde o produkční chybu, ale je tam vizuální nekonzistentnost, která na plátně udělá dojem rozpracovanosti.",
+      "co_funguje": [
+        "Tmavý design je čistý a profesionální, vhodný pro večerní obsluhu",
+        "Struktura levo-pravo je intuitivní — formulář vlevo, seznam vpravo, metriky nahoře",
+        "Tabulka je čitelná s jasně rozlišenými sloupci a zarovnáním",
+        "Typografická hierarchie je viditelná bez dekódování",
+        "Spacing je konzistentní a komunikuje seskupení prvků",
+        "Všechno je na mřížce, žádné pixel-shifting",
+        "Tlačítka a akce jsou jasně viditelné (červené CTA)",
+        "Data-ink ratio je dobrý, není tam zbytečný balast"
+      ],
+      "nalezy": [
+        {
+          "severity": "critical",
+          "category": "konzistence",
+          "popis": "Poslední dva řádky tabulky (Lukáš Procházka, Martin Dvořák) mají zcela jiný obsah v buňkách STAV a ODCHOD. Místo 'Detail' tlačítka a prázdného ODCHODU mají 'Upravit' a 'Odejít' tlačítka plus 'Příchom./a' tag se zeleným ohraničením. To vypadá, že jsou to dva různé typy záznamů, ale tato rozdílnost není konzistentně aplikována — je v rozporu s ostatními řádky. Na velké obrazovce to bude vypadat jako bug nebo rozpracovanost.",
+          "selektor_nebo_prvek": "Poslední dva řádky tabulky — řádky Lukáše Procházky a Martina Dvořáka, sloupce ODCHOD/STAV",
+          "navrhovana_oprava": "Sjednotit layout: buď všechny řádky bez odchodu (\"nedokončené návštěvy\") mají stejný internal layout, nebo se stav \"bez odchodu\" zobrazuje jako normální buňka v ODCHODU (např. '-' nebo 'Příchod bez odchodu'), a STAV zůstává 'Detail' tlačítko. Nemělo by být vidět, že některé řádky jsou mechanicky jiné."
+        },
+        {
+          "severity": "important",
+          "category": "data",
+          "popis": "Popis metriky ('AKTUÁLNĚ PŘÍTOMNÍ', 'DNES CELKEM', 'CELKEM ZÁZNAMŮ') je v malém fontu pod číslem. V první sekunde oko vidí jen čísla (4, 7, 12) bez kontextu. Popis by měl být okamžitě čitelný, aby uživatel nemusel číst dva řádky.",
+          "selektor_nebo_prvek": "Tři metrické karty v headeru — konkrétně text 'AKTUÁLNĚ PŘÍTOMNÍ', 'DNES CELKEM', 'CELKEM ZÁZNAMŮ' pod čísly",
+          "navrhovana_oprava": "Zvětšit font popisu metriky nebo jej umístit vedle čísla (ne pod ním). Nebo schovat do ikony se tooltipem. Cíl: kontext musí být zřejmý bez dalšího čtení."
+        },
+        {
+          "severity": "polish",
+          "category": "hierarchie",
+          "popis": "Levý panel (Nový návštěvník) a pravý panel (Přehled návštěv) mají vizuálně stejnou váhu, přestože seznam návštěv je primární obsah. Nadpisy jsou stejně tučné, stejné ikony. Na velkém plátně není jasné, které sekci by měl uživatel věnovat pozornost.",
+          "selektor_nebo_prvek": "Nadpisy 'Nový návštěvník' (vlevo) a 'Přehled návštěv' (vpravo)",
+          "navrhovana_oprava": "Přehled návštěv by měl být opticky dominantnější — větší font, jasněji viditelný akcent, nebo podtrhnutí. Nový návštěvník je sekundární panel pro zadávání — měl by být menší nebo bez vizuálního rámu."
+        }
+      ]
+    },
+    {
+      "snimek": "17-dash-vse-light",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Čistá, profesionální dashboard s jasnou hierarchií. KPI karty komunikují přehled na první pohled, formulář a tabulka jsou intuitivně uspořádané. Obrazovka si vysloužila důvěru vedení — vypadá zmapově a zvládnutě.",
+      "co_funguje": [
+        "KPI karty — velké číslo, malý popis, jasná vizuální stratifikace",
+        "Tabulka — skandovatelné sloupce, čitelné datum/časy, dostatek prostoru mezi řádky",
+        "Sidebar — přirozený flow formuláře (jméno, příjmení, organizace, SPZ)",
+        "Barva — červená konzistentně označuje primární akce a statusy",
+        "Status indikátor — zelené tečky pro přítomné vs. text Odešel/a jasně diferencují",
+        "Spacing — dostatečný bílý prostor, konzistentní padding a margins",
+        "Tlačítka — Detail a Odejít jsou zřetelné, Odhlášit je viditelně umístěn nahoře vpravo",
+        "Filtrování — tab Vše je jasně zvýrazněn červeně, ostatní taby jsou rozlišitelné"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "typografie",
+          "popis": "Text na tlačítku v levém panelu zní jako 'Zapsatpříchod' bez mezer. Na velkém plátně před vedením je to vidět a působí jako nedopatření. Mělo by být 'Zapsat příchod' nebo 'Zapsatpříchod' s ikonou checkmarku oddělený od textu.",
+          "selektor_nebo_prvek": "Tlačítko s checkmark ikonou v sekci 'Nový návštěvník', druhé tlačítko po 'Použít webkameru'",
+          "navrhovana_oprava": "Přidat mezery do textu: 'Zapsat příchod' nebo resetovat layout tak, aby ikona a text byly oddělené a čitelné"
+        },
+        {
+          "severity": "important",
+          "category": "story",
+          "popis": "Text 'nebo zadejte ručně' pod dvěma tlačítky (Náhrát doklad, Použít webkameru) je matoucí. Není zřejmé, jestli to znamená 'přeskočit tato tlačítka a zadat ručně' nebo 'jako alternativa k těmto způsobům'. Uživatel může být na moment zmaten, co má dělat dál.",
+          "selektor_nebo_prvek": "Pomocný text 'nebo zadejte ručně' umístěný pod oběma tlačítky v sekci 'Nový návštěvník'",
+          "navrhovana_oprava": "Buď text přepsat na jasnější instrukci: 'Nebo si vyplňte údaje ručně níže' a posunout pod formulářová pole, nebo toto tlačítko úplně odstranit, pokud jde jen o hint."
+        },
+        {
+          "severity": "polish",
+          "category": "spacing",
+          "popis": "SPZ sloupec v tabulce má někdy čísla (9AB 8877, 4KL 5566), někdy pomlčku (–). Formátování pomlčky a zarovnání sloupce by mohlo být jednotnější — zatím vypadá mírně chaoticky.",
+          "selektor_nebo_prvek": "Sloupec 'SPZ' v tabulce 'Přehled návštěv'",
+          "navrhovana_oprava": "Centrace pomlčky v sloupci nebo konzistentní formátování pro chybějící hodnoty (např. drobný placeholder text místo prázdné pomlčky)"
+        }
+      ]
+    },
+    {
+      "snimek": "18-dash-vse-fullpage",
+      "verdikt": "Needs Work",
+      "skore": 7,
+      "prvni_dojem": "Profesionální operační dashboard s čistým layoutem a jasným smyslem. Tmavý režim a červené akcenty jsou elegantní. Zve to klikat. Ale ortografické chyby a těsný spacing jedné sekce snižují důvěru v kvalitu.",
+      "co_funguje": [
+        "Vizuální hierarchie — metriky, formulář a tabulka mají jasné priority",
+        "Čitelnost typografie — nadpisy, body text i metadata jsou dobře rozlišeny a kontrastní",
+        "Zarovnání a mřížka — všechny prvky jsou přesně umístěny bez roztřepených hran",
+        "Consistency — tlačítka, inputy a styling jsou jednotné v celé aplikaci",
+        "Data prezentace — tabulka je snadno skenatelná, sloupce mají jasné záhlaví",
+        "Emoční rezonance — design je vážný ale nikoliv sterilní, barevná paleta je energická bez agresivity",
+        "Spacing mezi hlavními sekcemi — KPI karty, sidebar a tabulka mají dostatek prostoru"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "data",
+          "popis": "Tlačítko v levém sidebaru (sekce 'Nový návštěvník') nese text 'Nahrát dokiad ze souboru'. Slovo 'dokiad' není platné české slovo — mělo by to být 'doklad' nebo 'dokument'. Chyba je vidět na obrazovce a signalizuje nedbalost při přípravě na prezentaci vedení.",
+          "selektor_nebo_prvek": "Tlačítko 'Nahrát dokiad ze souboru' v levém sidebaru, sekce 'Nový návštěvník'",
+          "navrhovana_oprava": "Změnit text na 'Nahrát doklad ze souboru' nebo 'Nahrát dokument ze souboru'"
+        },
+        {
+          "severity": "important",
+          "category": "typografie",
+          "popis": "Zelená tlačítka v tabulce (na řádcích s aktivními návštěvami) nese text 'Připomenuť'. Správná česká forma příkazu od 'připomenout' je 'Připomeň', nikoliv 'Připomenuť'. Ortografická chyba na viditelném prvku opět evokuje nedbalost.",
+          "selektor_nebo_prvek": "Zelená tlačítka s textem 'Připomenuť' v tabulce 'Přehled návštěvy' (řádky Lukáš Procházka, Martin Dvořák, Jana Svobodová, Petr Novák)",
+          "navrhovana_oprava": "Změnit text na 'Připomeň'"
+        },
+        {
+          "severity": "polish",
+          "category": "spacing",
+          "popis": "Sekce 'Příchody za poslední hodinou' v levém sidebaru má seznam posledních návštěv (Novotná, Svobodová, Novák) se velmi těsným vertikálnímspacingem. Řádky jsou příliš blízko sebe, chybí jim prostor k dýchání. Zhoršuje to čitelnost, když se seznam rozroste.",
+          "selektor_nebo_prvek": "Sekce 'Příchody za poslední hodinou' — seznam položek (jméno, čas, organizace, doba)",
+          "navrhovana_oprava": "Zvýšit line-height nebo padding mezi řádky (např. zvednutí z ~1.2 na ~1.6 nebo přidání větší margin-bottom mezi položkami)"
+        }
+      ]
+    },
+    {
+      "snimek": "19-hledat-prazdne-dark",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Profesionální, moderní aplikace s čistým tmavým designem a jasnou strukturou. Levá strana má aktivní obsah, pravá strana je pro hledání. V prázdném stavu hledání cítím trošku nejasnost — instrukce je ve tabulce, ale není dostatečně vidět.",
+      "co_funguje": [
+        "Profesionální a moderní tmavý motiv",
+        "KPI čísla (4, 7, 12) jasně viditelná nahoře",
+        "Čisté rozdělení na levou stranu (přidání návštěvy) a pravou stranu (hledání)",
+        "Formulář s jasným labels (JMÉNO, DATUM, HODINA OD/DO)",
+        "Červená CTA tlačítka ('Nahrát doklad', 'Zapsát příchod') výrazně viditelná",
+        "Placeholdery v inputech (DD.MM.RRRR, HH:MM) pomáhají orientaci",
+        "Tab struktura (Příchod, Dnes, Historie, Vše, Hledat) je srozumitelná"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "data",
+          "popis": "Instrukce v prázdné tabulce 'Zadejte jméno, datum nebo čas — výsledky se hledají průběžně.' je příliš malá a diskrétní. V prázdném stavu, kde uživatel nemá co hledat, by měla být viditelněji umístěna a zvýšena viditelnost (větší text, vyšší kontrast, ikona).",
+          "selektor_nebo_prvek": "Text 'Zadejte jméno, datum nebo čas — výsledky se hledají průběžně.' v tabulce (empty state message)",
+          "navrhovana_oprava": "Přesunout instrukci nad formulář jako hint nebo zvýšit kontrast a velikost textu v tabulce. Přidat ikonu (💡 nebo 🔍) pro lepší viditelnost."
+        },
+        {
+          "severity": "polish",
+          "category": "typografie",
+          "popis": "Headers tabulky (JMÉNO A PŘÍJMENÍ, ORGANIZACE, SPZ, PŘÍCHOD, ODCHOD, DOBA, STAV) mají nízký kontrast — šedý text na tmavém pozadí splývá. V tmavém motivu by měly být jasnější.",
+          "selektor_nebo_prvek": "Headers řádek tabulky — jednotlivé sloupce (JMÉNO A PŘÍJMENÍ, ORGANIZACE, SPZ, PŘÍCHOD, ODCHOD, DOBA, STAV)",
+          "navrhovana_oprava": "Zvýšit kontrast — použít světlejší šedou barvu nebo bílý text na dark background"
+        }
+      ]
+    },
+    {
+      "snimek": "20-hledat-vysledky-dark",
+      "verdikt": "Needs Work",
+      "skore": 6,
+      "prvni_dojem": "Profesionální korporátní aplikace s čistou strukturou, ale bez elegance. Dark mode je technický a funkční, ale design postrádá osobnost. Na první pohled věřím v funkcionalitu, ne v péči o detail.",
+      "co_funguje": [
+        "Čistá dvousloupcová struktura — filtr vlevo, výsledky vpravo",
+        "KPI boxy v horní části jasně orientují v kontextu",
+        "Príchod/odchod v tabulce je logicky seřazen",
+        "Barva 'Hledat' tabu je dostatečně viditelná na pozadí ostatních",
+        "Dark mode je konzistentní v celé aplikaci"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "konzistence",
+          "selektor_nebo_prvek": "akční prvky v tabulce — 'Upravit' a 'Odejít'; porovnání s tlačítkem 'Použít webkameru' vlevo",
+          "popis": "V tabulce je 'Upravit' prezentován jako textový odkaz bez viditelného stylu, zatímco 'Odejít' je červené tlačítko. Vlevo v panelu je 'Použít webkameru' zcela bez viditelného stylování. Při prezentaci vedení na velkém plátně bude matoucí, co je klikatelné a co nikoliv.",
+          "navrhovana_oprava": "Všechny akční prvky v tabulce by měly být konzistentně stylizovány — buď jako button, nebo jako link. Zajistit jednotný styl akcí v celé aplikaci (vlevo vs vpravo)."
+        },
+        {
+          "severity": "important",
+          "category": "data",
+          "selektor_nebo_prvek": "sloupce tabulky — SPZ '3AB 1122', PŘÍCHOD '30. 7. 2026 14:22', DOBA '8 min'",
+          "popis": "Při prezentaci na velkém plátně vedení budou čísla a texty v tabulce špatně čitelné. SPZ, časy a další data jsou malé. Font je příliš jemný na dálkové čtení. To je kritické pro business meeting.",
+          "navrhovana_oprava": "Zvětšit font sloupců tabulky. Zvážit zhuštění sloupců (skrýt méně důležité sloupce) nebo přeuspořádat data na více řádků pro větší čitelnost na vzdálené obrazovce."
+        },
+        {
+          "severity": "polish",
+          "category": "spacing",
+          "selektor_nebo_prvek": "řádek tabulky s Petrem Novákem",
+          "popis": "Vertikální padding v řádku tabulky je příliš těsný. Cely řádek se zdá stlačený, čímž se snižuje čitelnost a dojem profesionality. Bílý prostor by měl komunikovat hodnotu.",
+          "navrhovana_oprava": "Zvýšit vertikální padding řádků tabulky (padding-top/bottom). Přidat vizuální oddělení mezi řádky (border-bottom nebo background contrast)."
+        },
+        {
+          "severity": "polish",
+          "category": "hierarchie",
+          "selektor_nebo_prvek": "sloupce tabulky — všechny labely (JMÉNO A PŘÍJMENÍ, ORGANIZACE, SPZ atd.)",
+          "popis": "Všechny sloupce mají stejnou vizuální váhu a velikost fontu. Není jasné, které sloupce jsou primární (jméno, organizace) a které sekundární (SPZ, doba). V nelineárním skenování bude oko zmateno.",
+          "navrhovana_oprava": "Zavést hierarchii sloupců: primární sloupce (jméno, org) mohou být větší/tučnější, sekundární (SPZ, doba) mohou být menší/šedé. Nebo je vizuálně oddělit."
+        }
+      ]
+    },
+    {
+      "snimek": "21-hledat-bez-vysledku-dark",
+      "verdikt": "Needs Work",
+      "skore": 6,
+      "prvni_dojem": "Tmavé profesionální rozhraní se zdá být dobře strukturované dvousloupcovými panely, ale prázdný stav vyhledávání je příliš minimalistický. Tabulka se sloupky bez obsahu a krátký text uprostřed evokují pocit nehotovosti. Uživatel neví, co dál - chybí mu guidance a emoční vstoupení.",
+      "co_funguje": [
+        "Jasný dvousloupcový layout oddělující formulář (vlevo) od obsahu (vpravo)",
+        "Konzistentní barevné schéma - červená CTA na tmavém pozadí se jasně rozlišuje",
+        "Tagy/filtry (Přítomní, Dnes, Historie, Všé, Hledat) umožňují skenování pohledů",
+        "Formulář vlevo je logicky strukturován: Nový návštěvník do pole, pak seznam Příchodů za poslední hodinu",
+        "Vyhledávací pole má dobrý vizuální feedback - červený border signalizuje aktivitu"
+      ],
+      "nalezy": [
+        {
+          "severity": "critical",
+          "category": "typografie",
+          "popis": "Text 'Žádné záznam' je gramaticky nesprávný. Správně by mělo být 'Žádné záznamy' (plurál) nebo 'Žádný záznam' (singulár). Na velkém plátně před vedením je to trapné a signalizuje nedbalost.",
+          "selektor_nebo_prvek": "Empty state text v tabulce - řádek bez dat obsahující 'Žádné záznam'",
+          "navrhovana_oprava": "Změnit na 'Žádné záznamy nalezeny' nebo 'Nic jsme nenašli' s přátelštějším tónem"
+        },
+        {
+          "severity": "important",
+          "category": "story",
+          "popis": "Prázdný stav nemá příběh. Uživatel vidí 'Žádné záznam' a neví, co dělat - má zkusit jiný výraz? Jít na 'Nový návštěvník'? Bez guidance se obrazovka cítí jako rozpracovaná.",
+          "selektor_nebo_prvek": "Celá empty-state sekce - tabulka s prázdným obsahem a minimálním textem",
+          "navrhovana_oprava": "Přidat explanatory text pod vyhledávací pole: 'Zkuste změnit výraz nebo přidejte nového návštěvníka' - nebo přesunout empty state mimo tabulku do dedikovaného containeru s ikonou"
+        },
+        {
+          "severity": "important",
+          "category": "data",
+          "popis": "Tabulka se sloupky (JMÉNO A PŘÍJMENÍ, ORGANIZACE, SPZ, PŘÍCHOD, ODCHOD, DOBA, STAV) zabírá velký prostor, ale je zcela prázdná. Data-ink ratio je špatný - vizuální struktura signalizuje 'tady budou data', ale není nic. Pro empty state je to neefektivní.",
+          "selektor_nebo_prvek": "table.search-results nebo div.results-table - celá tabulkové struktura se záhlavím sloupců",
+          "navrhovana_oprava": "Nahradit tabulkový layout dedikovaným empty state designem: odstranit řádky sloupců, zobrazit jen obrázek/ikonu + text 'Nic jsme nenašli. Zkuste změnit hledaný termín.'"
+        }
+      ]
+    },
+    {
+      "snimek": "23-modal-upravit-dark",
+      "verdikt": "Needs Work",
+      "skore": 6,
+      "prvni_dojem": "Velký tmavý modal kombinuje tabulku návštěvníků s editačním formulářem. Design je čistý a čitelný, ale struktura není intuitivní — obsahuje příliš informací a není jasné, co je protagonista: je to editace, nebo prohlídka seznamu?",
+      "co_funguje": [
+        "Tmavý režim je profesionální a čitelný bez ostrých hran",
+        "Tlačítka Zrušit (šedé) a Uložit (červené) jsou jasně viditelná a jejich barvy komunikují účel",
+        "Input fieldy mají dobrý kontrast na tmavém pozadí a jsou čitelné",
+        "Layout je zarovnaný, prvky jsou na mřížce",
+        "Barvy a styly jsou sjednocené, design neterčí všemi směry",
+        "Tabulka návštěvníků je čistě strukturována a dá se skenovat"
+      ],
+      "nalezy": [
+        {
+          "severity": "critical",
+          "category": "story",
+          "popis": "Modal kombinuje tabulku se seznamem návštěvníků (Lukáš Procházka, Martin Dvořák, Jana Svobodová, Petr Novák) v horní polovině s editačním formulářem tlačeným dolů. Když se otevře modal pro editaci, uživatel vidí nejdřív seznam, teprve pak formulář. To není správný příběh — formální by měl být hrdina, ne seznam. Titulek 'Přehled návštěvy' signalizuje read-only режim, ale vidí se input fieldy. Nejasné, jaká je primární akce.",
+          "selektor_nebo_prvek": "Modal dialog — sekvence: titulek + tabulka (4 řádky) + editační formulář",
+          "navrhovana_oprava": "Reorganizovat: (1) Dát editační formulář do popředí — to je primární obsah. (2) Tabulku buď odstranit, nebo ji přesunout do collapsed sekce/záložky. (3) Změnit titulek na 'Upravit návštěvu' — jasně komunikovat, že se jedná o editaci, ne o zobrazení."
+        },
+        {
+          "severity": "important",
+          "category": "typografie",
+          "popis": "Labely v editačním formuláři (JMÉNO, ORGANIZACE, SPZ VOZIDLA) jsou v šedé barvě na tmavém pozadí. Kontrast je slabý a text se čte s námahou. Na velkoplošné prezentaci vedení firmy by měly být bez debaty bez-ambiguously čitelné z první sekundy.",
+          "selektor_nebo_prvek": "Labely JMÉNO, ORGANIZACE, SPZ VOZIDLA v edita ním formuláři",
+          "navrhovana_oprava": "Zvýšit kontrast — změnit barvu labelu na bílou nebo jasně šedou s větší váhou fontu. Měřit kontrast WCAG AA min. 4.5:1 pro text na pozadí."
+        },
+        {
+          "severity": "important",
+          "category": "spacing",
+          "popis": "Prostor mezi tabulkou a editačním formulářem je minimální, vizuální oddělení těchto dvou sekcí chybí. Přechod z tabulky přímo na pole formuláře terčí design na mez čitelnosti. Modal vypadá jako jeden zaplnený kvádr bez rytmu a dýchání.",
+          "selektor_nebo_prvek": "Prostor mezi tabulkou (posledním řádkem Petr Novák) a prvním labelem JMÉNO",
+          "navrhovana_oprava": "Přidat jasné vizuální oddělení — horizontální oddělovací linka, zvětšit vertical spacing, nebo změnit background sekcí. Prostor má komunikovat: 'Tady končí seznam, tady začíná editace'."
+        },
+        {
+          "severity": "important",
+          "category": "spacing",
+          "popis": "Prostor mezi jednotlivými poli formuláře (JMÉNO, ORGANIZACE, SPZ VOZIDLA) je příliš těsný. Pole se přitiskují k sobě, chybí jim prostor k oddýchnutí. Modal terčí na hustotě dat místo elegance.",
+          "selektor_nebo_prvek": "Input fieldy v edita ním formuláři — prostor mezi řádky",
+          "navrhovana_oprava": "Zvýšit padding/margin mezi jednotlivými poli. Každé pole by mělo být jasně vizuálně odděleno. Rytmus prostoru by měl být konzistentní."
+        },
+        {
+          "severity": "polish",
+          "category": "zarovnani",
+          "popis": "Input fieldy nemají jasnou vizuální indikaci, že jsou editovatelné. Border je slabý, není jasný fokus state. Na první pohled se neví, jestli se do nich dá psát, nebo jestli to je jen zobrazení.",
+          "selektor_nebo_prvek": "Input fieldy — Lukáš Procházka, Bosch Rexroth, 2AE 4471",
+          "navrhovana_oprava": "Přidat vizuální indikaci editovatelnosti: (1) zesilnit border/outline, (2) přidat hover efekt, (3) přidat ikonu (tužka), nebo (4) změnit background při focus. Uživatel by měl vědět, co je interactive."
+        }
+      ]
+    },
+    {
+      "snimek": "24-modal-upravit-light",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Modal je čistý, profesionální a funkční — tři editovatelná pole jsou jasně viditelná a dobře organizovaná. Design ale postráhá explicitní nadpis „Upravit záznam\", který by jasně signalizoval akci a zvýšil jistotu uživatele. Všechny prvky jsou správně zarovnané a barevně konzistentní s aplikací.",
+      "co_funguje": [
+        "Čistý, minimalistický design bez zbytečných prvků",
+        "Jasně čitelná editovatelná pole s dostatečným vizuálním kontrastem",
+        "Tlačítka jsou barevně jasně odlišena — Zrušit (šedé) vs. Uložit (tmavě červené)",
+        "Dostatek bílého prostoru a konzistentní rytmus mezer mezi prvky",
+        "Všechny prvky jsou precizně zarovnané na mřížce",
+        "Horní identifikace Lukáš Procházka jasně signalizuje, kterou osobu edituju",
+        "Vizuální konzistence s ostatními prvky aplikace"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "story",
+          "popis": "Modal nemá explicitní dialog title. Vidím pouze jméno osoby Lukáš Procházka v horní části, ale chybí jasný nadpis jako Upravit záznam nebo Upravit údaje, který by unambigózně indikoval, jakou akci v modalu provádím. Bez tohoto kontextu si uživatel nemusí být zcela jistý, zda edituje existující záznam.",
+          "selektor_nebo_prvek": "Modal dialog header — horní část modalu s textem Lukáš Procházka",
+          "navrhovana_oprava": "Přidat explicitní nadpis Upravit záznam nebo Upravit údaje do horní části modalu, nebo změnit nadpis na Upravit údaje pro Lukáše Procházky. Tím by se jasně indikovala akce a zvýšila by se jistota uživatele."
+        },
+        {
+          "severity": "polish",
+          "category": "typografie",
+          "popis": "Labely vstupních polí jsou v VELKÝCH PÍSMENECH: JMÉNO, ORGANIZACE, SPZ VOZIDLA. Toto je konzistentní s aplikací, ale typograficky méně rafinované. Title Case by byl vizuálně elegantnější a přirozenější.",
+          "selektor_nebo_prvek": "Label texty v polích — konkrétně prvky s textem JMÉNO, ORGANIZACE, SPZ VOZIDLA",
+          "navrhovana_oprava": "Změnit labely na Title Case: Jméno, Organizace, SPZ vozidla. Zvýší se vizuální rafinace a elegance designu."
+        }
+      ]
+    },
+    {
+      "snimek": "25-modal-odchod-dark",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Čisté a profesionální potvrzovací okno s jasným účelem. Tmavý režim je bez šumu, bílý text má výborný kontrast, červené destruktivní tlačítko správně signalizuje závažnost. Jedinou zádrhel: tlačítko Zrušit nevypadá dostatečně jako interaktivní prvek — spíše jako text na pozadí než jako UI prvek se svým framingem.",
+      "co_funguje": [
+        "Jasná vizuální hierarchie — nadpis dominuje, jméno je tučné a vykočí, akce jsou jasně odděleny",
+        "Tučné zvýraznění důležitého jména (Lukáš Procházka) — uživatel okamžitě vidí, koho se to týká",
+        "Správné barevné kódování destruktivní akce — červená Ano, odejít jasně signalizuje závažnost",
+        "Konzistentní spacing — rytmus mezer je rovnoměrný, bez těsnění ani rozpačitosti",
+        "Čitelnost — bílý text na tmavém pozadí má výborný kontrast",
+        "Správné pořadí tlačítek — cancel vlevo, confirm vpravo",
+        "Emoční tón — formální, vážný, respektuje inteligenci uživatele bez dramatismu"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "konzistence",
+          "selektor_nebo_prvek": "Tlačítko Zrušit (cancel button, vlevo v modálu)",
+          "popis": "Tlačítko Zrušit je zobrazeno pouze jako bílý text na tmavém pozadí modálu bez viditelného border či background. V potvrzovacím dialogu — zejména v destruktivním kontextu — by měly být oba akční prvky (Zrušit i Ano, odejít) stejně jasně klikatelné a hmatné. Aktuálně se Zrušit chová spíš jako hyperlink nebo prostý text než jako prvek UI, což narušuje konzistenci s Ano, odejít tlačítkem, které má jasný vizuální frame (červené pozadí).",
+          "navrhovana_oprava": "Přidat kolem Zrušit tlačítka tenký border (1px, barva: rgba(255,255,255,0.3-0.4)) nebo subtilní pozadí (rgba(255,255,255,0.08)). Tím se prvek jasně oddělí od běžného textu v modálu a bude zřejmé, že je to klikatelné."
+        }
+      ]
+    },
+    {
+      "snimek": "26-modal-odchod-mobile",
+      "verdikt": "Needs Work",
+      "skore": 6,
+      "prvni_dojem": "Čistý a moderní dialog s jasnou otázkou a dvěma akčními tlačítky, ale chybí mu fullscreen darkened overlay. Obsah pod modálem matuje uživatele a dotykové cíle vypadají na mobilu těsně.",
+      "co_funguje": [
+        "Jasná otázka Zapsat odchod? — přímo a srozumitelně",
+        "Kontextový popis s jménem osoby Lukáš Procházka — uživatel ví, koho se to týká",
+        "Dvě jasně odlišená tlačítka (Zrušit vs. Ano, odejít) se zřejmou hierarchií",
+        "Minimální a čistý design bez zbytečného ozdobení",
+        "Konzistentní barvení — červená pro primární akci, tmavá pro bezpečný cancel",
+        "Čitelná typografie s jasnou vizuální hierarchií",
+        "Ikona (červená šipka) je intuitivní symbol odchodu"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Modální okno není pokryto fullscreen darkened overlay. Na snímku vidím obsah pod modálem (seznam s Přítomen/a, tlačítka Upravit, Odejít), což zeslabuje fokus na dialog a uživatel není jistý, zda je background disabled či stále interaktivní.",
+          "selektor_nebo_prvek": "Modal overlay / .modal-backdrop",
+          "navrhovana_oprava": "Přidej fullscreen semi-transparent overlay (50–70% opacity tmavé barvy) pod modální okno. Zajisti správný z-index, aby modal zůstal vždy na vrchu."
+        },
+        {
+          "severity": "important",
+          "category": "mobil",
+          "popis": "Na mobilu 390px jsou tlačítka Zrušit a Ano, odejít vedle sebe. Z vizuálu vypadají těsně, potenciálně pod minimální velikostí dotyku 44x44px (iOS/Android guidelines). Riziko nešťastného tapnutí, obzvláště u prvního tlačítka.",
+          "selektor_nebo_prvek": ".button-cancel, .button-confirm",
+          "navrhovana_oprava": "Zajisti 44x44px efektivní dotykový cíl včetně padingu. Na mobilu zvážit stackování tlačítek pod sebou (full-width) místo vedle sebe — větší plocha, bezpečnější interakce."
+        }
+      ]
+    },
+    {
+      "snimek": "27-alert-success-dark",
+      "verdikt": "Needs Work",
+      "skore": 5,
+      "prvni_dojem": "Dashboard po zápisu návštěvníka se zelením OK signálem, ale formulář zůstal částečně vyplnený, když měl být čistý. Celkově to vypadá zmateně — není jasné, jestli je akce hotová nebo jestli jsem uprostřed něčeho.",
+      "co_funguje": [
+        "Zelená hláška s checkmarkem jasně signalizuje úspěch",
+        "KPI karty nahoře jsou čitelné a okamžitě viditelné",
+        "Tabulka s přehledem návštěv je dobře strukturovaná",
+        "Typografie a kontrast v noční režimu jsou čitelné",
+        "Tlačítka a formulářová pole jsou konzistentně stylizované",
+        "Layout je jasně rozčleněný — formulář vlevo, data vpravo"
+      ],
+      "nalezy": [
+        {
+          "severity": "critical",
+          "category": "data",
+          "popis": "Formulář obsahuje data z předchozího zápisu (Jan, Novák, Firma s.r.o., SPZ 1AB 2345), když měl být po úspěchu vyprázdněný. Matoucí UX — není jasné, jestli je zápis hotový nebo se pokračuje.",
+          "selektor_nebo_prvek": "Formulářová pole JMÉNO, PŘÍJMENÍ, ORGANIZACE, SPZ VOZIDLA v levém panelu pod zprávou o úspěchu",
+          "navrhovana_oprava": "Po úspěšném zápisu vymazat všechny obsah z polí (nebo je nastavit na defaultní stav) tak, aby byl formulář viditelně připravený na nový zápis."
+        },
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Zelená hláška o úspěchu se ztrácí v rohu formuláře. Pro klíčový feedback by měla být jasně nejdominantnější prvek — teď konkuruje s ostatními prvky.",
+          "selektor_nebo_prvek": "Zelená linka s textem '✓ Tereza Novotná zapsána/a v 14:30.' v levém formuláři",
+          "navrhovana_oprava": "Zvýšit viditelnost: větší font, silnější barva, nebo vložit do zvýrazněného kontejneru; ideálně umístit výše v hierarchii nebo centrovat tak, aby byla první věc, kterou uživatel vidí po akci."
+        },
+        {
+          "severity": "important",
+          "category": "story",
+          "popis": "Nejasný stav formuláře po úspěchu — není vidět, jestli je formulář stále aktivní (připravený na nový zápis) nebo je deaktivovaný. Matoucí UX signál.",
+          "selektor_nebo_prvek": "Celý formulářový box s tlačítky 'Zapsać příchod' a poli pro vstup",
+          "navrhovana_oprava": "Pokud je formulář stále aktivní, měl by být prázdný; pokud je dočasně deaktivovaný, měl by mít viditelný disabled stav (např. nižší opacity, disabled atribut na tlačítku). Jasně komunikovat příští kroku."
+        }
+      ]
+    },
+    {
+      "snimek": "28-alert-success-light",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Cisty, logicky layout se dvema jasne oddeleny zony - vlevo formular pro noveho navstevnika se zelenou uspesnou hlaskou, vpravo prehled navstev. Zelen haska s checkmarkem je na miste a citliva. Profesionalni a produkc, bez chuby.",
+      "co_funguje": [
+        "Dvousloupcovy layout je prehledny a intuitivni",
+        "Statisticke karty vykomunikuji stav okamzite (4 pritomni, 7 dnes, 12 celkem)",
+        "Hierarchie: Novy navstevnik vlevo je glavni protagonista, tabulka vpravo je kontext",
+        "Zelena zprava Tereza Novotna zapsana/a v 14:30 je viditne umistena a jasne signalizuje uspech",
+        "Formular je jednoduchy bez zbytecne slozitosti",
+        "Tabulka je citliva a skenovatelna, data jsou dobre usporadana",
+        "Barvy jsou vetsinou konzistentni - cervena na primarni akce, seda na sekundarni",
+        "Typografie ma jasny rytmus - velka cisla, citelne labely, maly text v tabulce",
+        "Zarovnani prvku je ciste a presne",
+        "Spacing kolem prvku je zdravy a da jim vzduch"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "konzistence",
+          "selektor_nebo_prvek": "Prvni statisticka karta s cerveny pruhem vs sloupec STAV v tabulce",
+          "popis": "Karta Pritomni ma cerveny levy pruh (signalizuje varovani), ale v tabulce je stav Pritomom/a zelen. Cervena a zelena maji rozdilny vyznam - toto je sematicky zmate. Stejny koncept (pritomnost) je vyjadreny dvema barvami s ruznym vyznamu.",
+          "navrhovana_oprava": "Zmenit levy pruh na karte na zelenou barvu, aby se shodoval se stavem v tabulce. Cervena by mela byt jen pro varovani nebo chyby."
+        },
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "selektor_nebo_prvek": "Tlacitko Odejit v tabulce - cervene tlacitka v poslednim sloupci",
+          "popis": "Tlacitko Odejit je cervene (barva primarnich akci), ale v kontextu to je sekundarni operace. Cervena barva deklaruje toto jako kriticke nebo caste pouzivane, ale Odejit je relativne vzacna akce a nemel by byt stejne zdurazneny jako primarni formulare.",
+          "navrhovana_oprava": "Zmenit tlacitko Odejit na sedi barvu, aby odrazi jeho sekundarni post. Cervena by mela byt vyhrazena opravdu primarnich akcim na obrazovce."
+        },
+        {
+          "severity": "polish",
+          "category": "typografie",
+          "selektor_nebo_prvek": "Polozky JMENO a PRIJMENI v levem formulari",
+          "popis": "Polozky JMENO a PRIJMENI nemaji zadny vizualni znameni, ze jsou povinne (nejsou tu *), zatimco ostatni pole maji (nepovinne) napsane. Toto cini pole asymetricky - bylo jasnejsi mit konzistentni vzhled pro vsechna pole.",
+          "navrhovana_oprava": "Pridat * nebo (povinne) k polozkam JMENO a PRIJMENI, nebo smazat text (nepovinne) z ostatnich poli, aby byla konzistencni."
+        },
+        {
+          "severity": "polish",
+          "category": "data",
+          "selektor_nebo_prvek": "Zelena zprava s checkmarkem Tereza Novotna zapsana/a v 14:30",
+          "popis": "Uspesna zprava nema viditne ovladani pro jeji zavreni (neni tam X tlacitko nebo odkaz Zavrit). Neni jasne, zda se zprava automaticky uzavira nebo zustava trvale viditelna. Uzivateli neni jasne, jestli ma mit moznost zavrit tuto hlasku.",
+          "navrhovana_oprava": "Pridat malou ikonku X nebo link Zavrit, aby bylo jasne, ze se zprava da zavrrit. Nebo jasne komunikovat, ze se auto-zavira po N sekundach (vizualne - napr. progress linka)."
+        }
+      ]
+    },
+    {
+      "snimek": "29-alert-error-dark",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Čistý, profesionální tmavý design s jasnou strukturou — levý formulář, pravý obsah. Ale první věc, kterou vidím, je \"Odhlásit\" tlačítko v top-right, které soutěží se s hlášením chyby o pozornost. To je visuální matení.",
+      "co_funguje": [
+        "Tmavý mode je příjemný a čitelný",
+        "Červené akcenty jsou energické a jasně signalizují primární akce",
+        "Tabulka je dobře formátovaná s čitelnými sloupci",
+        "Časy a doby jsou čistě formátované (30. 7. 2026 12:20, 2 h 10 min)",
+        "Statistiky nahoře (4, 7, 12) jsou okamžitě viditelné",
+        "Layout 2-sloupců je logický — vlevo formulář, vpravo data",
+        "Chyba je jasně viditelná s ikonou ⚠ a červeným rámečkem",
+        "Typografická hierarchie je cítit bez dekódování"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Tlačítko 'Odhlásit' v top-right rohu je stejně červené a prominentní jako primární akce 'Odejít' v tabulce. Odhlášení je terciární akce, měla by být skromná. Teď soutěží se s hlášením chyby o pozornost uživatele.",
+          "selektor_nebo_prvek": "Tlačítko 'Odhlásit' v horním pravém rohu (top-right corner)",
+          "navrhovana_oprava": "Změnit barvu a styl tlačítka 'Odhlásit' na méně prominentní — šedá, menší písmo, nebo umístit do menu (hamburger/dropdown) místo do horního pruhu."
+        },
+        {
+          "severity": "important",
+          "category": "data",
+          "popis": "Sloupce 'PŘÍCHOD' a 'ODCHOD' mají v tabulce jen '-' nebo čísla. U některých řádků je nejasné, jestli data chybí, nebo je návštěva stále přítomna. Toto nedostatečně komunikuje stav.",
+          "selektor_nebo_prvek": "Sloupce 'PŘÍCHOD' a 'ODCHOD' v tabulce (čtvrtý a pátý sloupec zleva)",
+          "navrhovana_oprava": "Přidat placeholder text nebo ikonu (např. hodinky ⏱ pro čekání), nebo jasně dokumentovat, co '-' znamená. Nebo: v tabulce zobrazit jen vyplněné údaje a skrýt prázdné sloupce."
+        },
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Chyba 'Vyplňte jméno | příjmení' je umístěna pod formulárem, ale není vizuálně propojená s políčky, která chybu vyvolala. Uživatel musí 'dekódovat', která pole jsou problém. Chyba by měla být blíž nebo přímo v polích.",
+          "selektor_nebo_prvek": "Chybové hlášení se žlutou ikonou ⚠ v levém panelu",
+          "navrhovana_oprava": "Přidat chybový stav přímo do polí (JMÉNO, PŘÍJMENÍ) — změnit okraj na červený, přidat ikonu vpravo v poli. Nebo: Chybu udržet dolů, ale přidat zvýraznění (pulse, shadow) na políčka, která selhala."
+        },
+        {
+          "severity": "polish",
+          "category": "data",
+          "popis": "Sloupce s řídkými daty (PŘÍCHOD, ODCHOD jen s '-') signalizují, že datová tabulka není optimalizovaná. Když jsou data takto řídká, vypadá to, že design nebyl testován s reálnými daty, nebo se ignoroval bílý prostor.",
+          "selektor_nebo_prvek": "Celá tabulka, zejména sloupce PŘÍCHOD a ODCHOD",
+          "navrhovana_oprava": "Přehodnotit, které sloupce jsou kritické. Pokud PŘÍCHOD/ODCHOD nejsou vždy vyplněné, zvážit skrytí nebo dynamické zobrazení. Nebo: obsah zarovnat na levou stranu a přidat subtle background color pro rozlišení sloupců."
+        },
+        {
+          "severity": "polish",
+          "category": "mobil",
+          "popis": "2-sloupcový layout (formulář vlevo, tabulka vpravo) není responsive. Na mobilu by formulář zabrał 100% šířky a tabulka by byla nepoužitelná. Není vidět responsive verze, ale strukturálně to je problém.",
+          "selektor_nebo_prvek": "Celý layout — levý panel (formulář) a pravý panel (tabulka)",
+          "navrhovana_oprava": "Na mobilu: zobrazit formulář a tabulku vertikálně (stack). Formulář nahoře (collapsed nebo v modal), tabulka pod ním se scrollováním horizontálně. Nebo: použít tabbed interface (Formulář / Přehled)."
+        }
+      ]
+    },
+    {
+      "snimek": "30-alert-info-dark",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Profesionální dashboard v nočním režimu s dobrou čitelností. Design je funkční a strukturovaně rozdělen (formulář vlevo, přehled vpravo), ale chybí mu vizuální prominentnost hlavní akce — loading state „Zpracovávám doklad\" se ztrácí v panelu místo aby signalizoval aktivní stav. Metriky nahoře nejsou konzistentně stylizovány.",
+      "co_funguje": [
+        "Čitelný noční režim s dobrým kontrastem",
+        "Tabulka je dobře strukturovaná se jasnými sloupci (JMÉNO, ORGANIZACE, SPZ, PŘÍCHOD, ODCHOD, DOBA, STAV)",
+        "Logické rozložení: formulář vlevo pro nový příchod, seznam návštěv vpravo",
+        "Konzistentní styling tlačítek (červené akční, šedé sekundární)",
+        "Dobrý spacing a prostor k dýchání mezi prvky",
+        "Formulář v levém panelu je jasně strukturovaný s viditelnou CTA 'Zapsať příchod'"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "story",
+          "popis": "Hláška 'Zpracovávám doklad...' je zobrazena jako běžný text v levém panelu bez viditelné vizuální indikace a prominence. Podle zadání to má být informační (modrá/neutrální) hláška, ale nemá barevný background, ikonu loadingu nebo jasné umístění. Uživatel neví, že se právě něco děje. Toto je nejdůležitější prvek na obrazovce, ale je skryto.",
+          "selektor_nebo_prvek": "Prvek 'Zpracovávám doklad...' v levém panelu pod vstupními poli pro jméno/organizaci",
+          "navrhovana_oprava": "Přeformátovat na prominentní modální dialog nebo toast notifikaci s modrým backgroundem, loading spinner ikonou a jasným umístěním (nahoře nebo jako overlay). Zajistit, aby bylo uživateli okamžitě zřejmé, že se zpracování provádí."
+        },
+        {
+          "severity": "polish",
+          "category": "konzistence",
+          "popis": "Metriky v horní části nejsou konzistentně stylizovány. Levá metrika '4 AKTUÁLNĚ PŘÍTOMNÍ' má oranžový/červený levý border, zatímco '7 DNES CELKEM' a '12 CELKEM ZÁZNAMŮ' border nemají. Není jasné, proč je první zvýrazněna — vypadá to náhodně nebo jako chyba.",
+          "selektor_nebo_prvek": "Metriky v horní řádce: '4 AKTUÁLNĚ PŘÍTOMNÍ', '7 DNES CELKEM', '12 CELKEM ZÁZNAMŮ'",
+          "navrhovana_oprava": "Standardizovat styling — buď přidat oranžový border všem třem metrikám, nebo jej odebrat z první. Pokud má jedna metrika signalizovat aktivní stav, udělat to explicitně a konzistentně (např. subtilní background color místo borderu)."
+        }
+      ]
+    },
+    {
+      "snimek": "31-alert-amber-dark",
+      "verdikt": "Needs Work",
+      "skore": 5,
+      "prvni_dojem": "Profesionální dashboard s čistou hierarchií a logickým layoutem. Ale varovná hláška se rozpouští v tmavém nočním pozadí — amber text není dost kontrastní a důležitá zpráva ztrácí viditelnost a urgenci.",
+      "co_funguje": [
+        "Jasná hierarchie informací — metriky, formulář, tabulka jsou logicky uspořádány",
+        "Konzistentní nočný režim aplikovaný na všechny prvky",
+        "Červená tlačítka jsou výrazná a jasně oddělená od ostatního obsahu",
+        "Tabulka je dobře strukturovaná se čitelnými sloupci a daty",
+        "Spacing je vyvážený, prvky mají prostor k oddýchnutí",
+        "Typografie má rozumné hierarchie — nadpisy, texty, sekundární info",
+        "Layout je zarovnaný na mřížku, nic se neviklá",
+        "Formulář vede uživatele intuitivně skrz fáze vstupu"
+      ],
+      "nalezy": [
+        {
+          "severity": "critical",
+          "category": "typografie",
+          "popis": "Varovná hláška 'Jméno se nepodařilo rozpoznat – doplňte ručně.' má amber/oranžové pozadí s textem, který je málo kontrastní vůči tmavému nočnímu pozadí. Text je těžko čitelný, okraj hlášky není dostatečně ostře oddělený. Kritické varování by mělo být Crystal Clear a viditelné na první pohled — zde uživatel musí oko namáhat, aby si zprávu přečetl.",
+          "selektor_nebo_prvek": "Alert box s ikonou varování a textem 'Jméno se nepodařilo rozpoznat – doplňte ručně.' (oranžový rámec na levém panelu formuláře)",
+          "navrhovana_oprava": "Zvýšit kontrast: (1) text hlášky změnit na bílou nebo velmi světlou barvu, (2) amber/oranžový okraj zesílit nebo zvýšit jeho brightness, (3) zvážit zvýšení opacity nebo jiného vizuálního zvýraznění (shadow, border-width) aby byla hláška ostřeji oddělena od tmavého pozadí. V nočném režimu amber bez dostatečného kontrastu selhává — měla by být stejně viditelná jako v denním režimu."
+        }
+      ]
+    },
+    {
+      "snimek": "32-alert-amber-light",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Čistá, profesionální obrazovka. Varovná zpráva je vidět a jasně barevně signalizovaná. Layout je intuitivní: metriky – vstup – data. Design se ani neopírá o levotu, ani na tě nekřičí. Věřila bych tohle aplikaci vlastní peníze.",
+      "co_funguje": [
+        "Metriky (4, 7, 12) jsou výrazné a snadno skenabilní",
+        "Varovná zpráva v oranžovém boxu je vidět a správně signalizuje problém",
+        "Tabulka je čistě strukturovaná — sloupce, řádky a časy jsou čitelné bez námahy",
+        "Levý panel má jasnou hierarchii: upozornění → vstupní pole → primární tlačítka",
+        "Tlačítka jsou jednotná: červená pro primární akce, bílá pro sekundární",
+        "Spacing je konzistentní, rytmus mezer signalizuje, že design vedl jeden člověk"
+      ],
+      "nalezy": []
+    },
+    {
+      "snimek": "33-webkamera-dark",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Profesionální dashboard s jasnou strukturou a energií, ale vizuální hustota tabulky a malý font zhoršují čitelnost. Na velkém displeji bude slabě čitelné, což je pro vedení trapné.",
+      "co_funguje": [
+        "Jasná story: formulář → akce → přehled výsledků",
+        "Silná vizuální hierarchie nadpisů a CTA tlačítek (červená)",
+        "KPI karty nahoře jsou elegantní a čitelné",
+        "Zelené statusové tagy pro přítomnost/odchod",
+        "Tmavý režim je konzistentní a profesionální",
+        "Logické rozložení: formulář vlevo, data vpravo",
+        "Barva a ikony jsou jednotné"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "typografie",
+          "popis": "Font v tabulce je příliš malý pro prezentaci na velkém plátně. Řádky s jmény, organizacemi, časy jsou těžko čitelné z vzdálenosti. Na vedením přesazení budou jména prakticky neviditelná.",
+          "selektor_nebo_prvek": "Text v buňkách tabulky (sloupce JMÉNO A PŘÍJMENÍ, ORGANIZACE, SPZ, PŘÍCHOD, ODCHOD, DOBA)",
+          "navrhovana_oprava": "Zvýšit font-size tabulky minimálně na 14-16px (ze současných ~12px). Na velkém displeji má být čitelné bez přiblížení."
+        },
+        {
+          "severity": "important",
+          "category": "spacing",
+          "popis": "Řádky tabulky jsou vertikálně stísněné. Nedostatek paddingu mezi řádky (tr) vytváří vizuální hustotu a ztěžuje skenování. Řádky se slijí v jednu zeď textu.",
+          "selektor_nebo_prvek": "Řádky tabulky (tr elementy, konkrétně sloupce s daty návštěv)",
+          "navrhovana_oprava": "Zvýšit padding-top a padding-bottom u buněk (td/th) tabulky. Doporučuji minimálně padding: 12px 8px (z převažující hustoty ~6px 4px)."
+        },
+        {
+          "severity": "important",
+          "category": "zarovnani",
+          "popis": "Sloupce v tabulce nejsou jasně odděleny. Bez viditelných dělicích čar mezi sloupci je těžké rozlišit, kde končí jedno data a začíná další. Celá tabulka vypadá jako jedna homogenní stěna.",
+          "selektor_nebo_prvek": "Mřížka tabulky (border mezi sloupci td/th elementy)",
+          "navrhovana_oprava": "Přidat border-right na sloupce (1px solid rgba(255,255,255,0.1)) nebo zvýšit horizontální padding a gap mezi sloupci. Aby byla tabulka skenovaná, ne dekódovaná."
+        },
+        {
+          "severity": "polish",
+          "category": "spacing",
+          "popis": "Levý panel s formulářem má dobrý prostor, ale mezi formulářem a tabulkou by mohlo být více bílého prostoru pro vzdušnost. Design by mohl být více elegantní se více marginem.",
+          "selektor_nebo_prvek": "Celková struktura: gap mezi levým formulářem (.left-panel) a pravou tabulkou (.right-panel)",
+          "navrhovana_oprava": "Zvýšit margin nebo gap mezi panely (z ~20px na ~32px). Přidat padding nahoře celé tabulce."
+        }
+      ]
+    },
+    {
+      "snimek": "34-sken-krok1-dark-mobile",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Profesionální, čistá obrazovka s jasnou strukturou. Tmavý design, červené CTA a progresní indikátor říkají: toto je seriózní průvodce bez vybavení. Věřil bych.",
+      "co_funguje": [
+        "Soudržný a logický příběh: fotograf doklad, dvě jasně odlišené volby (kamera vs. upload)",
+        "Vizuální hierarchie bez šumu: kamera je protagonista, upload je fallback",
+        "Čistý spacing a rytmus mezer — není to stísnuté ani rozpité",
+        "Tmavý design s dobrým kontrastem — bílé/šedé na tmavém pozadí je čitelné",
+        "Progress indikátor (1/3) je orientační a malý, ale funguje",
+        "Dotykové cíle jsou dost velké pro mobil (390x844)",
+        "Info box komunikuje bezpečnost dat — buduje důvěru",
+        "Red tlačítko vzbuzuje akci a je jednotně stylizované",
+        "Všechno je zarovnané na mřížku, bez rozpih"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "typografie",
+          "popis": "Text v info boxu má špatné zalomení slov: 'euklád á' místo 'neuklád á', 'okamaž ité' a 'Ulož í' místo 'Uloží'. Vypadá to jako nežádoucí mezery nebo hvězdičky mezi morfémy. Na velkém plátně před vedením to bude patrné a aplikace půjde amatérsky.",
+          "selektor_nebo_prvek": "info-box text, první odstavec (Obrázek průkazu se nikde neuklád á...)",
+          "navrhovana_oprava": "Zkontrolovat CSS: line-height, word-break, letter-spacing a font-kerning. Zajistit, aby se slova nelamala uprostřed morfémů. Může jít o bug v unicode nebo unicode-bidi."
+        }
+      ]
+    },
+    {
+      "snimek": "35-sken-krok1-light-mobile",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Čistá, profesionální obrazovka s jasným účelem. Vidím hned: fotografuji doklad, jsem v kroku 1 ze 3, mám dvě intuitivní cesty (kamera nebo soubor). Červené tlačítko není agresivní, informační box není alarm. Design signalizuje důvěru a eleganci — až na jednu textovou chybu, která to narušuje.",
+      "co_funguje": [
+        "Jasná vizuální hierarchie — krok 1 dominuje bez křiku",
+        "Lineární story: pozice → upozornění → primární akce → alternativa",
+        "Konsistentní spacing a bílý prostor — prvky dýchají",
+        "Mobil-first layout — vertikální tok bez horizontálního scrollingu",
+        "Dostatečné velikosti tlačítek a dotykových cílů pro mobil",
+        "Jednotná typografie se správným kontrastem a čitelností",
+        "Konzistentní barvení a stylizace prvků",
+        "Elegantní zarovnání všech prvků na centrální ose",
+        "Respekt k inteligenci uživatele — dvě jasné cesty bez zbytečností"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "data",
+          "popis": "Text v informačním boxu: 'Obraz průkazu se nikde neuklád. Zpracuje se okamžitě v zahodí.' Slovo 'v zahodí' je gramaticky nesprávné a matoucí. V takto čistém, profesionálním designu tato chyba padne v oči a snižuje důvěru. Na velkém plátně před vedením bude vidět okamžitě.",
+          "selektor_nebo_prvek": "Informační box, text (gray background box se ikonou 'i')",
+          "navrhovana_oprava": "Změnit text na: 'Obraz průkazu se neuklád. Zpracuje se okamžitě a zahodí se.' nebo 'Obraz průkazu se neuklád. Zpracuje se okamžitě a pak se smaže.'"
+        }
+      ]
+    },
+    {
+      "snimek": "36-sken-krok1-dark-tablet",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Čistá, jasná obrazovka s jasnou vizuální hierarchií. Červené tlačítko dominuje, proceduální design je soudržný a profesionální. Věřil bych jí své peníze.",
+      "co_funguje": [
+        "Jasná vizuální hierarchie — červené tlačítko dominuje jako primární akce",
+        "Soudržný příběh — uživatel okamžitě rozumí, že si vybírá mezi fotografováním a nahráváním",
+        "Konzistentní spacing a rytmus mezer — není to těsné ani roztřepené",
+        "Zarovnání na mřížce — všechno je na místě, žádné posuny o pixel",
+        "Typografie nadpisů je jasně odlišená a čitelná",
+        "Dotykové cíle jsou dostatečně velké pro tablet",
+        "Barva a konzistence palety — vypadá, že ji vymyslel jeden design systém",
+        "Informační panel je přítomen a vidět, i když je malý",
+        "Proceduální indikátor (1–2–3) má správný prostor a není dominantní"
+      ],
+      "nalezy": [
+        {
+          "severity": "polish",
+          "category": "typografie",
+          "popis": "Bezpečnostní informace v panelu (\"Obrázek průkazu se nikde neuklád á...\") má malý text na tmavém pozadí. Bezpečnost dat si zaslouží lepší viditelnost — text je čitelný, ale na nočním režimu není dostatečně prominentní. Mohlo by to být viditelnější.",
+          "selektor_nebo_prvek": ".security-notice, .info-panel nebo element obsahující text 'Obrázek průkazu'",
+          "navrhovana_oprava": "Zvětšit font o 1–2 pt, zvýšit kontrast (světlejší text), nebo přidat diskrétní barevné pozadí (např. velmi tmavé modré/zelené) pro lepší čitelnost na nočním režimu"
+        }
+      ]
+    },
+    {
+      "snimek": "37-sken-kamera-bezi",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Čistý, tmavý interface s jasným účelem. Červené akcentní prvky vedou oko přirozeně od titulku přes instrukci k primární akci. Design je profesionální a důvěryhodný bez zbytečné složitosti.",
+      "co_funguje": [
+        "Primární akce je zcela zřetělná — velké červené tlačítko s ikonou jasně komunikuje, co dělat",
+        "Rámeček se skenovacím rámečkem je intuitivní, má silný červený okraj a instrukci pod sebou",
+        "Vodicí prvky jsou logicky seřazeny: nadpis → info box → rámeček → instrukce → akce",
+        "Progress indikátor jasně ukazuje, že jsem v kroku 1 z 3, bez zbytečné vizuální zátěže",
+        "Spacing a rytmus mezer jsou konzistentní — nic není příliš těsné ani rozprosýlené",
+        "Typografie má dobrý kontrast a čitelnost — bílý text na tmavém pozadí funguje",
+        "Sekundární cesty (Zavřít/Nahrát foto) jsou viditelné, ale jasně podřazeny primární akci",
+        "Paleta je soudržná — tmavý mode s červeným akcentem je moderní a pohodlný",
+        "Layout je optimalizovaný pro mobil — dotykové cíle jsou dostatečně velké",
+        "Informační box připravuje uživatele — vysvětluje, co se stane s daty"
+      ],
+      "nalezy": []
+    },
+    {
+      "snimek": "38-sken-krok2-rozpoznavani",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Čistá a profesionální obrazovka v nočním režimu. Okamžitě vidím, že se něco zpracovává, ale chybí mi informace o tom, jak dlouho čekání bude trvat. Základy jsou solidní — jednoduché, jasné, s respektem k prostoru.",
+      "co_funguje": [
+        "Čistota a odstranění zbytečných prvků — nic nepozoruje pozornost",
+        "Jasná vizuální hierarchie — rozpoznávání dokladu je jednoznačný hrdina",
+        "Progress indikátor nahoře ukazuje uživateli, kde je v procesu",
+        "Typografie a kontrast optimalizované pro čtení v nočním režimu",
+        "Zarovnání a mřížka — všechny prvky jsou přesně na místě",
+        "Responsivní layout připravený pro mobil",
+        "Minimalistické datové reprezentace — žádný balastu",
+        "Konzistentní barvy a stylizace (zelená = hotovo, červená = aktuální, šedá = budoucí)",
+        "Loading spinner s textovým vysvětlením — uživatel ví, co se děje",
+        "Dostatečný bílý (v tomto případě černý) prostor k dýchání"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "data",
+          "popis": "Uživatel nevidí odhad, jak dlouho bude čekání trvat. Bez toho si při delším čekání může myslet, že aplikace zamrzla. V čekacím stavu je psychologická podpora klíčová pro udržení důvěry.",
+          "selektor_nebo_prvek": "Loading spinner a text pod ním — 'Odesílám do serveru pro rozpoznání...'",
+          "navrhovana_oprava": "Přidat časový odhad: 'Odesílám do serveru pro rozpoznání... (~2 sekundy)' nebo přidat progress bar s vizuální indikací pokroku."
+        },
+        {
+          "severity": "polish",
+          "category": "zarovnani",
+          "popis": "Obsah (náhled dokladu a spinner) je vycentrovaný horizontálně, ale vertikálně je umístěný příliš vysoko. Velký černý prostor pod loadingem způsobuje nevyváženou vizuální váhu — obsah se zdá být 'zavěšený' nahoře.",
+          "selektor_nebo_prvek": "Hlavní obsah — náhled dokladu a loading spinner",
+          "navrhovana_oprava": "Vertikálně zarovnat obsah na střed obrazovky (přibližně 50 % výšky viewport). Lepší vizuální rovnováha a psychologické povědomí o procesu."
+        }
+      ]
+    },
+    {
+      "snimek": "39-sken-krok3-rozpoznano-dark",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Čistá, profesionální obrazovka s jasným cílem potvrzení dat. Uživateli je okamžitě zřejmé, co má udělat, a hierarchie vede oči správně od informací k akcím. Problém: červená barva potvrzovacího tlačítka vytváří sémantickou neskonzistenci - červená signalizuje varování nebo nebezpečí, nikoli potvrzení.",
+      "co_funguje": [
+        "Jasná a lineární story: sken → rozpoznání → potvrzení",
+        "Progress bar jednoznačně říká, kde uživatel je (krok 3)",
+        "Info pole \"Jméno rozpoznáno - zkontrolujte správnost\" elegantně komunikuje, že systém pracoval",
+        "Vizuální hierarchie je čitelná bez chaosu",
+        "Dobrý kontrast a čitelnost textu na tmavém pozadí",
+        "Spacing mezi prvky je konzistentní a volný",
+        "Pole jsou jasně oddělena (jméno × příjmení, povinné × nepovinné)",
+        "Dotykové cíle na mobilu jsou vhodně velké",
+        "Zarovnání a mřížka jsou čisté bez rozpískání",
+        "Formulář respektuje inteligenci uživatele: data k ověření plus možnost editace"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "konzistence",
+          "popis": "CTA tlačítko \"Zapsát příchod\" je červené, stejně jako \"Potvrzení\" krok v progress baru. Červená barva v UI designu tradičně signalizuje varování, chybu nebo destruktivní akci. Zde je to ale primární, pozitivní akce (potvrzení a zápis dat). Tato volba vytváří sémantickou nejednotnost - uživatel cítí nejistotu místo sebevědomí.",
+          "selektor_nebo_prvek": "CTA tlačítko \"Zapsát příchod\" (červené, spodní část formuláře) a \"Potvrzení\" kroku v progress baru",
+          "navrhovana_oprava": "Změnit barvu CTA tlačítka na zelenou (konzistentní s \"Rozpoznáno\" a dalšími success indikátory v aplikaci) nebo na accent barvu (modrá, fialová). Zelená by byla nejlepší volba - vizuálně by pak \"Zapsát příchod\" odpovídalo sémantice \"potvrzení\" a \"hotovo\"."
+        }
+      ]
+    },
+    {
+      "snimek": "40-sken-krok3-rozpoznano-light",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Čistý, profesionální interface, který věří svému obsahu. Zelený check a červené tlačítko jsou jasné signály. Uživateli je okamžitě zřejmé, co zkontrolovat a co dělat. Víš, na kterém kroku jsi, a důvěřuješ tomu, že systém data správně rozpoznal.",
+      "co_funguje": [
+        "Jasná a přirozená vizuální hierarchie – step indikátory vedou uživatele přirozeně k obsahu",
+        "Barvy jsou funkční signály – zelená signalizuje OK, červená signalizuje hlavní akci",
+        "Green infobox s checkmarkem vzbuzuje důvěru a potvrzuje, že data jsou správně",
+        "Typografie má rytmus – labels (caps, malé) vs. obsah (normální) je jasné oddělení",
+        "Spacing je konzistentní a elegantní – není tam těsno ani prázdno",
+        "Tlačítka jsou dostatečně velká pro dotykové interakce na mobilu",
+        "Data jsou skenatelná bez zbytečného formátování – Tufte by schválil",
+        "Zarovnání je pečlivé – všechno sedí na mřížce, bez roztřepených hran",
+        "Kontrast mezi prvky je vhodný – text je čitelný, hierarchie cítit, ne dekódovat",
+        "Responsive design na mobilu je elegantní – obsah se přirozeně přizpůsobuje displeji"
+      ],
+      "nalezy": []
+    },
+    {
+      "snimek": "41-sken-krok3-nerozpoznano",
+      "verdikt": "Needs Work",
+      "skore": 6,
+      "prvni_dojem": "Profesionální, ale studená a matoucí obrazovka. Červená a žlutá barva křičí \"chyba\", ale uživatel má pocit, že je to jeho chyba, ne selhání systému. Není jasné, co je povinné a jak se vrátit.",
+      "co_funguje": [
+        "Progress bar jasně signalizuje, že jsi na kroku 3 a tady se stalo něco (červená)",
+        "Upozornění zpráva je čitelná a odpovídá tomu, co se stalo",
+        "Primární CTA tlačítko (Zapsát přichod) je vizuálně dominantní a jasné v účelu",
+        "Dark mode je koherentní a příjemný",
+        "Struktura formuláře je logická: upozornění → pole → akce",
+        "Ikonka osoby + nadpis 'Zontrolujte a potvrďte' signalizují správný kontext"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "selektor_nebo_prvek": "Label 'ORGANIZACE (NEPOVINNÉ)' a 'SPZ VOZIDLA (NEPOVINNÉ)'",
+          "popis": "Povinná pole (JMÉNO, PŘÍJMENÍ) nejsou vizuálně odlišena od nepovinných. Označení nepovinnosti je napsáno v textu labelu — uživatel si to pod tlakem nemusí všimnout. Standardní UI praxe umisťuje `*` či `(povinné)` do labelu povinných polí, ne negaci u nepovinných.",
+          "navrhovana_oprava": "Přidej `*` či `(povinné)` k labelům JMÉNO a PŘÍJMENÍ. Nebo přeformatuj labely nepovinných polí pomocí ikony či subtilnějšího textu, aby nebyla textově hlučná."
+        },
+        {
+          "severity": "important",
+          "category": "story",
+          "selektor_nebo_prvek": "Tlačítka 'Zapsát přichod' a 'Skenovat znovu'",
+          "popis": "Není jasné, co dělat, pokud se uživatel chce vrátit a zkusit skenování znovu. 'Skenovat znovu' je umístěné na stejné vizuální úrovni jako primární CTA, takže se lehko přehlédne. Uživatel neví, jestli se má vrátit, nebo pokračovat.",
+          "navrhovana_oprava": "Přesuň 'Skenovat znovu' jako sekundární akci — vizuálně jasně pod primárním tlačítkem. Nebo přidej do upozornění explicitní instrukci: 'Pokud chceš zkusit skenování znovu, klikni na tlačítko Skenovat znovu výše.'"
+        },
+        {
+          "severity": "polish",
+          "category": "typografie",
+          "selektor_nebo_prvek": "Pole JMÉNO s labelou 'JMÉNO' a placeholderem 'Jméno'",
+          "popis": "Label a placeholder duplikují stejnou informaci. Placeholder by měl obsahovat hint nebo příklad, ne opakování labelu. Snižuje to čitelnost a zvyšuje vizuální šum.",
+          "navrhovana_oprava": "Změň placeholder na 'Např. Jan Novotný' nebo 'Zadej své jméno'. Podobně pro PŘÍJMENÍ."
+        }
+      ]
+    },
+    {
+      "snimek": "42-sken-krok3-chyba-ocr",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Čistý, odpovědný design chybového stavu. Noční režim je elegantně řešen, progress indikátor a layout jsou profesionální bez zbytečností. Aplikace komunikuje co se stalo pragmaticky, bez dramatu či viny na uživatele.",
+      "co_funguje": [
+        "Čistá, tmavá estetika nocního režimu s dobrým kontrastem",
+        "Jasný progress indikátor se třemi kroky a jejich stavu",
+        "Logická vizuální hierarchie od progress → chyby → formuláře → akcí",
+        "Jednotné stylování fieldů s jasnými labely a placeholdery",
+        "Primární tlačítko (červené) jasně vyznačuje hlavní akci",
+        "Konzistentní spacing a rytmus whitespace bez těsna či přeplácnutí",
+        "Čestná a pragmatická komunikace chyby bez dramatizace",
+        "Vhodné dotykové cíle a vertikální mobil-first layout"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Žlutá/oranžová chybová zpráva 'Automatické rozpoznání selhalo – zadejte jméno ručně. (OCR selhalo)' je kritickým sdělením, ale vizuálně není dostatečně dominantní. Na velkém plátně vedení si ji nemusí hned všimnout. Měla by vypadat důležitěji vzhledem k závažnosti informace.",
+          "selektor_nebo_prvek": "Oranžová chybová zpráva – řádky s textem 'Automatické rozpoznání selhalo – zadejte jméno ručně. (OCR selhalo)'",
+          "navrhovana_oprava": "Zvětšit font chybové zprávy, přidat více whitespace kolem ní pro odlišení, nebo přidat vizuální symbol (ikona upozornění) pro zvýšení dopadu."
+        },
+        {
+          "severity": "polish",
+          "category": "spacing",
+          "popis": "Sekundární tlačítko 'Skenovat znovu' je nenápadné a umístěné dole jako doplňkový prvek. Uživatel by měl mít jasně viditelnou volbu znovu skenovat, ale nyní je toto tlačítko snadno přehlédnutelné.",
+          "selektor_nebo_prvek": "Sekundární tlačítko '← Skenovat znovu' (šedý text v tmavém poli)",
+          "navrhovana_oprava": "Zvýšit viditelnost typografií (větší font nebo více padding), zvážit stylingu, aby bylo jasnější jako alternativní akce (eventuálně sekundární barva místo šedé)."
+        }
+      ]
+    },
+    {
+      "snimek": "43-sken-hotovo-dark",
+      "verdikt": "Good",
+      "skore": 8,
+      "prvni_dojem": "Čistý minimalizmus s dominantní zelenou fajfkou — návštěvník okamžitě ví, že je hotovo. Tmavý režim pracuje jako součást příběhu, ne jen jako estetika. Profesionální, uspokojivé, produkční kvalita.",
+      "co_funguje": [
+        "Zelená fajfka dominuje v očích — jasný hrdina, žádné pochyb",
+        "Hierarchie je čistá: fajfka → jméno → čas → akce",
+        "Spacing je elegantní, prvky mají prostor k dýchání",
+        "Zarovnání je na pixel perfect, nic neplove",
+        "Typografie má jasný ritmus a kontrast",
+        "Emoční design — uživatel odchází s pocitem vítězství",
+        "Layout je optimalizován pro mobil bez falešného rozptýlení",
+        "Tlačítko je jasně clickable, dobrá velikost pro dotyk",
+        "Logo a barvy jsou konzistentní s aplikací",
+        "Formátování času a jména je přirozené a čitelné"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Třetí krok 'Potvrzení' v horní navigaci zobrazuje červený X, který implikuje chybu nebo selhání. Veliká zelená fajfka uprostřed obrazovky ale signalizuje úspěšné potvrzení. To je vizuálně matoucí — indikátor kroku by měl být konzistentní se stavem (zelená fajfka, ne červený X).",
+          "selektor_nebo_prvek": "Ikona kroku 'Potvrzení' v záhlaví — aktuálně zobrazuje červený X symbol",
+          "navrhovana_oprava": "Změnit červený X symbol na zelenou fajfku pro krok 'Potvrzení', aby všechny tři kroky signalizovaly úspěch (Doklad ✓, Rozpoznání ✓, Potvrzení ✓)."
+        }
+      ]
+    },
+    {
+      "snimek": "44-sken-hotovo-light",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Čistá, minimalistická obrazovka, která jasně signalizuje úspěch. Profesionální a důvěryhodná v ústředí pozornosti je zelený háček. Chybí v ní jen pár podrobností a vizuální konzistence v progress baru.",
+      "co_funguje": [
+        "Silný vizuální signál úspěchu - velký zelený háček uprostřed",
+        "Čistá a nenadbytečná layoutu bez vizuálního hluku",
+        "Jasná hierarchie: akce → potvrzení → jméno → čas → CTA",
+        "Jednotné zarovnání - vše je na mřížce, nic se nerotřepuje",
+        "Odpovídající kontrast a čitelnost typografie",
+        "Adekvátní spacing a prostor k dýchání kolem klíčových prvků",
+        "CTA tlačítko je dostatečně velké na mobilní dotek a jasně formulované"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Třetí krok progress baru (Potvrzení) je zobrazený jako červená číslice 3, zatímco první dva kroky (Doklad, Rozpoznání) jsou zelené se zaškrtnout. Na obrazovce, která potvrzuje akci, to signalizuje nedokončenost místo potvrzení. Měl by být zelený se zaškrtnout jako ostatní, aby byla vizuální konzistence a správné semantické sdělení.",
+          "selektor_nebo_prvek": "Třetí ikona v progress baru - text 'Potvrzení' s červeným kruhem obsahujícím číslici 3",
+          "navrhovana_oprava": "Změnit ikonu Potvrzení z (3) na zelený kruh se zaškrtnout ✓, stejně jako zbylé dva kroky. Zachovat stejný styl pro všechny tři kroky."
+        },
+        {
+          "severity": "important",
+          "category": "data",
+          "popis": "Obrazovka potvrzuje pouze jméno osoby a čas příchodu, ale chybí informace o typu skenovaného dokladu (pas, průkaz, řidičský průkaz apod.). Pro uživatele je důležité vědět, jaký druh dokladu byl zaznamenán, aby si ověřil, že skenoval správný dokument. Samé jméno 'Tereza Novotná' není rozlišující.",
+          "selektor_nebo_prvek": "Obsah pod zeleným háčkem - označení osoba jméno a čas bez typu dokladu",
+          "navrhovana_oprava": "Přidat typ dokladu pod nebo nad jméno (např. 'Pas' nebo 'Občanský průkaz') tak, aby byla potvrzena správnost skenovaného dokumentu."
+        },
+        {
+          "severity": "polish",
+          "category": "spacing",
+          "popis": "Spodních 55 % obrazovky je prázdný bílý prostor. Na mobilu je to méně optimální - tlačítko 'Skenovat další doklad' by mohlo být trochu níže a využít prostor lépe, nebo může být prostor lépe zaplnit dalším kontextem (komentář, tip, ikona).",
+          "selektor_nebo_prvek": "Prostor pod tlačítkem 'Skenovat další doklad' až k dolnímu okraji obrazovky",
+          "navrhovana_oprava": "Zvážit posunutí tlačítka níže nebo přidání vedlejší informace/ikony do prázdného prostoru, aby se vizuální rovnováha lépe využila. Nebo nechat prostor, pokud je to záměr (elegantní minimalizmus)."
+        }
+      ]
+    },
+    {
+      "snimek": "45-sken-chyba-kamery",
+      "verdikt": "Good",
+      "skore": 7,
+      "prvni_dojem": "Čistá, profesionální obrazovka, která elegantně řeší problém nedostupné kamery. Nabízí řešení (nahrání fotky), takže uživatel není zablokován. Ale komunikace má matoucí detaily: instrukce pro nefunkční tlačítko a nejasný disabled state.",
+      "co_funguje": [
+        "Logické řazení — chybová zpráva, primární akce, alternativa",
+        "Alternativa (nahrát fotku) je dostupná — uživatel není zablokován",
+        "Čistý, profesionální design s dobrým kontrastem v noční režimu",
+        "Informace o soukromí je prominentní a jasně vysvětlena",
+        "Layout je optimalizován pro mobil",
+        "Progress bar jasně ukazuje pozici v toku",
+        "Sekundární volba je jednoduchým řešením problému"
+      ],
+      "nalezy": [
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Tlačítko 'Spustit kameru' vypadá normálně (běžná opacity, normální barva), přestože kamera není dostupná. Uživatel neví, že je tlačítko nedostupné, a může se pokoušet jej stisknout a čekat na odpověď.",
+          "selektor_nebo_prvek": "Tlačítko 'Spustit kameru' (ikona fotoaparátu + text)",
+          "navrhovana_oprava": "Přidat vizuální disabled state — snížit opacity (0.5), zmenit barvu na šedou, nebo přidat ikonu zákazu. Minimálně text 'nedostupné'"
+        },
+        {
+          "severity": "important",
+          "category": "story",
+          "popis": "Instrukční text 'Klepněte na Spustit kameru a namířte na doklad' je matoucí v kontextu nedostupné kamery. Dává instrukci, jak fotit, ale fotit není možné. Uživatel vidí instrukci → chybu → nejasné tlačítko.",
+          "selektor_nebo_prvek": "Text nad černou oblastí (místo náhledu kamery)",
+          "navrhovana_oprava": "Skrýt text. Nahradit textem: 'Kamera není dostupná na tomto zařízení. Nahrművahte fotku ručně níže.'"
+        },
+        {
+          "severity": "important",
+          "category": "hierarchie",
+          "popis": "Progress kruh '1 Doklad' je v červené barvě. Na chybové obrazovce, kde je chyba také v červeném rámečku, to signalizuje chybu kroku, ne jen aktivní krok. Konvence: červená = chyba/problém, nikoliv aktivní stav.",
+          "selektor_nebo_prvek": "Progress bar, kruh '1 Doklad' — červená barva",
+          "navrhovana_oprava": "Změnit barvu na primární barvu aplikace (modrou/tyrkysovou), nikoliv červenou. Červená zůstane rezervovaná pro chyby."
+        },
+        {
+          "severity": "polish",
+          "category": "typografie",
+          "popis": "Chybová hláška má sice čitelný text, ale barva pozadí (tmavá červená) a text by mohly mít vyšší kontras v noční režimu pro maximální čitelnost.",
+          "selektor_nebo_prvek": "Chybová zpráva v červeném rámečku",
+          "navrhovana_oprava": "Změnit barvu textu na bílou nebo velmi světlou červenou, nebo zmenske tmavý podklad na sytější červenou."
+        }
+      ]
+    }
+  ],
+  "nalezy": [
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Červené tlačítko 'Přihlásit se jako admin' je stylováno jako primární/dominantní akce (urgentní, nejviditelější barva), zatímco 'správce' je v sekundární tmavomodré barvě. Bez znalosti business logiky není zřejmé, zda admin role by měla být primární volbou — obvykle jsou admin funkce méně přístupné a měly by signalizovat sekundární variantu, nikoliv výchozí doporučení.",
+      "selektor_nebo_prvek": "Tlačítko 'Přihlásit se jako admin' (první tlačítko, červené pozadí, styles button-primary)",
+      "navrhovana_oprava": "Přehodnotit barvy podle business logiky: pokud je admin méně užívaná role, měla by být sekundární (tmavomodrá), a 'správce' by měl být primární (červený). Barva musí odpovídat skutečné hierarchii a preferenci uživatelů.",
+      "snimek": "02-lock-light-desktop"
+    },
+    {
+      "severity": "important",
+      "category": "story",
+      "popis": "Tři indikátory (malé čtverečky - červený, bílý, modrý) uprostřed snímku nemají kontextu ani vysvětlení. Není jasné, zda jde o kroky procesu, progress indikátor, nebo dekorativní prvek. Na login obrazovce bez popisu vypadají jako nedokončený design a matou uživatele.",
+      "selektor_nebo_prvek": "Tři `.indicator-dot` prvky v `.indicator-row` nebo `.stepper` kontejneru uprostřed (aproximativně y: 300px)",
+      "navrhovana_oprava": "Buď přidat popis jako 'Krok 1 ze 3' či 'Výběr přístupu', nebo prvky z obrazovky úplně odstranit, pokud nejsou součástí klíčového toku",
+      "snimek": "03-lock-dark-mobile"
+    },
+    {
+      "severity": "important",
+      "category": "spacing",
+      "popis": "Asymetrický a nadměrný negativní prostor: horní část mezi logem a hlavním obsahem obsahuje více než 150px prázdného místa (přibližně 18% výšky). Obsah je seskupený dolů, horní třetina snímku zůstává nekomunikativně prázdná. To vytváří disharmonii a dojem nezvládnutého plánování prostoru.",
+      "selektor_nebo_prvek": "Margin-top nebo padding na `.main-content` sekci (prostor mezi `.header` obsahujícím logo a nadpisem 'Vítejte v návštěvní knize')",
+      "navrhovana_oprava": "Zmenšit horní padding na 60-80px. Přesunout obsah výše a vyvážit prostor tak, aby login část nebyla suspenzivně zavěšena v dolní polovině",
+      "snimek": "03-lock-dark-mobile"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Dvě login tlačítka 'Přihlášt se jako admin' a 'Přihlášt se jako správce' nejsou dostatečně diferenciována. Uživatel bez domény neví, jaký je mezi rolemi rozdíl a kdy má na které kliknout. Jsou rozlišena pouze barvou a textem, bez vysvětlujícího kontextu nebo ikonografiky.",
+      "selektor_nebo_prvek": "Text na tlačítcích nebo prázdný prostor pod/vedle ně - `<button>` prvky s textem 'Přihlášt se jako admin' a 'Přihlášt se jako správce'",
+      "navrhovana_oprava": "Přidat krátký popis pod tlačítky nebo jako ikony, které vysvětlují roli (např. '👑 Admin: Všechny funkce' vs '👤 Správce: Řízení návštěv')",
+      "snimek": "03-lock-dark-mobile"
+    },
+    {
+      "severity": "polish",
+      "category": "prvni-dojem",
+      "popis": "Obrazovka postrádá kontext. 'Návštěvní kniha' jako název je abstraktní - nový uživatel neví, co je to za aplikaci, na co se připravuje, a proč se zde právě přihlašuje. Chybí zde jednořádkový účel, který by vytvořil důvěru a orientaci.",
+      "selektor_nebo_prvek": "Text 'Návštěvní kniha' v `.header` jako primární nadpis nebo `<h1>`",
+      "navrhovana_oprava": "Přidat krátký popis účelu pod názvem (např. 'Správa návštěv firemního areálu' nebo 'Přístupový systém návštěvnické knihy')",
+      "snimek": "03-lock-dark-mobile"
+    },
+    {
+      "severity": "important",
+      "category": "story",
+      "selektor_nebo_prvek": "Tři puntíky (bílá-červená-bílá) v centru modalu",
+      "popis": "V centru modalu jsou tři puntíky, které se podobají page/carousel indikátorům. Bez dalšího textu, vizuálních šipek nebo vysvětlení není jasné, jaký je jejich účel. Vytváří kognitivní nejasnost — návštěvník si položí otázku \"co to je?\" místo aby plynule postupoval dál.",
+      "navrhovana_oprava": "Pokud jde o page indicators, přidat textový hint (\"1 / 3\") nebo smazat prvek úplně. Pokud mají jiný účel (status indicator), jasně je označit nebo odebrat.",
+      "snimek": "04-lock-dark-tablet"
+    },
+    {
+      "severity": "important",
+      "category": "data",
+      "selektor_nebo_prvek": "Dvě CTA tlačítka: \"Přihlásit se jako admin\" a \"Přihlásit se jako správce\"",
+      "popis": "Oba termíny jsou si v češtině příliš podobné. \"Správce\" je v podstatě synonym pro \"administrátora\". Návštěvník se chvíli kouká na obrazovku a neví, jaký je mezi nimi rozdíl. Pokud jsou to různé role, měly by být jasně diferencovány.",
+      "navrhovana_oprava": "Přejmenovat na výrazně odlišnější páry, např. \"Vedoucí návštěv\" + \"Host\" nebo \"Admin\" + \"Uživatel\". Pokud je rozdíl malý, zvážit slučit na jedno tlačítko s后续ím výběrem role.",
+      "snimek": "04-lock-dark-tablet"
+    },
+    {
+      "severity": "polish",
+      "category": "konzistence",
+      "selektor_nebo_prvek": "Červené tlačítko \"Přihlásit se jako admin\"",
+      "popis": "V UI konvencích je červená barva rezervována pro destruktivní nebo varující akce (delete, warning). Primární CTA se obvykle značí neutrálněji (modrá, zelená). Červená pro admin login vytváří podvědomý dojem, že je to nějaké riziko nebo problém, přestože je to pouze role.",
+      "navrhovana_oprava": "Zvážit swap na modrou (primární) a šedou (sekundární). Případně ponechat červenou, pouze pokud je to záměrné signalizování odpovědnosti — pak by měl být vedle text typu \"(zvýšená odpovědnost)\".",
+      "snimek": "04-lock-dark-tablet"
+    },
+    {
+      "severity": "important",
+      "category": "typografie",
+      "popis": "Text pod 'Zrušit' má velmi nízký kontrast (šedá na téměř černé) a je prakticky nečitelný. Pokud to je důležitá informace, měla by ji vidět každý uživatel bez úsilí.",
+      "selektor_nebo_prvek": "Helper text / secondary information pod tlačítkem 'Zrušit'",
+      "navrhovana_oprava": "Zvýšit kontrast na alespoň 70-80% jasnost (z aktuálních ~30-40%), ideálně na stejný kontrast jako placeholder text v inputu. Alternativě: zvětšit font nebo zvýšit opacity textu.",
+      "snimek": "05-login-admin-dark"
+    },
+    {
+      "severity": "important",
+      "category": "konzistence",
+      "selektor_nebo_prvek": "Textové pole pro heslo (input s placeholder 'Zadejte heslo')",
+      "popis": "Červený border na heslovém poli evokuje signalizaci chyby nebo varovného stavu, ale žádná chybová zpráva ani varování není viditelné. Pole je v normálním (prázdném) stavu, bez předchozího pokusu o přihlášení. To vytváří rozpor mezi vizuálním signálem a skutečným stavem — uživatel si nemusí být jistý, jestli něco udělal špatně, nebo je to jen estetický prvek. Tato inkonsistence mezi sémantickou barvou a stavem snižuje čitelnost UI.",
+      "navrhovana_oprava": "Změnit border textového pole na neutrální barvu (např. šedá, černá, nebo jemná stříbrná), která nesignalizuje chybu. Pokud má být červený border záměrný designový prvek, přidat vizuální nebo textový indikátor (label, ikonu, nebo subtle zprávu), aby bylo jasné, co border znamená.",
+      "snimek": "06-login-spravce-light"
+    },
+    {
+      "severity": "important",
+      "category": "prvni-dojem",
+      "selektor_nebo_prvek": "Text 'Přihlásit se jako správce' viditelný za/pod modalem",
+      "popis": "Obsah za modalem (text 'Přihlásit se jako správce') je částečně viditelný, což vytváří vizuální rozptylení a nejasnost. Uživatel si není jistý, jestli je to součást aktuálního dialogu, druhý dialog pod tím, nebo pozadí. Tato částečná viditelnost narušuje soustředění na primární úkol (zadání hesla) a snižuje pocit, že je modal jasně oddělený od zbytku UI.",
+      "navrhovana_oprava": "Zajistit, aby modal zcela maskoval pozadí — buď zesílit overlay pozadí (tmavší, nepropustný), nebo změnit layout tak, aby obsah za modalem nebyl vůbec viditelný. Pokud je obsah za modalem součástí workflow (alternativní přihlášení), umístit jej jasně mimo modal do viditelné vzdálenosti nebo oddělit vizuálně.",
+      "snimek": "06-login-spravce-light"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Input pole se špatným heslem nemá žádný vizuální signál chyby (červený border, shadow, background tint). Pouze textová zpráva pod ním o chybě existuje. Uživatel tak nevidí od prvního pohledu, KTERÉ pole má problém - musí si to domyslet z textu níže. Správný UX má vždy vizuální indikátor chyby přímo na poli.",
+      "selektor_nebo_prvek": "input[type=password] v chybovém stavu",
+      "navrhovana_oprava": "Přidat červený border (1-2px) nebo jemný красный shadow na input pole. Možně i změní background nebo text color. Příklad: border: 2px solid #dc3545 nebo border-left: 4px solid #ef5350.",
+      "snimek": "07-login-chyba-dark"
+    },
+    {
+      "severity": "important",
+      "category": "konzistence",
+      "popis": "Chybová hláška i primární tlačítko Přihlásit se mají stejné červené pozadí. Toto je matoucí signalizace barev: červená obvykle znamená destruktivní/varovnou akci, ne primární akci kterou chcete aby uživatel udělal. Vizuálně se zdá, že jsou stejně důležité nebo mají stejný účel, což je zavádějící.",
+      "selektor_nebo_prvek": ".error-alert (červené pozadí s textem Nesprávné heslo) a button.primary (Přihlásit se)",
+      "navrhovana_oprava": "Либо: 1) Změnit chybovou zprávu - místo plného červeného pozadí použít červený border nebo ikonu s bílým pozadím; NEBO 2) Změnit barvu tlačítka na neutrální (modrá, tmavá šedá, nebo aplikační primární barva). Doporučení: ponechat chybu s border + white background a tlačítko udělat jednotnou aplikační barvou.",
+      "snimek": "07-login-chyba-dark"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Tři metriky (4/7/12) v horní části mají zvláštní červený rámec jen na levé straně. Není jasné, co tento prvek znamená — je to aktivní stav, dekorace, či náhodná nedokončenost? Vypadá to matoucí a snižuje důvěru v preciznost designu.",
+      "selektor_nebo_prvek": "Levý rámec na kartách metrik (AKTUÁLNĚ PŘÍTOMNÍ, DNES CELKEM, CELKEM ZÁZNAMŮ)",
+      "navrhovana_oprava": "Buď rámec zcela odstranit a ponechat čisté karty, nebo jej rozšířit po všech stranách. Pokud chce být akcentem, měl by mít jasný účel — např. zvýraznit jen jednu metriku.",
+      "snimek": "11-dash-pritomni-dark-tablet"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Dvě tlačítka v sekci 'Nový návštěvník' ('Nahrát doklad ze souboru' a 'Použít webkameru') nemají jasně definovanou primární/sekundární pozici. Obě řeší stejný úkol, ale není vidět, která je preferovaná. Červené 'Nahrát doklad' je viditelné, 'Webkamera' (tmavá, bez vyraznění) zaostává.",
+      "selektor_nebo_prvek": "Tlačítka v sekci 'Nový návštěvník' — 'Nahrát doklad ze souboru' (červené) a 'Použít webkameru' (tmavé)",
+      "navrhovana_oprava": "Jasně definovat primární akci jedinou barvou/stylem, druhou učinit explicitně sekundární (např. outline button, menší, jiná barva). Nebo je vertikálně odd",
+      "snimek": "11-dash-pritomni-dark-tablet"
+    },
+    {
+      "severity": "important",
+      "category": "typografie",
+      "popis": "Text 'nebo zadejte ručně' pod tlačítkem 'Použít webkameru' je velmi slabý, malý a neurčitý. Není jasné, co to znamená — je to instrukce, upozornění, či fallback možnost? Sled logiky uživatele je nejasný.",
+      "selektor_nebo_prvek": "Text 'nebo zadejte ručně' pod ikonou fotoaparátu",
+      "navrhovana_oprava": "Přepracovat na jasnější, čitelnější instrukci nebo jej přesunout do více viditelné pozice. Zvážit, zda je text vůbec nutný, či zda by měl být součástí tooltip/help textu.",
+      "snimek": "11-dash-pritomni-dark-tablet"
+    },
+    {
+      "severity": "polish",
+      "category": "spacing",
+      "popis": "Seznam v sekci 'Příchody za poslední hodinu' obsahuje tři položky (jména, společnosti, časy) oddělené jen vertikálním prostorem. Bez vizuálních dělících čar či subtilního background barev seznam vypadá ploše a těžko se proskenuje na tabletě.",
+      "selektor_nebo_prvek": "Položky v seznamu pod nadpisem 'Příchody za poslední hodinu' (Martin Dvořák, Jana Svobodová, Petr Novák)",
+      "navrhovana_oprava": "Přidat jemné dělící čáry (1px, subtilní barva) mezi položkami nebo lehkou background barvu (alternovat řádky). Zvýší se čitelnost a skenování seznamu.",
+      "snimek": "11-dash-pritomni-dark-tablet"
+    },
+    {
+      "severity": "important",
+      "category": "typografie",
+      "popis": "Slovo 'nepovinnné' v textu u polí ORGANIZACE a SPZ VOZIDLA obsahuje typografickou chybu (zdvojená n). Mělo by být 'nepovinné'. V produkční kvalitě na velkém plátně se to vidí a není přijatelné.",
+      "selektor_nebo_prvek": "Text '(nepovinnné)' v Labels polí ORGANIZACE a SPZ VOZIDLA",
+      "navrhovana_oprava": "Opravit na '(nepovinné)'",
+      "snimek": "12-dash-pritomni-dark-mobile"
+    },
+    {
+      "severity": "polish",
+      "category": "hierarchie",
+      "popis": "Text 'nebo zadejte ručně' pod tlačítky je velmi malý a snadno přehlédnutelný. Uživatel si nemusí všimnout, že může vyplnit formulář ručně bez uploadování dokladu, přestože je to alternativa.",
+      "selektor_nebo_prvek": "Text 'nebo zadejte ručně' pod tlačítky",
+      "navrhovana_oprava": "Zvětšit font nebo vylepšit vizuální odlišení, aby byla instrukce jasnější",
+      "snimek": "12-dash-pritomni-dark-mobile"
+    },
+    {
+      "severity": "polish",
+      "category": "spacing",
+      "popis": "Tlačítka 'Nahrát doklad ze souboru' a 'Použít webkameru' jsou umístěna vedle sebe. Na velmi úzkých zařízeních (sub-375px) by tato konfiguraci mohla vést k vypínání textu nebo bezdrátovým dotykovým cílům. Vidím, že to aktuálně funguje, ale na hranici.",
+      "selektor_nebo_prvek": "sekce tlačítek pod 'Nový návštěvník' (dois boutons côte à côte)",
+      "navrhovana_oprava": "Zvážit vertikální stack (pod sebou) tlačítek na breakpointu pod ~375px šířky, aby se zachovaly dotykové cíle v minimu 44x44px a text byl vždy čitelný bez zkrácení.",
+      "snimek": "13-dash-pritomni-light-mobile"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Tři metriky nahoře (4 Aktuálně přítomní, 7 Dnes celkem, 12 Celkem záznamů) mají všechny stejnou velikost a vizuální váhu. 'Aktuálně přítomní' by měla být jasně nejdůležitější — to je nejnaléhavější informace pro správce budovy v daný moment.",
+      "selektor_nebo_prvek": "Tři metrické karty v horní části — .metric-card nebo similar",
+      "navrhovana_oprava": "Zvýraznit 'AKTUÁLNĚ PŘÍTOMNÍ' — větší font (např. 48px vs 36px), zelenavá či kontrast nější barva (korespondující s 'Přítomen/a' stavem), nebo pozice (přesunout dopředu). Ostatní metriky zmenšit nebo udělat vizuálně druhotné.",
+      "snimek": "14-dash-dnes-dark"
+    },
+    {
+      "severity": "polish",
+      "category": "spacing",
+      "popis": "Levá strana má čtyři funkční sekce (akce: Nový návštěvník, filtry: Jméno/Organizace/SPZ, další akce: Webkamera/Zapsat příchod, event log: Příchody za poslední hodinu), ale nejsou jasně vizuálně odděleny. Zdá se to jako jeden dlouhý seznam prvků bez průduchů.",
+      "selektor_nebo_prvek": "Levý panel (.sidebar) — skupiny: 'Nový návštěvník', filtry, 'Použít webkameru', 'Zapsat příchod', 'Příchody za poslední hodinu'",
+      "navrhovana_oprava": "Přidat jasné vizuální dělítko (horizontální čára, subtle border, nebo padding) mezi sekcemi. Zvýšit spacing/margin mezi skupinami tak, aby bylo zřejmé, kde jedna sekce končí a druhá začíná.",
+      "snimek": "14-dash-dnes-dark"
+    },
+    {
+      "severity": "polish",
+      "category": "typografie",
+      "popis": "V sloupci STAV má 'Přítomen/a' zelenou barvu (skvělé), ale 'Odešel/a' je jen normální šedý text bez vizuálního vyznačení. Při rychlém skenování tabulky není stav 'Odešel/a' tak jasně viditelný.",
+      "selektor_nebo_prvek": "STAV sloupec v tabulce — buňky s textem 'Odešel/a'",
+      "navrhovana_oprava": "Přidat vizuální označení 'Odešel/a' — například šedé či průsvitné pozadí (badge/chip), ikonu (✓, kruh, nebo jiný glyph), nebo subtilní text styl (nižší opacity, kurzíva). Tím bude stav jasně rozlišitelný bez nutnosti číst text.",
+      "snimek": "14-dash-dnes-dark"
+    },
+    {
+      "severity": "critical",
+      "category": "konzistence",
+      "popis": "Poslední dva řádky tabulky (Lukáš Procházka, Martin Dvořák) mají zcela jiný obsah v buňkách STAV a ODCHOD. Místo 'Detail' tlačítka a prázdného ODCHODU mají 'Upravit' a 'Odejít' tlačítka plus 'Příchom./a' tag se zeleným ohraničením. To vypadá, že jsou to dva různé typy záznamů, ale tato rozdílnost není konzistentně aplikována — je v rozporu s ostatními řádky. Na velké obrazovce to bude vypadat jako bug nebo rozpracovanost.",
+      "selektor_nebo_prvek": "Poslední dva řádky tabulky — řádky Lukáše Procházky a Martina Dvořáka, sloupce ODCHOD/STAV",
+      "navrhovana_oprava": "Sjednotit layout: buď všechny řádky bez odchodu (\"nedokončené návštěvy\") mají stejný internal layout, nebo se stav \"bez odchodu\" zobrazuje jako normální buňka v ODCHODU (např. '-' nebo 'Příchod bez odchodu'), a STAV zůstává 'Detail' tlačítko. Nemělo by být vidět, že některé řádky jsou mechanicky jiné.",
+      "snimek": "16-dash-vse-dark"
+    },
+    {
+      "severity": "important",
+      "category": "data",
+      "popis": "Popis metriky ('AKTUÁLNĚ PŘÍTOMNÍ', 'DNES CELKEM', 'CELKEM ZÁZNAMŮ') je v malém fontu pod číslem. V první sekunde oko vidí jen čísla (4, 7, 12) bez kontextu. Popis by měl být okamžitě čitelný, aby uživatel nemusel číst dva řádky.",
+      "selektor_nebo_prvek": "Tři metrické karty v headeru — konkrétně text 'AKTUÁLNĚ PŘÍTOMNÍ', 'DNES CELKEM', 'CELKEM ZÁZNAMŮ' pod čísly",
+      "navrhovana_oprava": "Zvětšit font popisu metriky nebo jej umístit vedle čísla (ne pod ním). Nebo schovat do ikony se tooltipem. Cíl: kontext musí být zřejmý bez dalšího čtení.",
+      "snimek": "16-dash-vse-dark"
+    },
+    {
+      "severity": "polish",
+      "category": "hierarchie",
+      "popis": "Levý panel (Nový návštěvník) a pravý panel (Přehled návštěv) mají vizuálně stejnou váhu, přestože seznam návštěv je primární obsah. Nadpisy jsou stejně tučné, stejné ikony. Na velkém plátně není jasné, které sekci by měl uživatel věnovat pozornost.",
+      "selektor_nebo_prvek": "Nadpisy 'Nový návštěvník' (vlevo) a 'Přehled návštěv' (vpravo)",
+      "navrhovana_oprava": "Přehled návštěv by měl být opticky dominantnější — větší font, jasněji viditelný akcent, nebo podtrhnutí. Nový návštěvník je sekundární panel pro zadávání — měl by být menší nebo bez vizuálního rámu.",
+      "snimek": "16-dash-vse-dark"
+    },
+    {
+      "severity": "important",
+      "category": "typografie",
+      "popis": "Text na tlačítku v levém panelu zní jako 'Zapsatpříchod' bez mezer. Na velkém plátně před vedením je to vidět a působí jako nedopatření. Mělo by být 'Zapsat příchod' nebo 'Zapsatpříchod' s ikonou checkmarku oddělený od textu.",
+      "selektor_nebo_prvek": "Tlačítko s checkmark ikonou v sekci 'Nový návštěvník', druhé tlačítko po 'Použít webkameru'",
+      "navrhovana_oprava": "Přidat mezery do textu: 'Zapsat příchod' nebo resetovat layout tak, aby ikona a text byly oddělené a čitelné",
+      "snimek": "17-dash-vse-light"
+    },
+    {
+      "severity": "important",
+      "category": "story",
+      "popis": "Text 'nebo zadejte ručně' pod dvěma tlačítky (Náhrát doklad, Použít webkameru) je matoucí. Není zřejmé, jestli to znamená 'přeskočit tato tlačítka a zadat ručně' nebo 'jako alternativa k těmto způsobům'. Uživatel může být na moment zmaten, co má dělat dál.",
+      "selektor_nebo_prvek": "Pomocný text 'nebo zadejte ručně' umístěný pod oběma tlačítky v sekci 'Nový návštěvník'",
+      "navrhovana_oprava": "Buď text přepsat na jasnější instrukci: 'Nebo si vyplňte údaje ručně níže' a posunout pod formulářová pole, nebo toto tlačítko úplně odstranit, pokud jde jen o hint.",
+      "snimek": "17-dash-vse-light"
+    },
+    {
+      "severity": "polish",
+      "category": "spacing",
+      "popis": "SPZ sloupec v tabulce má někdy čísla (9AB 8877, 4KL 5566), někdy pomlčku (–). Formátování pomlčky a zarovnání sloupce by mohlo být jednotnější — zatím vypadá mírně chaoticky.",
+      "selektor_nebo_prvek": "Sloupec 'SPZ' v tabulce 'Přehled návštěv'",
+      "navrhovana_oprava": "Centrace pomlčky v sloupci nebo konzistentní formátování pro chybějící hodnoty (např. drobný placeholder text místo prázdné pomlčky)",
+      "snimek": "17-dash-vse-light"
+    },
+    {
+      "severity": "important",
+      "category": "data",
+      "popis": "Tlačítko v levém sidebaru (sekce 'Nový návštěvník') nese text 'Nahrát dokiad ze souboru'. Slovo 'dokiad' není platné české slovo — mělo by to být 'doklad' nebo 'dokument'. Chyba je vidět na obrazovce a signalizuje nedbalost při přípravě na prezentaci vedení.",
+      "selektor_nebo_prvek": "Tlačítko 'Nahrát dokiad ze souboru' v levém sidebaru, sekce 'Nový návštěvník'",
+      "navrhovana_oprava": "Změnit text na 'Nahrát doklad ze souboru' nebo 'Nahrát dokument ze souboru'",
+      "snimek": "18-dash-vse-fullpage"
+    },
+    {
+      "severity": "important",
+      "category": "typografie",
+      "popis": "Zelená tlačítka v tabulce (na řádcích s aktivními návštěvami) nese text 'Připomenuť'. Správná česká forma příkazu od 'připomenout' je 'Připomeň', nikoliv 'Připomenuť'. Ortografická chyba na viditelném prvku opět evokuje nedbalost.",
+      "selektor_nebo_prvek": "Zelená tlačítka s textem 'Připomenuť' v tabulce 'Přehled návštěvy' (řádky Lukáš Procházka, Martin Dvořák, Jana Svobodová, Petr Novák)",
+      "navrhovana_oprava": "Změnit text na 'Připomeň'",
+      "snimek": "18-dash-vse-fullpage"
+    },
+    {
+      "severity": "polish",
+      "category": "spacing",
+      "popis": "Sekce 'Příchody za poslední hodinou' v levém sidebaru má seznam posledních návštěv (Novotná, Svobodová, Novák) se velmi těsným vertikálnímspacingem. Řádky jsou příliš blízko sebe, chybí jim prostor k dýchání. Zhoršuje to čitelnost, když se seznam rozroste.",
+      "selektor_nebo_prvek": "Sekce 'Příchody za poslední hodinou' — seznam položek (jméno, čas, organizace, doba)",
+      "navrhovana_oprava": "Zvýšit line-height nebo padding mezi řádky (např. zvednutí z ~1.2 na ~1.6 nebo přidání větší margin-bottom mezi položkami)",
+      "snimek": "18-dash-vse-fullpage"
+    },
+    {
+      "severity": "important",
+      "category": "data",
+      "popis": "Instrukce v prázdné tabulce 'Zadejte jméno, datum nebo čas — výsledky se hledají průběžně.' je příliš malá a diskrétní. V prázdném stavu, kde uživatel nemá co hledat, by měla být viditelněji umístěna a zvýšena viditelnost (větší text, vyšší kontrast, ikona).",
+      "selektor_nebo_prvek": "Text 'Zadejte jméno, datum nebo čas — výsledky se hledají průběžně.' v tabulce (empty state message)",
+      "navrhovana_oprava": "Přesunout instrukci nad formulář jako hint nebo zvýšit kontrast a velikost textu v tabulce. Přidat ikonu (💡 nebo 🔍) pro lepší viditelnost.",
+      "snimek": "19-hledat-prazdne-dark"
+    },
+    {
+      "severity": "polish",
+      "category": "typografie",
+      "popis": "Headers tabulky (JMÉNO A PŘÍJMENÍ, ORGANIZACE, SPZ, PŘÍCHOD, ODCHOD, DOBA, STAV) mají nízký kontrast — šedý text na tmavém pozadí splývá. V tmavém motivu by měly být jasnější.",
+      "selektor_nebo_prvek": "Headers řádek tabulky — jednotlivé sloupce (JMÉNO A PŘÍJMENÍ, ORGANIZACE, SPZ, PŘÍCHOD, ODCHOD, DOBA, STAV)",
+      "navrhovana_oprava": "Zvýšit kontrast — použít světlejší šedou barvu nebo bílý text na dark background",
+      "snimek": "19-hledat-prazdne-dark"
+    },
+    {
+      "severity": "important",
+      "category": "konzistence",
+      "selektor_nebo_prvek": "akční prvky v tabulce — 'Upravit' a 'Odejít'; porovnání s tlačítkem 'Použít webkameru' vlevo",
+      "popis": "V tabulce je 'Upravit' prezentován jako textový odkaz bez viditelného stylu, zatímco 'Odejít' je červené tlačítko. Vlevo v panelu je 'Použít webkameru' zcela bez viditelného stylování. Při prezentaci vedení na velkém plátně bude matoucí, co je klikatelné a co nikoliv.",
+      "navrhovana_oprava": "Všechny akční prvky v tabulce by měly být konzistentně stylizovány — buď jako button, nebo jako link. Zajistit jednotný styl akcí v celé aplikaci (vlevo vs vpravo).",
+      "snimek": "20-hledat-vysledky-dark"
+    },
+    {
+      "severity": "important",
+      "category": "data",
+      "selektor_nebo_prvek": "sloupce tabulky — SPZ '3AB 1122', PŘÍCHOD '30. 7. 2026 14:22', DOBA '8 min'",
+      "popis": "Při prezentaci na velkém plátně vedení budou čísla a texty v tabulce špatně čitelné. SPZ, časy a další data jsou malé. Font je příliš jemný na dálkové čtení. To je kritické pro business meeting.",
+      "navrhovana_oprava": "Zvětšit font sloupců tabulky. Zvážit zhuštění sloupců (skrýt méně důležité sloupce) nebo přeuspořádat data na více řádků pro větší čitelnost na vzdálené obrazovce.",
+      "snimek": "20-hledat-vysledky-dark"
+    },
+    {
+      "severity": "polish",
+      "category": "spacing",
+      "selektor_nebo_prvek": "řádek tabulky s Petrem Novákem",
+      "popis": "Vertikální padding v řádku tabulky je příliš těsný. Cely řádek se zdá stlačený, čímž se snižuje čitelnost a dojem profesionality. Bílý prostor by měl komunikovat hodnotu.",
+      "navrhovana_oprava": "Zvýšit vertikální padding řádků tabulky (padding-top/bottom). Přidat vizuální oddělení mezi řádky (border-bottom nebo background contrast).",
+      "snimek": "20-hledat-vysledky-dark"
+    },
+    {
+      "severity": "polish",
+      "category": "hierarchie",
+      "selektor_nebo_prvek": "sloupce tabulky — všechny labely (JMÉNO A PŘÍJMENÍ, ORGANIZACE, SPZ atd.)",
+      "popis": "Všechny sloupce mají stejnou vizuální váhu a velikost fontu. Není jasné, které sloupce jsou primární (jméno, organizace) a které sekundární (SPZ, doba). V nelineárním skenování bude oko zmateno.",
+      "navrhovana_oprava": "Zavést hierarchii sloupců: primární sloupce (jméno, org) mohou být větší/tučnější, sekundární (SPZ, doba) mohou být menší/šedé. Nebo je vizuálně oddělit.",
+      "snimek": "20-hledat-vysledky-dark"
+    },
+    {
+      "severity": "critical",
+      "category": "typografie",
+      "popis": "Text 'Žádné záznam' je gramaticky nesprávný. Správně by mělo být 'Žádné záznamy' (plurál) nebo 'Žádný záznam' (singulár). Na velkém plátně před vedením je to trapné a signalizuje nedbalost.",
+      "selektor_nebo_prvek": "Empty state text v tabulce - řádek bez dat obsahující 'Žádné záznam'",
+      "navrhovana_oprava": "Změnit na 'Žádné záznamy nalezeny' nebo 'Nic jsme nenašli' s přátelštějším tónem",
+      "snimek": "21-hledat-bez-vysledku-dark"
+    },
+    {
+      "severity": "important",
+      "category": "story",
+      "popis": "Prázdný stav nemá příběh. Uživatel vidí 'Žádné záznam' a neví, co dělat - má zkusit jiný výraz? Jít na 'Nový návštěvník'? Bez guidance se obrazovka cítí jako rozpracovaná.",
+      "selektor_nebo_prvek": "Celá empty-state sekce - tabulka s prázdným obsahem a minimálním textem",
+      "navrhovana_oprava": "Přidat explanatory text pod vyhledávací pole: 'Zkuste změnit výraz nebo přidejte nového návštěvníka' - nebo přesunout empty state mimo tabulku do dedikovaného containeru s ikonou",
+      "snimek": "21-hledat-bez-vysledku-dark"
+    },
+    {
+      "severity": "important",
+      "category": "data",
+      "popis": "Tabulka se sloupky (JMÉNO A PŘÍJMENÍ, ORGANIZACE, SPZ, PŘÍCHOD, ODCHOD, DOBA, STAV) zabírá velký prostor, ale je zcela prázdná. Data-ink ratio je špatný - vizuální struktura signalizuje 'tady budou data', ale není nic. Pro empty state je to neefektivní.",
+      "selektor_nebo_prvek": "table.search-results nebo div.results-table - celá tabulkové struktura se záhlavím sloupců",
+      "navrhovana_oprava": "Nahradit tabulkový layout dedikovaným empty state designem: odstranit řádky sloupců, zobrazit jen obrázek/ikonu + text 'Nic jsme nenašli. Zkuste změnit hledaný termín.'",
+      "snimek": "21-hledat-bez-vysledku-dark"
+    },
+    {
+      "severity": "critical",
+      "category": "story",
+      "popis": "Modal kombinuje tabulku se seznamem návštěvníků (Lukáš Procházka, Martin Dvořák, Jana Svobodová, Petr Novák) v horní polovině s editačním formulářem tlačeným dolů. Když se otevře modal pro editaci, uživatel vidí nejdřív seznam, teprve pak formulář. To není správný příběh — formální by měl být hrdina, ne seznam. Titulek 'Přehled návštěvy' signalizuje read-only режim, ale vidí se input fieldy. Nejasné, jaká je primární akce.",
+      "selektor_nebo_prvek": "Modal dialog — sekvence: titulek + tabulka (4 řádky) + editační formulář",
+      "navrhovana_oprava": "Reorganizovat: (1) Dát editační formulář do popředí — to je primární obsah. (2) Tabulku buď odstranit, nebo ji přesunout do collapsed sekce/záložky. (3) Změnit titulek na 'Upravit návštěvu' — jasně komunikovat, že se jedná o editaci, ne o zobrazení.",
+      "snimek": "23-modal-upravit-dark"
+    },
+    {
+      "severity": "important",
+      "category": "typografie",
+      "popis": "Labely v editačním formuláři (JMÉNO, ORGANIZACE, SPZ VOZIDLA) jsou v šedé barvě na tmavém pozadí. Kontrast je slabý a text se čte s námahou. Na velkoplošné prezentaci vedení firmy by měly být bez debaty bez-ambiguously čitelné z první sekundy.",
+      "selektor_nebo_prvek": "Labely JMÉNO, ORGANIZACE, SPZ VOZIDLA v edita ním formuláři",
+      "navrhovana_oprava": "Zvýšit kontrast — změnit barvu labelu na bílou nebo jasně šedou s větší váhou fontu. Měřit kontrast WCAG AA min. 4.5:1 pro text na pozadí.",
+      "snimek": "23-modal-upravit-dark"
+    },
+    {
+      "severity": "important",
+      "category": "spacing",
+      "popis": "Prostor mezi tabulkou a editačním formulářem je minimální, vizuální oddělení těchto dvou sekcí chybí. Přechod z tabulky přímo na pole formuláře terčí design na mez čitelnosti. Modal vypadá jako jeden zaplnený kvádr bez rytmu a dýchání.",
+      "selektor_nebo_prvek": "Prostor mezi tabulkou (posledním řádkem Petr Novák) a prvním labelem JMÉNO",
+      "navrhovana_oprava": "Přidat jasné vizuální oddělení — horizontální oddělovací linka, zvětšit vertical spacing, nebo změnit background sekcí. Prostor má komunikovat: 'Tady končí seznam, tady začíná editace'.",
+      "snimek": "23-modal-upravit-dark"
+    },
+    {
+      "severity": "important",
+      "category": "spacing",
+      "popis": "Prostor mezi jednotlivými poli formuláře (JMÉNO, ORGANIZACE, SPZ VOZIDLA) je příliš těsný. Pole se přitiskují k sobě, chybí jim prostor k oddýchnutí. Modal terčí na hustotě dat místo elegance.",
+      "selektor_nebo_prvek": "Input fieldy v edita ním formuláři — prostor mezi řádky",
+      "navrhovana_oprava": "Zvýšit padding/margin mezi jednotlivými poli. Každé pole by mělo být jasně vizuálně odděleno. Rytmus prostoru by měl být konzistentní.",
+      "snimek": "23-modal-upravit-dark"
+    },
+    {
+      "severity": "polish",
+      "category": "zarovnani",
+      "popis": "Input fieldy nemají jasnou vizuální indikaci, že jsou editovatelné. Border je slabý, není jasný fokus state. Na první pohled se neví, jestli se do nich dá psát, nebo jestli to je jen zobrazení.",
+      "selektor_nebo_prvek": "Input fieldy — Lukáš Procházka, Bosch Rexroth, 2AE 4471",
+      "navrhovana_oprava": "Přidat vizuální indikaci editovatelnosti: (1) zesilnit border/outline, (2) přidat hover efekt, (3) přidat ikonu (tužka), nebo (4) změnit background při focus. Uživatel by měl vědět, co je interactive.",
+      "snimek": "23-modal-upravit-dark"
+    },
+    {
+      "severity": "important",
+      "category": "story",
+      "popis": "Modal nemá explicitní dialog title. Vidím pouze jméno osoby Lukáš Procházka v horní části, ale chybí jasný nadpis jako Upravit záznam nebo Upravit údaje, který by unambigózně indikoval, jakou akci v modalu provádím. Bez tohoto kontextu si uživatel nemusí být zcela jistý, zda edituje existující záznam.",
+      "selektor_nebo_prvek": "Modal dialog header — horní část modalu s textem Lukáš Procházka",
+      "navrhovana_oprava": "Přidat explicitní nadpis Upravit záznam nebo Upravit údaje do horní části modalu, nebo změnit nadpis na Upravit údaje pro Lukáše Procházky. Tím by se jasně indikovala akce a zvýšila by se jistota uživatele.",
+      "snimek": "24-modal-upravit-light"
+    },
+    {
+      "severity": "polish",
+      "category": "typografie",
+      "popis": "Labely vstupních polí jsou v VELKÝCH PÍSMENECH: JMÉNO, ORGANIZACE, SPZ VOZIDLA. Toto je konzistentní s aplikací, ale typograficky méně rafinované. Title Case by byl vizuálně elegantnější a přirozenější.",
+      "selektor_nebo_prvek": "Label texty v polích — konkrétně prvky s textem JMÉNO, ORGANIZACE, SPZ VOZIDLA",
+      "navrhovana_oprava": "Změnit labely na Title Case: Jméno, Organizace, SPZ vozidla. Zvýší se vizuální rafinace a elegance designu.",
+      "snimek": "24-modal-upravit-light"
+    },
+    {
+      "severity": "important",
+      "category": "konzistence",
+      "selektor_nebo_prvek": "Tlačítko Zrušit (cancel button, vlevo v modálu)",
+      "popis": "Tlačítko Zrušit je zobrazeno pouze jako bílý text na tmavém pozadí modálu bez viditelného border či background. V potvrzovacím dialogu — zejména v destruktivním kontextu — by měly být oba akční prvky (Zrušit i Ano, odejít) stejně jasně klikatelné a hmatné. Aktuálně se Zrušit chová spíš jako hyperlink nebo prostý text než jako prvek UI, což narušuje konzistenci s Ano, odejít tlačítkem, které má jasný vizuální frame (červené pozadí).",
+      "navrhovana_oprava": "Přidat kolem Zrušit tlačítka tenký border (1px, barva: rgba(255,255,255,0.3-0.4)) nebo subtilní pozadí (rgba(255,255,255,0.08)). Tím se prvek jasně oddělí od běžného textu v modálu a bude zřejmé, že je to klikatelné.",
+      "snimek": "25-modal-odchod-dark"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Modální okno není pokryto fullscreen darkened overlay. Na snímku vidím obsah pod modálem (seznam s Přítomen/a, tlačítka Upravit, Odejít), což zeslabuje fokus na dialog a uživatel není jistý, zda je background disabled či stále interaktivní.",
+      "selektor_nebo_prvek": "Modal overlay / .modal-backdrop",
+      "navrhovana_oprava": "Přidej fullscreen semi-transparent overlay (50–70% opacity tmavé barvy) pod modální okno. Zajisti správný z-index, aby modal zůstal vždy na vrchu.",
+      "snimek": "26-modal-odchod-mobile"
+    },
+    {
+      "severity": "important",
+      "category": "mobil",
+      "popis": "Na mobilu 390px jsou tlačítka Zrušit a Ano, odejít vedle sebe. Z vizuálu vypadají těsně, potenciálně pod minimální velikostí dotyku 44x44px (iOS/Android guidelines). Riziko nešťastného tapnutí, obzvláště u prvního tlačítka.",
+      "selektor_nebo_prvek": ".button-cancel, .button-confirm",
+      "navrhovana_oprava": "Zajisti 44x44px efektivní dotykový cíl včetně padingu. Na mobilu zvážit stackování tlačítek pod sebou (full-width) místo vedle sebe — větší plocha, bezpečnější interakce.",
+      "snimek": "26-modal-odchod-mobile"
+    },
+    {
+      "severity": "critical",
+      "category": "data",
+      "popis": "Formulář obsahuje data z předchozího zápisu (Jan, Novák, Firma s.r.o., SPZ 1AB 2345), když měl být po úspěchu vyprázdněný. Matoucí UX — není jasné, jestli je zápis hotový nebo se pokračuje.",
+      "selektor_nebo_prvek": "Formulářová pole JMÉNO, PŘÍJMENÍ, ORGANIZACE, SPZ VOZIDLA v levém panelu pod zprávou o úspěchu",
+      "navrhovana_oprava": "Po úspěšném zápisu vymazat všechny obsah z polí (nebo je nastavit na defaultní stav) tak, aby byl formulář viditelně připravený na nový zápis.",
+      "snimek": "27-alert-success-dark"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Zelená hláška o úspěchu se ztrácí v rohu formuláře. Pro klíčový feedback by měla být jasně nejdominantnější prvek — teď konkuruje s ostatními prvky.",
+      "selektor_nebo_prvek": "Zelená linka s textem '✓ Tereza Novotná zapsána/a v 14:30.' v levém formuláři",
+      "navrhovana_oprava": "Zvýšit viditelnost: větší font, silnější barva, nebo vložit do zvýrazněného kontejneru; ideálně umístit výše v hierarchii nebo centrovat tak, aby byla první věc, kterou uživatel vidí po akci.",
+      "snimek": "27-alert-success-dark"
+    },
+    {
+      "severity": "important",
+      "category": "story",
+      "popis": "Nejasný stav formuláře po úspěchu — není vidět, jestli je formulář stále aktivní (připravený na nový zápis) nebo je deaktivovaný. Matoucí UX signál.",
+      "selektor_nebo_prvek": "Celý formulářový box s tlačítky 'Zapsać příchod' a poli pro vstup",
+      "navrhovana_oprava": "Pokud je formulář stále aktivní, měl by být prázdný; pokud je dočasně deaktivovaný, měl by mít viditelný disabled stav (např. nižší opacity, disabled atribut na tlačítku). Jasně komunikovat příští kroku.",
+      "snimek": "27-alert-success-dark"
+    },
+    {
+      "severity": "important",
+      "category": "konzistence",
+      "selektor_nebo_prvek": "Prvni statisticka karta s cerveny pruhem vs sloupec STAV v tabulce",
+      "popis": "Karta Pritomni ma cerveny levy pruh (signalizuje varovani), ale v tabulce je stav Pritomom/a zelen. Cervena a zelena maji rozdilny vyznam - toto je sematicky zmate. Stejny koncept (pritomnost) je vyjadreny dvema barvami s ruznym vyznamu.",
+      "navrhovana_oprava": "Zmenit levy pruh na karte na zelenou barvu, aby se shodoval se stavem v tabulce. Cervena by mela byt jen pro varovani nebo chyby.",
+      "snimek": "28-alert-success-light"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "selektor_nebo_prvek": "Tlacitko Odejit v tabulce - cervene tlacitka v poslednim sloupci",
+      "popis": "Tlacitko Odejit je cervene (barva primarnich akci), ale v kontextu to je sekundarni operace. Cervena barva deklaruje toto jako kriticke nebo caste pouzivane, ale Odejit je relativne vzacna akce a nemel by byt stejne zdurazneny jako primarni formulare.",
+      "navrhovana_oprava": "Zmenit tlacitko Odejit na sedi barvu, aby odrazi jeho sekundarni post. Cervena by mela byt vyhrazena opravdu primarnich akcim na obrazovce.",
+      "snimek": "28-alert-success-light"
+    },
+    {
+      "severity": "polish",
+      "category": "typografie",
+      "selektor_nebo_prvek": "Polozky JMENO a PRIJMENI v levem formulari",
+      "popis": "Polozky JMENO a PRIJMENI nemaji zadny vizualni znameni, ze jsou povinne (nejsou tu *), zatimco ostatni pole maji (nepovinne) napsane. Toto cini pole asymetricky - bylo jasnejsi mit konzistentni vzhled pro vsechna pole.",
+      "navrhovana_oprava": "Pridat * nebo (povinne) k polozkam JMENO a PRIJMENI, nebo smazat text (nepovinne) z ostatnich poli, aby byla konzistencni.",
+      "snimek": "28-alert-success-light"
+    },
+    {
+      "severity": "polish",
+      "category": "data",
+      "selektor_nebo_prvek": "Zelena zprava s checkmarkem Tereza Novotna zapsana/a v 14:30",
+      "popis": "Uspesna zprava nema viditne ovladani pro jeji zavreni (neni tam X tlacitko nebo odkaz Zavrit). Neni jasne, zda se zprava automaticky uzavira nebo zustava trvale viditelna. Uzivateli neni jasne, jestli ma mit moznost zavrit tuto hlasku.",
+      "navrhovana_oprava": "Pridat malou ikonku X nebo link Zavrit, aby bylo jasne, ze se zprava da zavrrit. Nebo jasne komunikovat, ze se auto-zavira po N sekundach (vizualne - napr. progress linka).",
+      "snimek": "28-alert-success-light"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Tlačítko 'Odhlásit' v top-right rohu je stejně červené a prominentní jako primární akce 'Odejít' v tabulce. Odhlášení je terciární akce, měla by být skromná. Teď soutěží se s hlášením chyby o pozornost uživatele.",
+      "selektor_nebo_prvek": "Tlačítko 'Odhlásit' v horním pravém rohu (top-right corner)",
+      "navrhovana_oprava": "Změnit barvu a styl tlačítka 'Odhlásit' na méně prominentní — šedá, menší písmo, nebo umístit do menu (hamburger/dropdown) místo do horního pruhu.",
+      "snimek": "29-alert-error-dark"
+    },
+    {
+      "severity": "important",
+      "category": "data",
+      "popis": "Sloupce 'PŘÍCHOD' a 'ODCHOD' mají v tabulce jen '-' nebo čísla. U některých řádků je nejasné, jestli data chybí, nebo je návštěva stále přítomna. Toto nedostatečně komunikuje stav.",
+      "selektor_nebo_prvek": "Sloupce 'PŘÍCHOD' a 'ODCHOD' v tabulce (čtvrtý a pátý sloupec zleva)",
+      "navrhovana_oprava": "Přidat placeholder text nebo ikonu (např. hodinky ⏱ pro čekání), nebo jasně dokumentovat, co '-' znamená. Nebo: v tabulce zobrazit jen vyplněné údaje a skrýt prázdné sloupce.",
+      "snimek": "29-alert-error-dark"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Chyba 'Vyplňte jméno | příjmení' je umístěna pod formulárem, ale není vizuálně propojená s políčky, která chybu vyvolala. Uživatel musí 'dekódovat', která pole jsou problém. Chyba by měla být blíž nebo přímo v polích.",
+      "selektor_nebo_prvek": "Chybové hlášení se žlutou ikonou ⚠ v levém panelu",
+      "navrhovana_oprava": "Přidat chybový stav přímo do polí (JMÉNO, PŘÍJMENÍ) — změnit okraj na červený, přidat ikonu vpravo v poli. Nebo: Chybu udržet dolů, ale přidat zvýraznění (pulse, shadow) na políčka, která selhala.",
+      "snimek": "29-alert-error-dark"
+    },
+    {
+      "severity": "polish",
+      "category": "data",
+      "popis": "Sloupce s řídkými daty (PŘÍCHOD, ODCHOD jen s '-') signalizují, že datová tabulka není optimalizovaná. Když jsou data takto řídká, vypadá to, že design nebyl testován s reálnými daty, nebo se ignoroval bílý prostor.",
+      "selektor_nebo_prvek": "Celá tabulka, zejména sloupce PŘÍCHOD a ODCHOD",
+      "navrhovana_oprava": "Přehodnotit, které sloupce jsou kritické. Pokud PŘÍCHOD/ODCHOD nejsou vždy vyplněné, zvážit skrytí nebo dynamické zobrazení. Nebo: obsah zarovnat na levou stranu a přidat subtle background color pro rozlišení sloupců.",
+      "snimek": "29-alert-error-dark"
+    },
+    {
+      "severity": "polish",
+      "category": "mobil",
+      "popis": "2-sloupcový layout (formulář vlevo, tabulka vpravo) není responsive. Na mobilu by formulář zabrał 100% šířky a tabulka by byla nepoužitelná. Není vidět responsive verze, ale strukturálně to je problém.",
+      "selektor_nebo_prvek": "Celý layout — levý panel (formulář) a pravý panel (tabulka)",
+      "navrhovana_oprava": "Na mobilu: zobrazit formulář a tabulku vertikálně (stack). Formulář nahoře (collapsed nebo v modal), tabulka pod ním se scrollováním horizontálně. Nebo: použít tabbed interface (Formulář / Přehled).",
+      "snimek": "29-alert-error-dark"
+    },
+    {
+      "severity": "important",
+      "category": "story",
+      "popis": "Hláška 'Zpracovávám doklad...' je zobrazena jako běžný text v levém panelu bez viditelné vizuální indikace a prominence. Podle zadání to má být informační (modrá/neutrální) hláška, ale nemá barevný background, ikonu loadingu nebo jasné umístění. Uživatel neví, že se právě něco děje. Toto je nejdůležitější prvek na obrazovce, ale je skryto.",
+      "selektor_nebo_prvek": "Prvek 'Zpracovávám doklad...' v levém panelu pod vstupními poli pro jméno/organizaci",
+      "navrhovana_oprava": "Přeformátovat na prominentní modální dialog nebo toast notifikaci s modrým backgroundem, loading spinner ikonou a jasným umístěním (nahoře nebo jako overlay). Zajistit, aby bylo uživateli okamžitě zřejmé, že se zpracování provádí.",
+      "snimek": "30-alert-info-dark"
+    },
+    {
+      "severity": "polish",
+      "category": "konzistence",
+      "popis": "Metriky v horní části nejsou konzistentně stylizovány. Levá metrika '4 AKTUÁLNĚ PŘÍTOMNÍ' má oranžový/červený levý border, zatímco '7 DNES CELKEM' a '12 CELKEM ZÁZNAMŮ' border nemají. Není jasné, proč je první zvýrazněna — vypadá to náhodně nebo jako chyba.",
+      "selektor_nebo_prvek": "Metriky v horní řádce: '4 AKTUÁLNĚ PŘÍTOMNÍ', '7 DNES CELKEM', '12 CELKEM ZÁZNAMŮ'",
+      "navrhovana_oprava": "Standardizovat styling — buď přidat oranžový border všem třem metrikám, nebo jej odebrat z první. Pokud má jedna metrika signalizovat aktivní stav, udělat to explicitně a konzistentně (např. subtilní background color místo borderu).",
+      "snimek": "30-alert-info-dark"
+    },
+    {
+      "severity": "critical",
+      "category": "typografie",
+      "popis": "Varovná hláška 'Jméno se nepodařilo rozpoznat – doplňte ručně.' má amber/oranžové pozadí s textem, který je málo kontrastní vůči tmavému nočnímu pozadí. Text je těžko čitelný, okraj hlášky není dostatečně ostře oddělený. Kritické varování by mělo být Crystal Clear a viditelné na první pohled — zde uživatel musí oko namáhat, aby si zprávu přečetl.",
+      "selektor_nebo_prvek": "Alert box s ikonou varování a textem 'Jméno se nepodařilo rozpoznat – doplňte ručně.' (oranžový rámec na levém panelu formuláře)",
+      "navrhovana_oprava": "Zvýšit kontrast: (1) text hlášky změnit na bílou nebo velmi světlou barvu, (2) amber/oranžový okraj zesílit nebo zvýšit jeho brightness, (3) zvážit zvýšení opacity nebo jiného vizuálního zvýraznění (shadow, border-width) aby byla hláška ostřeji oddělena od tmavého pozadí. V nočném režimu amber bez dostatečného kontrastu selhává — měla by být stejně viditelná jako v denním režimu.",
+      "snimek": "31-alert-amber-dark"
+    },
+    {
+      "severity": "important",
+      "category": "typografie",
+      "popis": "Font v tabulce je příliš malý pro prezentaci na velkém plátně. Řádky s jmény, organizacemi, časy jsou těžko čitelné z vzdálenosti. Na vedením přesazení budou jména prakticky neviditelná.",
+      "selektor_nebo_prvek": "Text v buňkách tabulky (sloupce JMÉNO A PŘÍJMENÍ, ORGANIZACE, SPZ, PŘÍCHOD, ODCHOD, DOBA)",
+      "navrhovana_oprava": "Zvýšit font-size tabulky minimálně na 14-16px (ze současných ~12px). Na velkém displeji má být čitelné bez přiblížení.",
+      "snimek": "33-webkamera-dark"
+    },
+    {
+      "severity": "important",
+      "category": "spacing",
+      "popis": "Řádky tabulky jsou vertikálně stísněné. Nedostatek paddingu mezi řádky (tr) vytváří vizuální hustotu a ztěžuje skenování. Řádky se slijí v jednu zeď textu.",
+      "selektor_nebo_prvek": "Řádky tabulky (tr elementy, konkrétně sloupce s daty návštěv)",
+      "navrhovana_oprava": "Zvýšit padding-top a padding-bottom u buněk (td/th) tabulky. Doporučuji minimálně padding: 12px 8px (z převažující hustoty ~6px 4px).",
+      "snimek": "33-webkamera-dark"
+    },
+    {
+      "severity": "important",
+      "category": "zarovnani",
+      "popis": "Sloupce v tabulce nejsou jasně odděleny. Bez viditelných dělicích čar mezi sloupci je těžké rozlišit, kde končí jedno data a začíná další. Celá tabulka vypadá jako jedna homogenní stěna.",
+      "selektor_nebo_prvek": "Mřížka tabulky (border mezi sloupci td/th elementy)",
+      "navrhovana_oprava": "Přidat border-right na sloupce (1px solid rgba(255,255,255,0.1)) nebo zvýšit horizontální padding a gap mezi sloupci. Aby byla tabulka skenovaná, ne dekódovaná.",
+      "snimek": "33-webkamera-dark"
+    },
+    {
+      "severity": "polish",
+      "category": "spacing",
+      "popis": "Levý panel s formulářem má dobrý prostor, ale mezi formulářem a tabulkou by mohlo být více bílého prostoru pro vzdušnost. Design by mohl být více elegantní se více marginem.",
+      "selektor_nebo_prvek": "Celková struktura: gap mezi levým formulářem (.left-panel) a pravou tabulkou (.right-panel)",
+      "navrhovana_oprava": "Zvýšit margin nebo gap mezi panely (z ~20px na ~32px). Přidat padding nahoře celé tabulce.",
+      "snimek": "33-webkamera-dark"
+    },
+    {
+      "severity": "important",
+      "category": "typografie",
+      "popis": "Text v info boxu má špatné zalomení slov: 'euklád á' místo 'neuklád á', 'okamaž ité' a 'Ulož í' místo 'Uloží'. Vypadá to jako nežádoucí mezery nebo hvězdičky mezi morfémy. Na velkém plátně před vedením to bude patrné a aplikace půjde amatérsky.",
+      "selektor_nebo_prvek": "info-box text, první odstavec (Obrázek průkazu se nikde neuklád á...)",
+      "navrhovana_oprava": "Zkontrolovat CSS: line-height, word-break, letter-spacing a font-kerning. Zajistit, aby se slova nelamala uprostřed morfémů. Může jít o bug v unicode nebo unicode-bidi.",
+      "snimek": "34-sken-krok1-dark-mobile"
+    },
+    {
+      "severity": "important",
+      "category": "data",
+      "popis": "Text v informačním boxu: 'Obraz průkazu se nikde neuklád. Zpracuje se okamžitě v zahodí.' Slovo 'v zahodí' je gramaticky nesprávné a matoucí. V takto čistém, profesionálním designu tato chyba padne v oči a snižuje důvěru. Na velkém plátně před vedením bude vidět okamžitě.",
+      "selektor_nebo_prvek": "Informační box, text (gray background box se ikonou 'i')",
+      "navrhovana_oprava": "Změnit text na: 'Obraz průkazu se neuklád. Zpracuje se okamžitě a zahodí se.' nebo 'Obraz průkazu se neuklád. Zpracuje se okamžitě a pak se smaže.'",
+      "snimek": "35-sken-krok1-light-mobile"
+    },
+    {
+      "severity": "polish",
+      "category": "typografie",
+      "popis": "Bezpečnostní informace v panelu (\"Obrázek průkazu se nikde neuklád á...\") má malý text na tmavém pozadí. Bezpečnost dat si zaslouží lepší viditelnost — text je čitelný, ale na nočním režimu není dostatečně prominentní. Mohlo by to být viditelnější.",
+      "selektor_nebo_prvek": ".security-notice, .info-panel nebo element obsahující text 'Obrázek průkazu'",
+      "navrhovana_oprava": "Zvětšit font o 1–2 pt, zvýšit kontrast (světlejší text), nebo přidat diskrétní barevné pozadí (např. velmi tmavé modré/zelené) pro lepší čitelnost na nočním režimu",
+      "snimek": "36-sken-krok1-dark-tablet"
+    },
+    {
+      "severity": "important",
+      "category": "data",
+      "popis": "Uživatel nevidí odhad, jak dlouho bude čekání trvat. Bez toho si při delším čekání může myslet, že aplikace zamrzla. V čekacím stavu je psychologická podpora klíčová pro udržení důvěry.",
+      "selektor_nebo_prvek": "Loading spinner a text pod ním — 'Odesílám do serveru pro rozpoznání...'",
+      "navrhovana_oprava": "Přidat časový odhad: 'Odesílám do serveru pro rozpoznání... (~2 sekundy)' nebo přidat progress bar s vizuální indikací pokroku.",
+      "snimek": "38-sken-krok2-rozpoznavani"
+    },
+    {
+      "severity": "polish",
+      "category": "zarovnani",
+      "popis": "Obsah (náhled dokladu a spinner) je vycentrovaný horizontálně, ale vertikálně je umístěný příliš vysoko. Velký černý prostor pod loadingem způsobuje nevyváženou vizuální váhu — obsah se zdá být 'zavěšený' nahoře.",
+      "selektor_nebo_prvek": "Hlavní obsah — náhled dokladu a loading spinner",
+      "navrhovana_oprava": "Vertikálně zarovnat obsah na střed obrazovky (přibližně 50 % výšky viewport). Lepší vizuální rovnováha a psychologické povědomí o procesu.",
+      "snimek": "38-sken-krok2-rozpoznavani"
+    },
+    {
+      "severity": "important",
+      "category": "konzistence",
+      "popis": "CTA tlačítko \"Zapsát příchod\" je červené, stejně jako \"Potvrzení\" krok v progress baru. Červená barva v UI designu tradičně signalizuje varování, chybu nebo destruktivní akci. Zde je to ale primární, pozitivní akce (potvrzení a zápis dat). Tato volba vytváří sémantickou nejednotnost - uživatel cítí nejistotu místo sebevědomí.",
+      "selektor_nebo_prvek": "CTA tlačítko \"Zapsát příchod\" (červené, spodní část formuláře) a \"Potvrzení\" kroku v progress baru",
+      "navrhovana_oprava": "Změnit barvu CTA tlačítka na zelenou (konzistentní s \"Rozpoznáno\" a dalšími success indikátory v aplikaci) nebo na accent barvu (modrá, fialová). Zelená by byla nejlepší volba - vizuálně by pak \"Zapsát příchod\" odpovídalo sémantice \"potvrzení\" a \"hotovo\".",
+      "snimek": "39-sken-krok3-rozpoznano-dark"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "selektor_nebo_prvek": "Label 'ORGANIZACE (NEPOVINNÉ)' a 'SPZ VOZIDLA (NEPOVINNÉ)'",
+      "popis": "Povinná pole (JMÉNO, PŘÍJMENÍ) nejsou vizuálně odlišena od nepovinných. Označení nepovinnosti je napsáno v textu labelu — uživatel si to pod tlakem nemusí všimnout. Standardní UI praxe umisťuje `*` či `(povinné)` do labelu povinných polí, ne negaci u nepovinných.",
+      "navrhovana_oprava": "Přidej `*` či `(povinné)` k labelům JMÉNO a PŘÍJMENÍ. Nebo přeformatuj labely nepovinných polí pomocí ikony či subtilnějšího textu, aby nebyla textově hlučná.",
+      "snimek": "41-sken-krok3-nerozpoznano"
+    },
+    {
+      "severity": "important",
+      "category": "story",
+      "selektor_nebo_prvek": "Tlačítka 'Zapsát přichod' a 'Skenovat znovu'",
+      "popis": "Není jasné, co dělat, pokud se uživatel chce vrátit a zkusit skenování znovu. 'Skenovat znovu' je umístěné na stejné vizuální úrovni jako primární CTA, takže se lehko přehlédne. Uživatel neví, jestli se má vrátit, nebo pokračovat.",
+      "navrhovana_oprava": "Přesuň 'Skenovat znovu' jako sekundární akci — vizuálně jasně pod primárním tlačítkem. Nebo přidej do upozornění explicitní instrukci: 'Pokud chceš zkusit skenování znovu, klikni na tlačítko Skenovat znovu výše.'",
+      "snimek": "41-sken-krok3-nerozpoznano"
+    },
+    {
+      "severity": "polish",
+      "category": "typografie",
+      "selektor_nebo_prvek": "Pole JMÉNO s labelou 'JMÉNO' a placeholderem 'Jméno'",
+      "popis": "Label a placeholder duplikují stejnou informaci. Placeholder by měl obsahovat hint nebo příklad, ne opakování labelu. Snižuje to čitelnost a zvyšuje vizuální šum.",
+      "navrhovana_oprava": "Změň placeholder na 'Např. Jan Novotný' nebo 'Zadej své jméno'. Podobně pro PŘÍJMENÍ.",
+      "snimek": "41-sken-krok3-nerozpoznano"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Žlutá/oranžová chybová zpráva 'Automatické rozpoznání selhalo – zadejte jméno ručně. (OCR selhalo)' je kritickým sdělením, ale vizuálně není dostatečně dominantní. Na velkém plátně vedení si ji nemusí hned všimnout. Měla by vypadat důležitěji vzhledem k závažnosti informace.",
+      "selektor_nebo_prvek": "Oranžová chybová zpráva – řádky s textem 'Automatické rozpoznání selhalo – zadejte jméno ručně. (OCR selhalo)'",
+      "navrhovana_oprava": "Zvětšit font chybové zprávy, přidat více whitespace kolem ní pro odlišení, nebo přidat vizuální symbol (ikona upozornění) pro zvýšení dopadu.",
+      "snimek": "42-sken-krok3-chyba-ocr"
+    },
+    {
+      "severity": "polish",
+      "category": "spacing",
+      "popis": "Sekundární tlačítko 'Skenovat znovu' je nenápadné a umístěné dole jako doplňkový prvek. Uživatel by měl mít jasně viditelnou volbu znovu skenovat, ale nyní je toto tlačítko snadno přehlédnutelné.",
+      "selektor_nebo_prvek": "Sekundární tlačítko '← Skenovat znovu' (šedý text v tmavém poli)",
+      "navrhovana_oprava": "Zvýšit viditelnost typografií (větší font nebo více padding), zvážit stylingu, aby bylo jasnější jako alternativní akce (eventuálně sekundární barva místo šedé).",
+      "snimek": "42-sken-krok3-chyba-ocr"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Třetí krok 'Potvrzení' v horní navigaci zobrazuje červený X, který implikuje chybu nebo selhání. Veliká zelená fajfka uprostřed obrazovky ale signalizuje úspěšné potvrzení. To je vizuálně matoucí — indikátor kroku by měl být konzistentní se stavem (zelená fajfka, ne červený X).",
+      "selektor_nebo_prvek": "Ikona kroku 'Potvrzení' v záhlaví — aktuálně zobrazuje červený X symbol",
+      "navrhovana_oprava": "Změnit červený X symbol na zelenou fajfku pro krok 'Potvrzení', aby všechny tři kroky signalizovaly úspěch (Doklad ✓, Rozpoznání ✓, Potvrzení ✓).",
+      "snimek": "43-sken-hotovo-dark"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Třetí krok progress baru (Potvrzení) je zobrazený jako červená číslice 3, zatímco první dva kroky (Doklad, Rozpoznání) jsou zelené se zaškrtnout. Na obrazovce, která potvrzuje akci, to signalizuje nedokončenost místo potvrzení. Měl by být zelený se zaškrtnout jako ostatní, aby byla vizuální konzistence a správné semantické sdělení.",
+      "selektor_nebo_prvek": "Třetí ikona v progress baru - text 'Potvrzení' s červeným kruhem obsahujícím číslici 3",
+      "navrhovana_oprava": "Změnit ikonu Potvrzení z (3) na zelený kruh se zaškrtnout ✓, stejně jako zbylé dva kroky. Zachovat stejný styl pro všechny tři kroky.",
+      "snimek": "44-sken-hotovo-light"
+    },
+    {
+      "severity": "important",
+      "category": "data",
+      "popis": "Obrazovka potvrzuje pouze jméno osoby a čas příchodu, ale chybí informace o typu skenovaného dokladu (pas, průkaz, řidičský průkaz apod.). Pro uživatele je důležité vědět, jaký druh dokladu byl zaznamenán, aby si ověřil, že skenoval správný dokument. Samé jméno 'Tereza Novotná' není rozlišující.",
+      "selektor_nebo_prvek": "Obsah pod zeleným háčkem - označení osoba jméno a čas bez typu dokladu",
+      "navrhovana_oprava": "Přidat typ dokladu pod nebo nad jméno (např. 'Pas' nebo 'Občanský průkaz') tak, aby byla potvrzena správnost skenovaného dokumentu.",
+      "snimek": "44-sken-hotovo-light"
+    },
+    {
+      "severity": "polish",
+      "category": "spacing",
+      "popis": "Spodních 55 % obrazovky je prázdný bílý prostor. Na mobilu je to méně optimální - tlačítko 'Skenovat další doklad' by mohlo být trochu níže a využít prostor lépe, nebo může být prostor lépe zaplnit dalším kontextem (komentář, tip, ikona).",
+      "selektor_nebo_prvek": "Prostor pod tlačítkem 'Skenovat další doklad' až k dolnímu okraji obrazovky",
+      "navrhovana_oprava": "Zvážit posunutí tlačítka níže nebo přidání vedlejší informace/ikony do prázdného prostoru, aby se vizuální rovnováha lépe využila. Nebo nechat prostor, pokud je to záměr (elegantní minimalizmus).",
+      "snimek": "44-sken-hotovo-light"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Tlačítko 'Spustit kameru' vypadá normálně (běžná opacity, normální barva), přestože kamera není dostupná. Uživatel neví, že je tlačítko nedostupné, a může se pokoušet jej stisknout a čekat na odpověď.",
+      "selektor_nebo_prvek": "Tlačítko 'Spustit kameru' (ikona fotoaparátu + text)",
+      "navrhovana_oprava": "Přidat vizuální disabled state — snížit opacity (0.5), zmenit barvu na šedou, nebo přidat ikonu zákazu. Minimálně text 'nedostupné'",
+      "snimek": "45-sken-chyba-kamery"
+    },
+    {
+      "severity": "important",
+      "category": "story",
+      "popis": "Instrukční text 'Klepněte na Spustit kameru a namířte na doklad' je matoucí v kontextu nedostupné kamery. Dává instrukci, jak fotit, ale fotit není možné. Uživatel vidí instrukci → chybu → nejasné tlačítko.",
+      "selektor_nebo_prvek": "Text nad černou oblastí (místo náhledu kamery)",
+      "navrhovana_oprava": "Skrýt text. Nahradit textem: 'Kamera není dostupná na tomto zařízení. Nahrművahte fotku ručně níže.'",
+      "snimek": "45-sken-chyba-kamery"
+    },
+    {
+      "severity": "important",
+      "category": "hierarchie",
+      "popis": "Progress kruh '1 Doklad' je v červené barvě. Na chybové obrazovce, kde je chyba také v červeném rámečku, to signalizuje chybu kroku, ne jen aktivní krok. Konvence: červená = chyba/problém, nikoliv aktivní stav.",
+      "selektor_nebo_prvek": "Progress bar, kruh '1 Doklad' — červená barva",
+      "navrhovana_oprava": "Změnit barvu na primární barvu aplikace (modrou/tyrkysovou), nikoliv červenou. Červená zůstane rezervovaná pro chyby.",
+      "snimek": "45-sken-chyba-kamery"
+    },
+    {
+      "severity": "polish",
+      "category": "typografie",
+      "popis": "Chybová hláška má sice čitelný text, ale barva pozadí (tmavá červená) a text by mohly mít vyšší kontras v noční režimu pro maximální čitelnost.",
+      "selektor_nebo_prvek": "Chybová zpráva v červeném rámečku",
+      "navrhovana_oprava": "Změnit barvu textu na bílou nebo velmi světlou červenou, nebo zmenske tmavý podklad na sytější červenou.",
+      "snimek": "45-sken-chyba-kamery"
+    }
+  ]
+}
