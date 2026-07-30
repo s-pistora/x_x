@@ -8,10 +8,25 @@ z české občanky a filtruje hlavičkové výrazy.
 """
 import os
 import re
+import threading
+
+# Torch (pod EasyOCR) si jinak rozjede vlastní pool vláken, což se s vláknovým
+# webserverem tluče — v našem případě to zablokovalo celý server včetně TLS
+# handshake. Jedno vlákno navíc dělá dobu rozpoznání předvídatelnou, což je pro
+# sken u vrátnice důležitější než špičkový výkon. Nastavit se to musí PŘED
+# importem torche, proto tady a ne níž.
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
 
 import numpy as np
 import pytesseract
 from PIL import Image
+
+# Rozpoznávání pouštíme jen jedno v jednom okamžiku. EasyOCR (potažmo torch pod
+# ním) není vláknově bezpečný: když se model načítal na pozadí a současně přišel
+# první požadavek z jiného vlákna, celý server se zaseknul bez chyby a bez logu.
+# Sken navíc posílá až 12 snímků a telefonů může být víc než jeden.
+_ocr_lock = threading.Lock()
 
 # Použijeme přesnější český model tessdata_best z projektové složky ./tessdata,
 # pokud tam je. Nastavením TESSDATA_PREFIX na tuhle složku ho Tesseract načte
@@ -31,6 +46,13 @@ if os.path.exists(os.path.join(_TESSDATA_DIR, "ces.traineddata")):
 _easyocr_reader = None
 _easyocr_nedostupne = False
 
+# Striktní režim: když text nesedí na nikoho z uzavřeného seznamu ZNAMI_LIDE,
+# vrátí se PRÁZDNÉ jméno místo obecné extrakce z dokladu. Prázdné pole s výzvou
+# k ručnímu doplnění je bezpečnější než sebejistě vyplněné cizí jméno — obecná
+# extrakce umí přečíst kterýkoliv doklad, což je při testovacím provozu
+# omezeném na dva lidi nežádoucí. Vypnout: OCR_STRICT_WHITELIST=0
+STRIKTNI_WHITELIST = os.environ.get("OCR_STRICT_WHITELIST", "1") != "0"
+
 
 def _ziskej_easyocr():
     global _easyocr_reader, _easyocr_nedostupne
@@ -39,6 +61,8 @@ def _ziskej_easyocr():
     if _easyocr_nedostupne:
         return None
     try:
+        import torch
+        torch.set_num_threads(1)   # viz poznámka u OMP_NUM_THREADS nahoře
         import easyocr
         # čeština + angličtina (na dokladu jsou oba jazyky), běh na CPU
         _easyocr_reader = easyocr.Reader(["cs", "en"], gpu=False, verbose=False)
@@ -46,6 +70,21 @@ def _ziskej_easyocr():
     except Exception:
         _easyocr_nedostupne = True
         return None
+
+
+def predehrej():
+    """Načte EasyOCR model dopředu, ve vlastním vlákně při startu serveru.
+
+    Bez tohohle by se model načítal líně až při prvním skenu — měřeno 16,9 s.
+    Na jevišti je sedmnáctisekundové ticho po prvním „Vyfotit doklad“ nepřijatelné,
+    a přitom to není chyba, jen líná inicializace. Selhání ignorujeme: když
+    EasyOCR není k dispozici, sken pojede na Tesseractu.
+    """
+    with _ocr_lock:
+        try:
+            _ziskej_easyocr()
+        except Exception:
+            pass
 
 
 def _easyocr_boxy(pil_image):
@@ -475,12 +514,19 @@ def precti_doklad(pil_image):
     místo jména vracel útržky hlavičky dokladu). Prázdné pole s výzvou k ruční
     opravě je vždycky lepší než sebejistě špatný údaj.
     """
+    with _ocr_lock:
+        return _precti_doklad_bez_zamku(pil_image)
+
+
+def _precti_doklad_bez_zamku(pil_image):
     boxy = _easyocr_boxy(pil_image)
     if boxy is not None:
         text = "\n".join(b["text"] for b in boxy).strip()
         znamy_jmeno, znamy_prijmeni = uroci_znamou_osobu(text)
         if znamy_jmeno:
             return znamy_jmeno, znamy_prijmeni, text, "easyocr"
+        if STRIKTNI_WHITELIST:
+            return "", "", text, "easyocr"
         jmeno, prijmeni = _jmeno_prijmeni_z_boxu(boxy)
         return _titulek(jmeno), _titulek(prijmeni), text, "easyocr"
 
@@ -488,6 +534,8 @@ def precti_doklad(pil_image):
     znamy_jmeno, znamy_prijmeni = uroci_znamou_osobu(text)
     if znamy_jmeno:
         return znamy_jmeno, znamy_prijmeni, text, "tesseract"
+    if STRIKTNI_WHITELIST:
+        return "", "", text, "tesseract"
     j, p = extrahuj_jmeno(text)
     return _titulek(j), _titulek(p), text, "tesseract"
 

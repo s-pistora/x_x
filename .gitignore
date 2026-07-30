@@ -1,1 +1,6 @@
 backend.log
+backend-http.log
+demo.log
+tls-proxy.log
+node_modules/
+package-lock.json
