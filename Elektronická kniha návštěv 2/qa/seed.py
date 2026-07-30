@@ -10,7 +10,8 @@ import json, shutil, sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 
-APP = Path(__file__).resolve().parent.parent / "x_x" / "Elektronická kniha návštěv 2"
+# Odvozeno od umístění skriptu: qa/ leží uvnitř projektu, takže APP je o úroveň výš.
+APP = Path(__file__).resolve().parent.parent
 DB = APP / "navstevni_kniha.db"
 MANIFEST = Path(__file__).resolve().parent / "seed-manifest.json"
 

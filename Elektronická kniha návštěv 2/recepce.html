@@ -245,6 +245,10 @@ tr:hover td{background:#fafafa}
             <label class="lbl" for="fSpz">SPZ vozidla</label>
             <input type="text" id="fSpz" placeholder="1AB 2345 (nepovinné)" oninput="this.value=this.value.toUpperCase()"/>
           </div>
+          <div class="form-group">
+            <label class="lbl" for="fTelefon">Telefon</label>
+            <input type="text" id="fTelefon" placeholder="+420 123 456 789 (nepovinné, pro SMS)"/>
+          </div>
           <button class="btn btn-green btn-full" id="btnZapis" onclick="zapsat()">
             <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
             Zapsat příchod
@@ -362,10 +366,18 @@ tr:hover td{background:#fafafa}
       <label class="lbl">SPZ vozidla</label>
       <input type="text" id="mSpz" placeholder="—" oninput="this.value=this.value.toUpperCase()"/>
     </div>
+    <div class="form-group">
+      <label class="lbl">Telefon</label>
+      <input type="text" id="mTelefon" placeholder="—"/>
+    </div>
     <div id="mAlertDiv" class="alert hidden"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Zrušit</button>
       <button class="btn btn-primary" onclick="saveModal()">Uložit</button>
+      <button class="btn btn-red" id="mOdchodBtn" onclick="zapisOdchod()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Zapsat odchod
+      </button>
     </div>
   </div>
 </div>
@@ -867,49 +879,61 @@ function renderTbl() {
 }
  
 // ── Zápis příchodu ────────────────────────────────────────────────────────────
+const TELEFON_RE = /^(\+420)?\d{9}$/;
+
 async function zapsat() {
   const jmeno    = document.getElementById('fJmeno').value.trim();
   const prijmeni = document.getElementById('fPrijmeni').value.trim();
- 
+  const telefon  = document.getElementById('fTelefon').value.trim().replace(/\s+/g, '');
+
   if (!jmeno || !prijmeni) {
     showAlert('fAlert', 'error', '⚠ Vyplňte jméno i příjmení.');
     if (!jmeno)    document.getElementById('fJmeno').style.borderColor    = 'var(--red)';
     if (!prijmeni) document.getElementById('fPrijmeni').style.borderColor = 'var(--red)';
     return;
   }
+  if (telefon && !TELEFON_RE.test(telefon)) {
+    showAlert('fAlert', 'error', '⚠ Telefon musí být ve formátu +420xxxxxxxxx nebo 9 číslic.');
+    document.getElementById('fTelefon').style.borderColor = 'var(--red)';
+    return;
+  }
   document.getElementById('fJmeno').style.borderColor    = '';
   document.getElementById('fPrijmeni').style.borderColor = '';
- 
+  document.getElementById('fTelefon').style.borderColor  = '';
+
   const btn = document.getElementById('btnZapis');
   btn.disabled = true;
- 
+
   try {
     const res = await fetch(API + '/navstevnici', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({
         jmeno, prijmeni,
-        organizace: document.getElementById('fOrg').value.trim(),
-        spz:        document.getElementById('fSpz').value.trim()
+        organizace:   document.getElementById('fOrg').value.trim(),
+        spz:          document.getElementById('fSpz').value.trim(),
+        phone_number: telefon
       })
     });
- 
+
     let d = {};
     try { d = await res.json(); } catch(e) {}
- 
+
     if (res.ok) {
       const cas = d.prichod_dt ? d.prichod_dt.slice(11, 16) : '';
-      showAlert('fAlert', 'success', `✓ ${jmeno} ${prijmeni} zapsán/a${cas ? ' v ' + cas : ''}.`);
-      ['fJmeno','fPrijmeni','fOrg','fSpz'].forEach(id => document.getElementById(id).value = '');
+      showAlert('fAlert', 'success', d.vitejte_zpet && d.zprava
+        ? '✓ ' + d.zprava
+        : `✓ ${jmeno} ${prijmeni} zapsán/a${cas ? ' v ' + cas : ''}.`);
+      ['fJmeno','fPrijmeni','fOrg','fSpz','fTelefon'].forEach(id => document.getElementById(id).value = '');
       nactiData();
       nactiHodinovyPrehled();
     } else {
-      showAlert('fAlert', 'error', '⚠ Chyba ' + res.status + ': ' + (d.error || 'Neznámá chyba.'));
+      showAlert('fAlert', 'error', '⚠ ' + (d.error || ('Chyba ' + res.status + ': Neznámá chyba.')));
     }
   } catch (e) {
     showAlert('fAlert', 'error', '⚠ Spojení se systémem selhalo. Zkuste to prosím znovu.');
   }
- 
+
   btn.disabled = false;
 }
  
@@ -922,6 +946,8 @@ function openModal(id) {
   document.getElementById('mJmeno').value  = r.jmeno + ' ' + r.prijmeni;
   document.getElementById('mOrg').value    = r.organizace || '';
   document.getElementById('mSpz').value    = r.spz || '';
+  document.getElementById('mTelefon').value = r.phone_number || '';
+  document.getElementById('mOdchodBtn').style.display = r.odchod_dt ? 'none' : '';
   document.getElementById('mAlertDiv').classList.add('hidden');
   document.getElementById('modal').classList.remove('hidden');
 }
@@ -932,15 +958,26 @@ function closeModal() {
 }
  
 async function saveModal() {
+  const telefon = document.getElementById('mTelefon').value.trim().replace(/\s+/g, '');
+  if (telefon && !TELEFON_RE.test(telefon)) {
+    showModalAlert('error', 'Telefon musí být ve formátu +420xxxxxxxxx nebo 9 číslic.');
+    return;
+  }
   try {
-    await fetch(API + '/navstevnici/' + modalId, {
+    const res = await fetch(API + '/navstevnici/' + modalId, {
       method:  'PATCH',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({
-        organizace: document.getElementById('mOrg').value,
-        spz:        document.getElementById('mSpz').value
+        organizace:   document.getElementById('mOrg').value,
+        spz:          document.getElementById('mSpz').value,
+        phone_number: telefon
       })
     });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      showModalAlert('error', d.error || 'Chyba uložení.');
+      return;
+    }
     closeModal();
     if (filter === 'hledat') hledat(); else nactiData();
   } catch (e) { showModalAlert('error', 'Chyba uložení.'); }
@@ -991,6 +1028,20 @@ async function potvrditOdchod() {
     showAlert('fAlert', 'error', '⚠ Spojení se systémem selhalo. Zkuste to prosím znovu.');
   }
   btn.disabled = false;
+}
+
+// Zapíše odchod přímo z modalu „Upravit záznam". Tlačítko se skrývá, pokud
+// návštěvník už odešel — řídí to openModal podle r.odchod_dt.
+async function zapisOdchod() {
+  try {
+    const res = await fetch(API + '/navstevnici/' + modalId, {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ odchod: true })
+    });
+    if (res.ok) { closeModal(); if (filter === 'hledat') hledat(); else nactiData(); }
+    else { const d = await res.json(); showModalAlert('error', d.error || 'Chyba.'); }
+  } catch (e) { showModalAlert('error', 'Spojení se systémem selhalo. Zkuste to prosím znovu.'); }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

@@ -2,8 +2,11 @@ flask>=3.0
 flask-cors>=4.0
 pillow
 numpy
+python-dotenv
 # OCR – hlavní engine (lokální neuronová síť, zdarma, čte fotky líp než Tesseract):
 easyocr
 # OCR – záloha, když EasyOCR není k dispozici:
 pytesseract
 opencv-python-headless
+# Odkomentuj, až budeš chtít zapojit ostré odesílání SMS (viz sms_notifier.py + .env):
+# twilio
