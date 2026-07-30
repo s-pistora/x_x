@@ -357,7 +357,10 @@ async function zpracovatObrazek(b64, previewSrc) {
     setStep(3);
  
     if (!res.ok || d.error) {
-      zobrazAlert('aResult', 'warn', 'Automatické rozpoznání selhalo – zadejte jméno ručně. (' + (d.error || '') + ')');
+      // Technický důvod jde do konzole, ne na obrazovku — uživateli u vrátnice
+      // nepomůže „tesseract is not installed or it's not in your PATH".
+      if (d.error) console.warn('OCR selhalo:', d.error);
+      zobrazAlert('aResult', 'warn', 'Automatické rozpoznání selhalo – vyplňte jméno a příjmení ručně.');
       return;
     }
  
