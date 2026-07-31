@@ -22,7 +22,7 @@ PINy jsou v `.env` (do gitu se necommitují).
 
 | # | Krok | Co se má stát |
 |---|---|---|
-| 1 | Naskenuj QR z panelu „Samoobslužný sken" | Na telefonu se otevře stránka skenu |
+| 1 | Otevři v telefonu adresu skenu (vypíše ji `start_demo.sh`) | Otevře se stránka skenu |
 | 2 | Vyfoť doklad | Formulář se vyplní jménem, fotka se zahodí |
 | 3 | Potvrď příchod | Do 20 s se objeví nový řádek na recepci |
 | 4 | Zkus zapsat stejnou osobu znovu | „je již přítomen/a od …", žádná duplicita |
