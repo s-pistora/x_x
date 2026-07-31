@@ -261,16 +261,16 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
 <!-- 4 ─ jak to funguje -->
 <section class="s">
   <div class="hl"><span class="kicker">Jak to funguje</span><span class="cara"></span></div>
-  <h2>Od QR kódu k zápisu ve čtyřech krocích</h2>
+  <h2>Od příchodu k zápisu ve čtyřech krocích</h2>
   <div class="telo">
     <div class="tok">
       <div class="tok-krok">
-        <div class="n">1</div><h3>Recepce ukáže QR</h3>
-        <p>Kód je trvale na obrazovce recepce. Míří na adresu skenu v místní síti.</p>
+        <div class="n">1</div><h3>Návštěvník přijde k vrátnici</h3>
+        <p>Recepce mu dá adresu stránky skenu v místní síti, nebo ho zapíše sama.</p>
       </div>
       <div class="tok-sipka">→</div>
       <div class="tok-krok">
-        <div class="n">2</div><h3>Návštěvník ho naskenuje</h3>
+        <div class="n">2</div><h3>Otevře si ji v telefonu</h3>
         <p>Vlastním telefonem. Nic neinstaluje, otevře se mu stránka skenu.</p>
       </div>
       <div class="tok-sipka">→</div>
@@ -311,8 +311,8 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
   <div class="telo">
     <div class="scen">
       <div class="scen-r"><div class="kr"></div>
-        <div class="co">Naskenujete QR z obrazovky recepce</div>
-        <div class="vidi">Na telefonu se otevře stránka skenu. Bez instalace čehokoli.</div></div>
+        <div class="co">Otevřete si v telefonu stránku skenu</div>
+        <div class="vidi">Adresu vám dá recepce. Bez instalace čehokoli.</div></div>
       <div class="scen-r"><div class="kr"></div>
         <div class="co">Vyfotíte doklad</div>
         <div class="vidi">Formulář se sám vyplní jménem z dokladu. Fotka se zahodí.</div></div>
@@ -349,17 +349,18 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
     <div class="dva uzky-vlevo">
       <div>
         <ul class="body">
-          <li><strong>Nic se neinstaluje.</strong> QR otevře běžnou webovou stránku.</li>
+          <li><strong>Nic se neinstaluje.</strong> Je to běžná webová stránka
+          v místní síti.</li>
           <li><strong>Fronta u vrátnice se rozpustí.</strong> Zapisovat se může několik
           lidí zároveň, každý na svém telefonu.</li>
           <li><strong>Recepce se nemusí ptát na jméno.</strong> Přečte se z dokladu,
           takže nevznikají přepisy typu „Nowak“ místo „Novák“.</li>
           <li><strong>Kdo telefon nemá</strong>, zapíše ho obsluha ručně jako dosud.</li>
+          <li><strong>Fotka se zahodí</strong> hned po přečtení jména.</li>
         </ul>
       </div>
-      <div style="display:flex;gap:6mm;align-items:flex-start;justify-content:center">
-        <img class="snimek" src="snimky/qr-detail.png" alt="QR panel na recepci" style="width:44%">
-        <img class="snimek mobil" src="snimky/sken-mobil.png" alt="Sken na telefonu" style="width:44%">
+      <div style="display:flex;justify-content:center">
+        <img class="snimek mobil" src="snimky/sken-mobil.png" alt="Sken na telefonu">
       </div>
     </div>
   </div>
@@ -511,7 +512,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
       <!-- Popisky sedí nad/pod křivkami, ne na nich — jinak je linka přetíná
            a v PDF to vypadá jako chyba sazby. -->
       <path class="ln" d="M180 62 C255 62 255 120 328 128"/>
-      <text class="lbl" x="192" y="48">https · QR</text>
+      <text class="lbl" x="192" y="48">https</text>
       <path class="ln" d="M180 224 C255 224 255 172 328 162"/>
       <text class="lbl" x="192" y="252">https</text>
       <path class="ln" d="M530 128 C600 128 600 58 670 54"/>
@@ -572,7 +573,6 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
           <tr><td><code>GET /api/stats</code></td><td>admin / správce</td></tr>
           <tr><td><code>GET /api/audit</code></td><td>admin / správce</td></tr>
           <tr><td><code>GET /api/export.csv</code></td><td>admin / správce</td></tr>
-          <tr><td><code>GET /api/qr</code></td><td>veřejné</td></tr>
         </table>
         <div class="karta" style="margin-top:5mm">
           <h3>Proč je sken bez přihlášení</h3>

@@ -79,11 +79,9 @@ def index():
 def sken():
     return send_from_directory('.', 'sken.html')
 
-# ── QR kód na samoobslužný sken ───────────────────────────────────────────────
-# Tímhle celý tok začíná: recepce ukáže QR, návštěvník ho naskenuje telefonem.
-# Adresa se MUSÍ složit ze síťové IP tohohle stroje — localhost by telefon
-# poslal na sebe sama. A schéma musí být https, protože prohlížeče pustí kameru
-# jen na zabezpečeném původu; na http:// z telefonu sken nefunguje.
+# ── Adresa v místní síti ──────────────────────────────────────────────────────
+# Používá se pro výpis adres při startu serveru: sken se otevírá na telefonu,
+# takže potřebujeme síťovou IP, ne localhost — ten by telefon poslal na sebe sama.
 
 def lan_adresa():
     """IP tohohle stroje v místní síti. Necháme OS vybrat rozhraní, kterým by
@@ -100,7 +98,7 @@ def lan_adresa():
 
 
 def zakladni_url():
-    """Adresa, na kterou má mířit QR — tedy ta, kterou uvidí telefon.
+    """Adresa, na kterou se chodí zvenčí — tu vypisujeme při startu.
 
     Za TLS proxy to není adresa aplikace: aplikace poslouchá na 5051 na
     localhostu, ale navenek se chodí na 5050 přes https. Proto se veřejný port
@@ -110,24 +108,6 @@ def zakladni_url():
     schema = "https" if os.environ.get("EPT_HTTPS") == "1" else "http"
     return f"{schema}://{lan_adresa()}:{port}"
 
-
-@app.route("/api/qr")
-def api_qr():
-    import segno
-    cil = zakladni_url() + "/sken"
-    buf = io.BytesIO()
-    # scale/border nastavené tak, aby byl kód čitelný i z metru od monitoru
-    segno.make(cil, error="m").save(buf, kind="png", scale=8, border=2,
-                                    dark="#141d28", light="#ffffff")
-    resp = Response(buf.getvalue(), mimetype="image/png")
-    resp.headers["Cache-Control"] = "no-store"   # IP se může změnit mezi sítěmi
-    return resp
-
-
-@app.route("/api/sken-url")
-def api_sken_url():
-    """Adresa textem — kdyby QR nešel naskenovat, dá se přepsat ručně."""
-    return jsonify({"url": zakladni_url() + "/sken"})
 
 # ── OCR ───────────────────────────────────────────────────────────────────────
 # Bez přihlášení – používá to i samoobslužný sken-kiosek (/sken). Obrázek se

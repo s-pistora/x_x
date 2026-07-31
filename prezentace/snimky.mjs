@@ -59,26 +59,12 @@ async function snap(name, opts, akce) {
 await snap('dashboard-dark', {});
 await snap('dashboard-light', { theme: 'light' });
 await snap('lock', { auth: false });
-await snap('qr-panel', {}, async (p) => {
-  await p.locator('#qrCard').scrollIntoViewIfNeeded();
-});
 await snap('audit', {}, async (p) => {
   await p.getByRole('button', { name: 'Audit' }).click();
   await p.waitForSelector('#auditModal:not(.hidden)');
   await p.waitForTimeout(600);
 });
 await snap('sken-mobil', { url: '/sken', width: 390, height: 844, auth: false });
-
-// Výřez QR panelu zvlášť — v decku se hodí detail, ne celá obrazovka
-{
-  const { ctx, page } = await stranka({});
-  await prihlas(page);
-  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
-  await page.waitForTimeout(500);
-  await page.locator('#qrCard').screenshot({ path: join(OUT, 'qr-detail.png') });
-  console.log('  ✓ qr-detail');
-  await ctx.close();
-}
 
 // Evakuační seznam v tiskovém režimu — emulace print media, aby se v decku
 // ukázalo přesně to, co vyleze z tiskárny

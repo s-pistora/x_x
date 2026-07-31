@@ -256,19 +256,6 @@ tr:hover td{background:#fafafa}
         </div>
       </div>
 
-      <div class="card" id="qrCard">
-        <div class="card-head">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM19 19h2v2h-2z"/></svg>
-          <h2>Samoobslužný sken</h2>
-        </div>
-        <div class="card-body qr-body">
-          <p class="qr-vyzva">Naskenujte telefonem a vyfoťte doklad</p>
-          <img id="qrImg" class="qr-img" src="/api/qr" alt="QR kód na samoobslužný sken"/>
-          <p class="qr-url" id="qrUrl">—</p>
-          <p class="qr-note" id="qrNote"></p>
-        </div>
-      </div>
-
       <div class="card">
         <div class="card-head">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -503,7 +490,6 @@ function applyRole() {
     authStatus.classList.remove('hidden');
     dashboard.classList.remove('hidden');
     lock.classList.add('hidden');
-    nactiQr();          // adresa se může změnit s jinou sítí, tak až po přihlášení
   } else {
     authArea.classList.remove('hidden');
     authStatus.classList.add('hidden');
@@ -1099,27 +1085,6 @@ async function zapisOdchod() {
     if (res.ok) { closeModal(); if (filter === 'hledat') hledat(); else nactiData(); }
     else { const d = await res.json(); showModalAlert('error', d.error || 'Chyba.'); }
   } catch (e) { showModalAlert('error', 'Spojení se systémem selhalo. Zkuste to prosím znovu.'); }
-}
-
-// ── QR na samoobslužný sken ─────────────────────────────────────────────────
-// Adresu bere ze serveru, ne z window.location — recepce může běžet na
-// localhostu, ale telefon potřebuje síťovou IP, jinak QR nikam nevede.
-async function nactiQr() {
-  try {
-    const r = await fetch(API + '/sken-url');
-    const d = await r.json();
-    document.getElementById('qrUrl').textContent = d.url;
-    const note = document.getElementById('qrNote');
-    if (d.url.startsWith('http://') && !d.url.includes('127.0.0.1')) {
-      // Bez HTTPS prohlížeč na telefonu kameru nepovolí — ať to recepční ví
-      // dřív, než se návštěvník marně snaží naskenovat doklad.
-      note.textContent = 'Server běží bez HTTPS — kamera na telefonu nebude fungovat.';
-      note.classList.add('qr-warn');
-    } else {
-      note.textContent = 'Při prvním otevření telefon potvrdí certifikát.';
-      note.classList.remove('qr-warn');
-    }
-  } catch (e) { document.getElementById('qrUrl').textContent = '—'; }
 }
 
 // ── Evakuační seznam ────────────────────────────────────────────────────────
