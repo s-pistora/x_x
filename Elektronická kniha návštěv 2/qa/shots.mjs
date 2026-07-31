@@ -212,7 +212,8 @@ async function main() {
   await shot('12-dash-pritomni-dark-mobile',   { viewport: 'mobile' });
   await shot('13-dash-pritomni-light-mobile',  { theme: 'light', viewport: 'mobile' });
   await shot('14-dash-dnes-dark',      { setup: tab('Dnes') });
-  await shot('15-dash-historie-dark',  { setup: tab('Historie') });
+  // tab „Historie" zrušen — vracel bajt po bajtu totéž co „Vše“ (backend pro něj
+  // neměl vlastní větev, filtr propadl bez omezení)
   await shot('16-dash-vse-dark',       { setup: tab('Vše') });
   await shot('17-dash-vse-light',      { theme: 'light', setup: tab('Vše') });
   await shot('18-dash-vse-fullpage',   { setup: tab('Vše'), fullPage: true });
