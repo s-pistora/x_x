@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<title>Rozpoznávání dokladů — Digitální kniha návštěv · ept connectors</title>
+<title>Rozpoznávání dokladů · Digitální kniha návštěv · ept connectors</title>
 <link rel="stylesheet" href="assets/ept-fonts.css">
 <style>
 /* ── Brand vrstva EPT ─────────────────────────────────────────────────────────
@@ -10,7 +10,7 @@
    produkt vypadaly jako jedna věc. Fonty jsou v ept-fonts.css jako base64,
    takže PDF nepotřebuje internet ani nainstalované fonty.
 
-   Sazba stojí na jednom modulu (--m: 4mm). Všechny mezery jsou jeho násobky —
+   Sazba stojí na jednom modulu (--m: 4mm). Všechny mezery jsou jeho násobky,
    proto deck působí klidně: rytmus je předvídatelný, ne náhodný. */
 :root{
   --cervena:#a70a1b;
@@ -36,7 +36,7 @@ h1,h2,h3,.velke,.stat-c{font-family:'Cairo',sans-serif;font-weight:800;letter-sp
 }
 .s:last-child{page-break-after:auto;break-after:auto}
 
-/* Tmavé strany jsou emoční předěly — titul, klíčové tvrzení, závěr.
+/* Tmavé strany jsou emoční předěly: titul, klíčové tvrzení, závěr.
    Světlé nesou obsah. Střídání dává decku tep. */
 .tma{
   background-color:var(--tmava);color:#fff;
@@ -191,7 +191,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
     </h1>
     <p style="font-size:13pt;color:rgba(255,255,255,.7);max-width:165mm;line-height:1.45">
       Digitální kniha návštěv s rozpoznáváním dokladů, které běží celé
-      u nás v budově — bez cloudu a bez ukládání fotek.
+      u nás v budově, bez cloudu a bez ukládání fotek.
     </p>
     <div style="margin-top:calc(var(--m)*3);font-size:9.5pt;color:rgba(255,255,255,.45)">
       Prezentace pro vedení společnosti · 31. 7. 2026
@@ -224,7 +224,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
       <div class="karta akcent">
         <h3>Nedohledá se</h3>
         <p>Kdo tu byl třetího dubna odpoledne? Odpověď znamená listovat knihou
-        a luštit cizí rukopis — pokud je ta stránka vůbec čitelná.</p>
+        a luštit cizí rukopis, pokud je ta stránka vůbec čitelná.</p>
       </div>
     </div>
     <div class="zvyraz" style="margin-top:calc(var(--m)*2.5)">
@@ -292,7 +292,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
         čtyři sekundy.</p></div>
       <div class="pipe-s">→</div>
       <div class="pipe-k"><div class="n">2</div><h3>Měření ostrosti</h3>
-        <p>U každého snímku se spočítá energie hran — míra, jak je text ostrý.</p></div>
+        <p>U každého snímku se spočítá energie hran, tedy míra, jak je text ostrý.</p></div>
       <div class="pipe-s">→</div>
       <div class="pipe-k"><div class="n">3</div><h3>Seřazení</h3>
         <p>Snímky se seřadí od nejostřejšího. Rozmazané jdou na konec fronty.</p></div>
@@ -314,8 +314,8 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
       <div class="karta">
         <h3>Skládá se napříč snímky</h3>
         <p>Na jednom snímku je čitelné příjmení, na jiném jméno. Systém bere
-        <strong>první spolehlivou hodnotu každého pole zvlášť</strong> — nečeká,
-        až bude jeden snímek dokonalý.</p>
+        <strong>první spolehlivou hodnotu každého pole zvlášť</strong>. Nečeká, až bude
+        jeden snímek dokonalý.</p>
       </div>
     </div>
   </div>
@@ -330,7 +330,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
 <section class="s">
   <span class="kicker">Měřeno, ne odhadnuto</span>
   <h2>Proč se vybírá <em>nejostřejší</em> snímek</h2>
-  <p class="pod">Stejný doklad, stejný engine. Jediný rozdíl je ostrost — a rozhoduje
+  <p class="pod">Stejný doklad, stejný engine. Jediný rozdíl je ostrost, a ta rozhoduje
   o tom, jestli se jméno přečte, nebo ne.</p>
   <div class="telo">
     <div class="vs">
@@ -346,7 +346,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
       </div>
     </div>
     <p class="pod" style="margin-top:calc(var(--m)*2);text-align:center;max-width:none">
-      Z rozmazaného snímku engine vytáhl <strong style="color:var(--ink)">6 řádků místo 14</strong> —
+      Z rozmazaného snímku engine vytáhl <strong style="color:var(--ink)">6 řádků místo 14</strong>,
       a jméno mezi nimi nebylo. Proto se sbírá série.
     </p>
   </div>
@@ -366,12 +366,12 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
       <div>
         <ul class="body">
           <li><strong>Naivní řešení měří celý záběr.</strong> Jenže pak vyhraje
-          vzorovaný ubrus na stole nebo hologram na kartě — mají spoustu
+          vzorovaný ubrus na stole nebo hologram na kartě. Mají spoustu
           kontrastních hran.</li>
           <li><strong>Vybral by se snímek, kde je pozadí ostré a text rozmazaný.</strong>
           Přesně naopak, než potřebujeme.</li>
-          <li><strong>Proto se hodnotí jen výřez skenovacího rámečku</strong> —
-          ta oblast, kam se karta vycentruje.</li>
+          <li><strong>Proto se hodnotí jen výřez skenovacího rámečku</strong>,
+          tedy oblast, kam se karta vycentruje.</li>
           <li><strong>Měří se na zmenšeném plátně</strong>, aby to zvládl telefon
           třicetkrát za sebou bez sekání.</li>
         </ul>
@@ -411,7 +411,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
           <span class="z">123456789</span>
         </div>
         <p style="font-size:8pt;color:var(--ink3);margin-top:calc(var(--m)*.8)">
-          Skutečný výstup z měření — 14 řádků, z toho dva jsou jméno.
+          Skutečný výstup z měření: 14 řádků, z toho dva jsou jméno.
         </p>
       </div>
       <div>
@@ -423,7 +423,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
           „SURNAME“ se nikdy nestane jménem návštěvníka.</li>
           <li><strong>Porovnává se bez diakritiky</strong>, aby „PISTORA“
           z dokladu sedlo na „Pištora“ i při nedokonalém čtení.</li>
-          <li><strong>Zapíše se kanonická podoba</strong> — správně napsané jméno
+          <li><strong>Zapíše se kanonická podoba</strong>: správně napsané jméno
           z evidence, ne velká písmena z dokladu.</li>
         </ul>
       </div>
@@ -443,15 +443,15 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
   <div class="telo">
     <div class="dva">
       <div class="karta akcent">
-        <h3>EasyOCR — hlavní</h3>
+        <h3>Hlavní engine: EasyOCR</h3>
         <p style="margin-bottom:calc(var(--m)*.8)">Neuronová síť, která běží lokálně
         na stroji u vrátnice. Na fotkách z telefonu čte výrazně líp než klasické
-        OCR a vrací i pozice jednotlivých slov — díky tomu jde číst podle
+        OCR a vrací i pozice jednotlivých slov, díky tomu jde číst podle
         rozvržení dokladu.</p>
         <p>Model se stáhne jednou a pak funguje <strong>bez připojení k internetu</strong>.</p>
       </div>
       <div class="karta">
-        <h3>Tesseract — záloha</h3>
+        <h3>Záloha: Tesseract</h3>
         <p style="margin-bottom:calc(var(--m)*.8)">Klasické OCR s českým jazykovým
         modelem. Nastoupí, když EasyOCR není k dispozici, takže sken funguje
         i tehdy.</p>
@@ -459,8 +459,8 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
       </div>
     </div>
     <div class="zvyraz" style="margin-top:calc(var(--m)*2.5)">
-      <p><strong>Žádná cloudová služba.</strong> Snímek dokladu neopustí budovu —
-      nejde na cizí server, nikam se nenahrává a po přečtení se zahodí. To je
+      <p><strong>Žádná cloudová služba.</strong> Snímek dokladu neopustí budovu.
+      Nejde na cizí server, nikam se nenahrává a po přečtení se zahodí. To je
       podstatný rozdíl proti běžným online OCR nástrojům.</p>
     </div>
   </div>
@@ -487,7 +487,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
     <div class="tri">
       <div class="karta">
         <h3>První čtení po startu</h3>
-        <p>Zhruba dvě sekundy — jednorázově se načítá model. Každé další už jede
+        <p>Zhruba dvě sekundy, protože se jednorázově načítá model. Každé další už jede
         v ustálené jedné sekundě.</p>
       </div>
       <div class="karta">
@@ -553,7 +553,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
       <div>
         <ul class="body">
           <li><strong>Fotka dokladu se nikdy neukládá.</strong> Zpracuje se
-          v paměti a zahodí — na disk ani do databáze se nedostane.</li>
+          v paměti a zahodí, na disk ani do databáze se nedostane.</li>
           <li><strong>Z dokladu se bere jen jméno a příjmení.</strong> Ne číslo
           dokladu, ne datum narození, ne adresa. Ostatní řádky systém přečte,
           ale zahodí.</li>
@@ -595,14 +595,14 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
       <img class="sn" src="snimky/dashboard-dark.png" alt="Dashboard recepce" style="width:100%">
       <div>
         <ul class="body">
-          <li><strong>Kdo je právě v budově</strong> a jak dlouho — doba se počítá
+          <li><strong>Kdo je právě v budově</strong> a jak dlouho. Doba se počítá
           živě, přehled se sám obnovuje.</li>
           <li><strong>Tisk</strong> vydá seznam osob v budově se sloupcem na podpis.
           Papírová kniha zůstane uvnitř, tenhle list odejde s hlídkou.</li>
           <li><strong>Audit</strong> ukáže historii akcí včetně pokusů o duplicitní
           zápis.</li>
           <li><strong>Export</strong> stáhne celou evidenci do Excelu.</li>
-          <li><strong>Duplicitu systém odmítne</strong> — kdo už je uvnitř, nezaloží
+          <li><strong>Duplicitu systém odmítne</strong>: kdo už je uvnitř, nezaloží
           se podruhé.</li>
         </ul>
       </div>
@@ -620,7 +620,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
   <span class="kicker">Poctivě</span>
   <h2>Co ještě chybí do ostrého provozu</h2>
   <p class="pod">Dnešní stav je funkční prototyp v testovacím provozu. Tohle jsou
-  známé mezery — je lepší je pojmenovat teď než je nechat objevit později.</p>
+  známé mezery, je lepší je pojmenovat teď než je nechat objevit později.</p>
   <div class="telo">
     <table class="tb">
       <tr><th>Oblast</th><th>Stav</th><th>Co je potřeba</th></tr>
@@ -629,11 +629,11 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
           vyžaduje víc testovacích vzorků a doladění.</td></tr>
       <tr><td><strong>Spolehlivost přiřazení</strong></td><td><span class="znacka chybi">ladí se</span></td>
           <td>Shoda se opírá o podobnost textu. U cizího dokladu může dojít
-          k chybnému přiřazení — před ostrým provozem nutné zpřísnit.</td></tr>
+          k chybnému přiřazení, před ostrým provozem nutné zpřísnit.</td></tr>
       <tr><td><strong>Databáze</strong></td><td><span class="znacka chybi">nešifrovaná</span></td>
           <td>Soubor SQLite bez šifrování. Pro ostrý provoz zašifrovat nebo přesunout na server.</td></tr>
       <tr><td><strong>Přihlašování</strong></td><td><span class="znacka chybi">společné PINy</span></td>
-          <td>Dva sdílené PINy místo osobních účtů — nelze rozlišit, který pracovník co udělal.</td></tr>
+          <td>Dva sdílené PINy místo osobních účtů, nelze rozlišit, který pracovník co udělal.</td></tr>
       <tr><td><strong>Doba uchování</strong></td><td><span class="znacka ne">neřešeno</span></td>
           <td>Záznamy se nemažou. Potřeba nastavit lhůtu a automatický výmaz.</td></tr>
       <tr><td><strong>Zálohování</strong></td><td><span class="znacka ne">neřešeno</span></td>
@@ -656,7 +656,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
   <div class="telo">
     <div class="tri">
       <div class="karta akcent">
-        <h3>1 — Pilot na vrátnici</h3>
+        <h3>1. Pilot na vrátnici</h3>
         <p style="margin-bottom:calc(var(--m)*.7)">Dva až tři týdny, papírová kniha
         běží paralelně jako záloha.</p>
         <p>· zpřísnit přiřazení jmen<br>
@@ -665,7 +665,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
            · informační cedule u vstupu</p>
       </div>
       <div class="karta akcent">
-        <h3>2 — Ostrý provoz</h3>
+        <h3>2. Ostrý provoz</h3>
         <p style="margin-bottom:calc(var(--m)*.7)">Papír se odloží, systém je jediná
         evidence.</p>
         <p>· rozpoznávání libovolného dokladu<br>
@@ -674,7 +674,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
            · zaškolení recepce</p>
       </div>
       <div class="karta akcent">
-        <h3>3 — Rozšíření</h3>
+        <h3>3. Rozšíření</h3>
         <p style="margin-bottom:calc(var(--m)*.7)">Až základ běží spolehlivě.</p>
         <p>· upozornění hostiteli při příchodu<br>
            · tisk jmenovky návštěvníka<br>
@@ -686,7 +686,7 @@ table.tb code{font-family:ui-monospace,monospace;font-size:8pt;color:var(--cerve
       <h3>Co potřebujeme rozhodnout dnes</h3>
       <p style="font-size:9.5pt;line-height:1.6">
         <strong>1.</strong> Jdeme do pilotu na vrátnici, a od kdy?&nbsp;&nbsp;·&nbsp;&nbsp;
-        <strong>2.</strong> Kdo je vlastníkem na straně EPT — IT, bezpečnost, provoz?&nbsp;&nbsp;·&nbsp;&nbsp;
+        <strong>2.</strong> Kdo je vlastníkem na straně EPT: IT, bezpečnost, provoz?&nbsp;&nbsp;·&nbsp;&nbsp;
         <strong>3.</strong> Jaká je požadovaná doba uchování záznamů?&nbsp;&nbsp;·&nbsp;&nbsp;
         <strong>4.</strong> Poběží to na serveru EPT, nebo na vyhrazeném stroji u vrátnice?
       </p>
