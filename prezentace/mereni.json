@@ -1,0 +1,49 @@
+{
+  "vysledky": [
+    {
+      "popis": "ostrý snímek",
+      "jmeno": "Simon",
+      "prijmeni": "Pistora",
+      "engine": "easyocr",
+      "sekundy": 2.05,
+      "precteny_text": "ČESKÁ REPUBLIKA\nOBČANSKÝ PRŮKAZ\nPŘÍJMENÍ\nSURNAME\nPISTORA\nJMÉNO / GIVEN NAMES\nSIMON\nFOTO\nDATUM NAROZENÍ\n14. 03. 1988\nČÍSLO DOKLADU\n123456789\nVZOR\nSPECIMEN",
+      "radku_textu": 14
+    },
+    {
+      "popis": "rozmazaný snímek",
+      "jmeno": "",
+      "prijmeni": "",
+      "engine": "easyocr",
+      "sekundy": 1.02,
+      "precteny_text": "Caaa\n\naoaag\nDoioaa\nQuo\n447014o]\n821480700",
+      "radku_textu": 6
+    },
+    {
+      "popis": "cizí doklad (mimo seznam)",
+      "jmeno": "Simon",
+      "prijmeni": "Pistora",
+      "engine": "easyocr",
+      "sekundy": 1.02,
+      "precteny_text": "ČESKÁ REPUBLIKA\nOBČANSKÝ PRŮKAZ\nPŘÍJMENÍ\nSURNAME\nSVOBODOVÁ\nJMÉNO / GIVEN NAMES\nJANA\nFOTO\nDATUM NAROZENÍ\n14. 03. 1988\nČÍSLO DOKLADU\n123456789\nVZOR\nSPECIMEN",
+      "radku_textu": 14
+    }
+  ],
+  "opakovane_casy": [
+    1.02,
+    1.02,
+    1.02,
+    1.02
+  ],
+  "medianovy_cas": 1.02,
+  "znami_lide": [
+    {
+      "jmeno": "Simon",
+      "prijmeni": "Pistora"
+    },
+    {
+      "jmeno": "William",
+      "prijmeni": "Varga"
+    }
+  ],
+  "striktni_whitelist": true
+}
