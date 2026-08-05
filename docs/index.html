@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Elektronická kniha návštěv — přehled produktu</title>
+<script>
+document.documentElement.dataset.theme = localStorage.getItem('ept_theme') || 'dark';
+</script>
+<link rel="stylesheet" href="static/ept-fonts.css">
+<link rel="stylesheet" href="static/ept-theme.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{color:var(--ink);min-height:100vh}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1100px;margin:0 auto;padding:0 1.5rem}
+
+/* ── Nav ─────────────────────────────────────────────────────────────────── */
+.nav{position:sticky;top:0;z-index:20;background:var(--slate);border-bottom:1px solid rgba(255,255,255,.08)}
+.nav-inner{max-width:1100px;margin:0 auto;padding:0 1.5rem;height:60px;display:flex;align-items:center;gap:1.75rem}
+.nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.nav-logo .chip{background:#fff;padding:5px 11px;border-radius:4px;display:inline-flex}
+.nav-logo .chip img{height:18px;display:block}
+.nav-logo span{color:#fff;font-family:'Cairo',sans-serif;font-weight:800;font-size:.95rem;letter-spacing:-.01em}
+.nav-links{display:flex;gap:1.5rem;margin-left:.5rem}
+.nav-links a{color:rgba(255,255,255,.7);font-size:.88rem;font-weight:600;transition:color .15s}
+.nav-links a:hover{color:#fff}
+.nav-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.nav-cta{background:var(--red);color:#fff;font-size:.85rem;font-weight:700;padding:9px 16px;border-radius:var(--r);white-space:nowrap;transition:background .15s}
+.nav-cta:hover{background:#7d0815}
+@media(max-width:760px){.nav-links{display:none}}
+
+/* ── Hero ────────────────────────────────────────────────────────────────── */
+.hero{
+  position:relative;overflow:hidden;background:var(--slate);
+  padding:5.5rem 0 4.5rem;
+}
+.hero::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 900px 480px at 50% -8%, rgba(167,10,27,.28), transparent 62%);
+}
+.hero::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size:32px 32px;
+  mask-image:radial-gradient(ellipse 70% 60% at 50% 20%, rgba(0,0,0,.9), transparent 75%);
+}
+.hero-inner{position:relative;z-index:1;max-width:720px;margin:0 auto;text-align:center;padding:0 1.5rem}
+.hero .dot-mark{justify-content:center;color:rgba(255,255,255,.7);margin-bottom:1.25rem}
+.hero .eyebrow{color:rgba(255,255,255,.55);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem}
+.hero h1{
+  font-family:'Cairo',sans-serif;font-weight:800;letter-spacing:-.02em;
+  color:#fff;font-size:2.6rem;line-height:1.15;margin-bottom:1.1rem;
+}
+.hero p.lead{color:rgba(255,255,255,.65);font-size:1.1rem;line-height:1.6;margin-bottom:2rem}
+.hero-ctas{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.75rem}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;font-size:.95rem;font-weight:700;border-radius:var(--r);border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-primary{background:var(--red);color:#fff}
+.btn-primary:hover{background:#7d0815}
+.btn-ghost-dark{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.25)}
+.btn-ghost-dark:hover{background:rgba(255,255,255,.16)}
+.stat-row{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
+.stat-pill{
+  display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.8);
+  font-size:.8rem;font-weight:600;padding:8px 14px;border-radius:20px;
+}
+.stat-pill svg{flex-shrink:0;opacity:.8}
+
+/* ── Sekce obecně ────────────────────────────────────────────────────────── */
+section{padding:4.5rem 0}
+.section-head{max-width:600px;margin:0 auto 2.75rem;text-align:center}
+.section-head .eyebrow{color:var(--red);font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.6rem}
+.section-head h2{font-family:'Cairo',sans-serif;font-weight:800;letter-spacing:-.01em;font-size:1.85rem;color:var(--ink);margin-bottom:.75rem}
+.section-head p{color:var(--ink2);font-size:1.02rem;line-height:1.55}
+
+/* ── Feature grid ────────────────────────────────────────────────────────── */
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.feature-grid{grid-template-columns:1fr}}
+.feature-card{
+  background:var(--surface,#fff);border:1px solid var(--border);border-radius:var(--r2);
+  padding:1.75rem;
+}
+.feature-icon{
+  width:42px;height:42px;border-radius:10px;background:var(--blue-bg);color:var(--red);
+  display:flex;align-items:center;justify-content:center;margin-bottom:1rem;
+}
+.feature-card h3{font-family:'Cairo',sans-serif;font-weight:800;font-size:1.08rem;color:var(--ink);margin-bottom:.5rem}
+.feature-card p{color:var(--ink2);font-size:.92rem;line-height:1.55}
+
+/* ── Jak to funguje — kroky ──────────────────────────────────────────────── */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;position:relative}
+@media(max-width:760px){.steps{grid-template-columns:1fr}}
+.step{text-align:center;padding:0 .5rem}
+.step-num{
+  width:40px;height:40px;border-radius:50%;background:var(--red);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-family:'Cairo',sans-serif;
+  font-weight:800;font-size:1.05rem;margin:0 auto 1rem;
+}
+.step h3{font-family:'Cairo',sans-serif;font-weight:800;font-size:1.02rem;color:var(--ink);margin-bottom:.5rem}
+.step p{color:var(--ink2);font-size:.9rem;line-height:1.55}
+
+/* ── Zabezpečení — 3 sloupce ─────────────────────────────────────────────── */
+.sec-alt{background:var(--surface2)}
+.trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+@media(max-width:760px){.trust-grid{grid-template-columns:1fr}}
+.trust-item{text-align:center;padding:0 .5rem}
+.trust-item svg{color:var(--red);margin-bottom:.9rem}
+.trust-item h3{font-family:'Cairo',sans-serif;font-weight:800;font-size:.98rem;color:var(--ink);margin-bottom:.4rem}
+.trust-item p{color:var(--ink2);font-size:.88rem;line-height:1.55}
+
+/* ── Závěrečná výzva ─────────────────────────────────────────────────────── */
+.cta-band{
+  background:var(--slate);border-radius:20px;padding:3rem 2rem;text-align:center;
+  max-width:1100px;margin:0 auto;position:relative;overflow:hidden;
+}
+.cta-band::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 700px 320px at 50% 0%, rgba(167,10,27,.25), transparent 65%);
+}
+.cta-band-inner{position:relative;z-index:1}
+.cta-band h2{font-family:'Cairo',sans-serif;font-weight:800;color:#fff;font-size:1.7rem;margin-bottom:.65rem}
+.cta-band p{color:rgba(255,255,255,.62);margin-bottom:1.75rem;font-size:1rem}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+footer{background:var(--slate);padding:3rem 0 2rem;margin-top:1.5rem}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:2rem;padding-bottom:2rem;border-bottom:1px solid rgba(255,255,255,.1)}
+@media(max-width:700px){.footer-grid{grid-template-columns:1fr}}
+.footer-col h4{color:#fff;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.9rem;opacity:.6}
+.footer-col a,.footer-col p{display:block;color:rgba(255,255,255,.65);font-size:.88rem;margin-bottom:.55rem;line-height:1.5}
+.footer-col a:hover{color:#fff}
+.footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:.9rem}
+.footer-brand .chip{background:#fff;padding:5px 11px;border-radius:4px;display:inline-flex}
+.footer-brand .chip img{height:18px;display:block}
+.footer-bottom{padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.footer-bottom p{color:rgba(255,255,255,.4);font-size:.8rem}
+.placeholder{color:#ff9aa0;font-style:italic}
+
+/* ── Přepínač den/noc — umístěný v navu, stejný jazyk jako v appce ─────────── */
+.theme-toggle{
+  width:32px;height:32px;padding:0;flex-shrink:0;border-radius:50%;
+  border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .13s;
+}
+.theme-toggle:hover{background:rgba(255,255,255,.18)}
+.theme-toggle svg{width:16px;height:16px}
+.theme-toggle .i-moon{display:block}
+.theme-toggle .i-sun{display:none}
+html[data-theme="dark"] .theme-toggle .i-moon{display:none}
+html[data-theme="dark"] .theme-toggle .i-sun{display:block}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo">
+      <span class="chip"><img src="static/ept_logo.png" alt="ept"/></span>
+      <span>Elektronická kniha návštěv</span>
+    </div>
+    <div class="nav-links">
+      <a href="#funkce">Funkce</a>
+      <a href="#jak-to-funguje">Jak to funguje</a>
+      <a href="#zabezpeceni">Zabezpečení</a>
+      <a href="#kontakt">Kontakt</a>
+    </div>
+    <div class="nav-right">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Přepnout denní/noční režim" aria-label="Přepnout denní/noční režim">
+        <svg class="i-moon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="i-sun" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <a class="nav-cta" href="#kontakt">Nezávazná poptávka</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="dot-mark"><span class="d dk"></span><span class="d dr"></span><span class="d dk"></span></span>
+    <div class="eyebrow">Digitální recepce</div>
+    <h1>Recepce bez papíru a bez čekání</h1>
+    <p class="lead">Návštěvník naskenuje doklad totožnosti, systém během pár vteřin
+      rozpozná jméno a zapíše příchod. Recepce má vždy okamžitý přehled — kdo je
+      v budově, kdy přišel a za kým jde.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="#kontakt">Chci nezávaznou nabídku</a>
+      <a class="btn btn-ghost-dark" href="#jak-to-funguje">Jak to funguje</a>
+    </div>
+    <div class="stat-row">
+      <span class="stat-pill">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Rozpoznání dokladu za pár vteřin
+      </span>
+      <span class="stat-pill">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        100 % offline provoz
+      </span>
+      <span class="stat-pill">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Automatické mazání starých dat
+      </span>
+    </div>
+  </div>
+</header>
+
+<section id="funkce">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Co systém umí</div>
+      <h2>Vše, co recepce potřebuje na jedné obrazovce</h2>
+      <p>Od naskenování dokladu po přehled návštěv — bez ručního přepisování a bez papírové knihy.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <h3>Sken dokladu</h3>
+        <p>Kamera pozná jméno a příjmení z občanského průkazu, pasu i řidičského
+          průkazu — stačí doklad namířit na kameru.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h3>Okamžitý zápis</h3>
+        <p>Příchod i odchod se zapisují jedním klepnutím s přesným časem —
+          bez ručního vyplňování formulářů.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+        </div>
+        <h3>Přehled na recepci</h3>
+        <p>Kdo je právě v budově, historie návštěv i evakuační seznam pro nouzové
+          situace — vše na jedné obrazovce.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h3>Běží offline</h3>
+        <p>Zpracování dokladu i celá databáze zůstávají ve vaší síti — žádná
+          fotka ani jméno neopouští budovu.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="jak-to-funguje" class="sec-alt">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Postup</div>
+      <h2>Jak to funguje</h2>
+      <p>Tři kroky mezi příchodem návštěvníka a zápisem v databázi.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Návštěvník naskenuje doklad</h3>
+        <p>U vstupu, na tabletu nebo telefonu — stačí doklad nasměrovat na kameru.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Systém rozpozná jméno a zapíše čas</h3>
+        <p>OCR přečte jméno a příjmení, návštěvník zvolí osobu, za kterou jde.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Recepce má okamžitý přehled</h3>
+        <p>Kdo je v budově, jak dlouho, a kompletní historie návštěv na jednom místě.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="zabezpeceni">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Soukromí</div>
+      <h2>Zabezpečení a ochrana dat</h2>
+      <p>Systém je navržený tak, aby s citlivými údaji návštěvníků zacházel co nejopatrněji.</p>
+    </div>
+    <div class="trust-grid">
+      <div class="trust-item">
+        <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <h3>Data zůstávají ve vaší síti</h3>
+        <p>Žádná cloudová závislost — zpracování i uložení probíhá lokálně, u vás v budově.</p>
+      </div>
+      <div class="trust-item">
+        <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        <h3>Fotka dokladu se neukládá</h3>
+        <p>Doklad se zpracuje jen pro rozpoznání jména a poté se zahodí.</p>
+      </div>
+      <div class="trust-item">
+        <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+        <h3>Stará data se sama mažou</h3>
+        <p>Po uplynutí nastavené doby uchování se záznamy automaticky odstraní.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="cta-band">
+      <div class="cta-band-inner">
+        <h2>Chcete to vidět naživo?</h2>
+        <p>Rádi vám ukážeme systém v provozu a probereme nasazení na vaší recepci.</p>
+        <a class="btn btn-primary" href="#kontakt">Domluvit ukázku</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="kontakt">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-brand">
+          <span class="chip"><img src="static/ept_logo.png" alt="ept"/></span>
+        </div>
+        <p>Digitální kniha návštěv pro rychlejší a bezpečnější recepci.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Produkt</h4>
+        <a href="#funkce">Funkce</a>
+        <a href="#jak-to-funguje">Jak to funguje</a>
+        <a href="#zabezpeceni">Zabezpečení</a>
+      </div>
+      <div class="footer-col">
+        <h4>Kontakt</h4>
+        <a href="mailto:simon.pistora2@gmail.com">simon.pistora2@gmail.com</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="dot-mark" style="color:rgba(255,255,255,.4)"><span class="d dk"></span><span class="d dr"></span><span class="d dk"></span></span>
+      <p>© 2026 · Vytvořeno pro ept connectors</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+function toggleTheme(){
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem('ept_theme', next);
+}
+</script>
+</body>
+</html>
