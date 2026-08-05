@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Elektronická kniha návštěv — přehled produktu</title>
+<title>Digitální recepce — přehled produktu</title>
 <script>
 document.documentElement.dataset.theme = localStorage.getItem('ept_theme') || 'dark';
 </script>
@@ -82,6 +82,12 @@ section{padding:4.5rem 0}
 .feature-card{
   background:var(--surface,#fff);border:1px solid var(--border);border-radius:var(--r2);
   padding:1.75rem;
+  box-shadow:0 1px 2px rgba(20,29,40,.04), 0 8px 20px -10px rgba(20,29,40,.10);
+  transition:box-shadow .15s, transform .15s;
+}
+html[data-theme="light"] .feature-card:hover{
+  box-shadow:0 1px 2px rgba(20,29,40,.05), 0 14px 28px -12px rgba(20,29,40,.16);
+  transform:translateY(-2px);
 }
 .feature-icon{
   width:42px;height:42px;border-radius:10px;background:var(--blue-bg);color:var(--red);
@@ -104,6 +110,14 @@ section{padding:4.5rem 0}
 
 /* ── Zabezpečení — 3 sloupce ─────────────────────────────────────────────── */
 .sec-alt{background:var(--surface2)}
+/* Ve světlém režimu je --surface2 skoro totožné s --bg (rozdíl pár jednotek),
+   takže se pruh sekce vizuálně vůbec neoddělí od zbytku stránky. Čistá bílá
+   s jemnou linkou nahoře/dole dá pruhu skutečný, viditelný kontrast. */
+html[data-theme="light"] .sec-alt{
+  background:#fff;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
 .trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
 @media(max-width:760px){.trust-grid{grid-template-columns:1fr}}
 .trust-item{text-align:center;padding:0 .5rem}
@@ -131,9 +145,21 @@ footer{background:var(--slate);padding:3rem 0 2rem;margin-top:1.5rem}
 .footer-col h4{color:#fff;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.9rem;opacity:.6}
 .footer-col a,.footer-col p{display:block;color:rgba(255,255,255,.65);font-size:.88rem;margin-bottom:.55rem;line-height:1.5}
 .footer-col a:hover{color:#fff}
-.footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:.9rem}
-.footer-brand .chip{background:#fff;padding:5px 11px;border-radius:4px;display:inline-flex}
-.footer-brand .chip img{height:18px;display:block}
+.footer-brand{color:#fff;font-family:'Cairo',sans-serif;font-weight:800;font-size:1.05rem;margin-bottom:.9rem}
+
+/* ── S kým spolupracujeme ────────────────────────────────────────────────── */
+.partner-row{display:flex;justify-content:center;align-items:center;gap:1.5rem;flex-wrap:wrap}
+.partner-chip{
+  background:#fff;border:1px solid var(--border);border-radius:var(--r2);
+  padding:.9rem 1.7rem;display:inline-flex;align-items:center;justify-content:center;
+  min-height:52px;
+  box-shadow:0 1px 2px rgba(20,29,40,.04), 0 8px 20px -10px rgba(20,29,40,.10);
+}
+.partner-chip img{height:20px;display:block}
+.partner-chip.partner-text{
+  font-family:'Cairo',sans-serif;font-weight:800;font-size:1.15rem;
+  color:#141d28;letter-spacing:.02em;
+}
 .footer-bottom{padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
 .footer-bottom p{color:rgba(255,255,255,.4);font-size:.8rem}
 .placeholder{color:#ff9aa0;font-style:italic}
@@ -150,6 +176,22 @@ footer{background:var(--slate);padding:3rem 0 2rem;margin-top:1.5rem}
 .theme-toggle .i-sun{display:none}
 html[data-theme="dark"] .theme-toggle .i-moon{display:none}
 html[data-theme="dark"] .theme-toggle .i-sun{display:block}
+
+/* ── Poptávkový formulář v cta-band ──────────────────────────────────────── */
+.hidden{display:none!important}
+.lead-form{display:flex;flex-direction:column;gap:.75rem;max-width:460px;margin:0 auto;text-align:left}
+.lead-row{display:flex;gap:.75rem}
+@media(max-width:520px){.lead-row{flex-direction:column}}
+.lead-form input,.lead-form textarea{
+  width:100%;padding:12px 14px;border-radius:var(--r);
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);
+  color:#fff;font-family:inherit;font-size:.95rem;resize:vertical;
+}
+.lead-form input::placeholder,.lead-form textarea::placeholder{color:rgba(255,255,255,.45)}
+.lead-form input:focus,.lead-form textarea:focus{
+  outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(227,5,27,.25);
+}
+.lead-form button{align-self:center;margin-top:.25rem}
 </style>
 </head>
 <body>
@@ -157,8 +199,7 @@ html[data-theme="dark"] .theme-toggle .i-sun{display:block}
 <nav class="nav">
   <div class="nav-inner">
     <div class="nav-logo">
-      <span class="chip"><img src="static/ept_logo.png" alt="ept"/></span>
-      <span>Elektronická kniha návštěv</span>
+      <span>Digitální recepce</span>
     </div>
     <div class="nav-links">
       <a href="#funkce">Funkce</a>
@@ -171,7 +212,7 @@ html[data-theme="dark"] .theme-toggle .i-sun{display:block}
         <svg class="i-moon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="i-sun" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
-      <a class="nav-cta" href="#kontakt">Nezávazná poptávka</a>
+      <a class="nav-cta" href="#dotaznik">Kontakt</a>
     </div>
   </div>
 </nav>
@@ -185,7 +226,7 @@ html[data-theme="dark"] .theme-toggle .i-sun{display:block}
       rozpozná jméno a zapíše příchod. Recepce má vždy okamžitý přehled — kdo je
       v budově, kdy přišel a za kým jde.</p>
     <div class="hero-ctas">
-      <a class="btn btn-primary" href="#kontakt">Chci nezávaznou nabídku</a>
+      <a class="btn btn-primary" href="#dotaznik">Chci nezávaznou nabídku</a>
       <a class="btn btn-ghost-dark" href="#jak-to-funguje">Jak to funguje</a>
     </div>
     <div class="stat-row">
@@ -305,12 +346,43 @@ html[data-theme="dark"] .theme-toggle .i-sun{display:block}
 
 <section>
   <div class="wrap">
-    <div class="cta-band">
+    <div class="cta-band" id="dotaznik">
       <div class="cta-band-inner">
-        <h2>Chcete to vidět naživo?</h2>
-        <p>Rádi vám ukážeme systém v provozu a probereme nasazení na vaší recepci.</p>
-        <a class="btn btn-primary" href="#kontakt">Domluvit ukázku</a>
+        <div id="formStep">
+          <h2>Chcete to také?</h2>
+          <p>Napište e-mail, telefon a co byste na systému chtěli pozměnit — ozveme se vám zpět.</p>
+          <form class="lead-form" action="https://formsubmit.co/simon.pistora2@gmail.com" method="POST">
+            <input type="hidden" name="_subject" value="Nová poptávka — Digitální recepce">
+            <input type="hidden" name="_template" value="table">
+            <input type="hidden" name="_next" value="https://s-pistora.github.io/x_x/?odeslano=1#dotaznik">
+            <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+            <div class="lead-row">
+              <input type="email" name="email" placeholder="Váš e-mail" required>
+              <input type="tel" name="telefon" placeholder="Telefon">
+            </div>
+            <textarea name="co_pozmenit" placeholder="Co byste na systému chtěli pozměnit nebo doplnit?" rows="3" required></textarea>
+            <button type="submit" class="btn btn-primary">Odeslat poptávku</button>
+          </form>
+        </div>
+        <div id="thankYou" class="hidden">
+          <h2>Děkujeme!</h2>
+          <p>Vaši poptávku jsme přijali, ozveme se vám co nejdřív.</p>
+        </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="partneri" class="sec-alt">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Reference</div>
+      <h2>S kým spolupracujeme</h2>
+    </div>
+    <div class="partner-row">
+      <span class="partner-chip"><img src="static/ept_logo.png" alt="EPT"/></span>
+      <span class="partner-chip partner-text">VELYOS</span>
+      <span class="partner-chip"><img src="static/praut_logo.png" alt="PRAUT"/></span>
     </div>
   </div>
 </section>
@@ -319,10 +391,8 @@ html[data-theme="dark"] .theme-toggle .i-sun{display:block}
   <div class="wrap">
     <div class="footer-grid">
       <div class="footer-col">
-        <div class="footer-brand">
-          <span class="chip"><img src="static/ept_logo.png" alt="ept"/></span>
-        </div>
-        <p>Digitální kniha návštěv pro rychlejší a bezpečnější recepci.</p>
+        <div class="footer-brand">Digitální recepce</div>
+        <p>Digitální recepce pro rychlejší a bezpečnější vstup do budovy.</p>
       </div>
       <div class="footer-col">
         <h4>Produkt</h4>
@@ -337,7 +407,7 @@ html[data-theme="dark"] .theme-toggle .i-sun{display:block}
     </div>
     <div class="footer-bottom">
       <span class="dot-mark" style="color:rgba(255,255,255,.4)"><span class="d dk"></span><span class="d dr"></span><span class="d dk"></span></span>
-      <p>© 2026 · Vytvořeno pro ept connectors</p>
+      <p>© 2026 · Digitální recepce</p>
     </div>
   </div>
 </footer>
@@ -347,6 +417,11 @@ function toggleTheme(){
   const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
   document.documentElement.dataset.theme = next;
   localStorage.setItem('ept_theme', next);
+}
+
+if (new URLSearchParams(window.location.search).get('odeslano') === '1') {
+  document.getElementById('formStep').classList.add('hidden');
+  document.getElementById('thankYou').classList.remove('hidden');
 }
 </script>
 </body>
