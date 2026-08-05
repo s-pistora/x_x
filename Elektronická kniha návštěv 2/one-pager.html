@@ -151,17 +151,20 @@ footer{background:var(--slate);padding:3rem 0 2rem;margin-top:1.5rem}
 .partner-row{display:flex;justify-content:center;align-items:center;gap:1.5rem;flex-wrap:wrap}
 .partner-chip{
   background:#fff;border:1px solid var(--border);border-radius:var(--r2);
-  padding:.9rem 1.7rem;display:inline-flex;align-items:center;justify-content:center;
-  min-height:52px;
+  width:10rem;height:4.25rem;display:inline-flex;align-items:center;justify-content:center;
   box-shadow:0 1px 2px rgba(20,29,40,.04), 0 8px 20px -10px rgba(20,29,40,.10);
 }
-.partner-chip img{height:20px;display:block}
+/* Loga mají hodně odlišný poměr stran (EPT skoro čtvercové, PRAUT dlouhý úzký
+   wordmark) — object-fit:contain v pevně stejně velkém rámečku je zmenší na
+   vizuálně stejnou "váhu", místo aby jen sdílela stejnou výšku. */
+.partner-chip img{max-width:74%;max-height:56%;object-fit:contain;display:block}
 .partner-chip.partner-text{
   font-family:'Cairo',sans-serif;font-weight:800;font-size:1.15rem;
   color:#141d28;letter-spacing:.02em;
 }
 .footer-bottom{padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
 .footer-bottom p{color:rgba(255,255,255,.4);font-size:.8rem}
+.footer-dotmark{color:rgba(255,255,255,.4)}
 .placeholder{color:#ff9aa0;font-style:italic}
 
 /* ── Přepínač den/noc — umístěný v navu, stejný jazyk jako v appce ─────────── */
@@ -192,6 +195,60 @@ html[data-theme="dark"] .theme-toggle .i-sun{display:block}
   outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(227,5,27,.25);
 }
 .lead-form button{align-self:center;margin-top:.25rem}
+.lead-err{color:#ff9aa0;font-size:.85rem;text-align:center}
+html[data-theme="light"] .lead-err{color:var(--red)}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SVĚTLÝ REŽIM — chrome prvky (nav, hero, formulářový pruh, patička) byly
+   natvrdo tmavé bez ohledu na přepínač, takže "světlý režim" byl světlý jen
+   uprostřed stránky. Tady se rozsvítí opravdu celá stránka odshora dolů.
+   ══════════════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] .nav{background:#fff;border-bottom-color:var(--border)}
+html[data-theme="light"] .nav-logo span{color:var(--ink)}
+html[data-theme="light"] .nav-links a{color:var(--ink2)}
+html[data-theme="light"] .nav-links a:hover{color:var(--ink)}
+html[data-theme="light"] .theme-toggle{background:var(--surface2);border-color:var(--border);color:var(--ink)}
+html[data-theme="light"] .theme-toggle:hover{background:var(--border)}
+
+html[data-theme="light"] .hero{background:#fff}
+html[data-theme="light"] .hero::before{
+  background:radial-gradient(ellipse 900px 480px at 50% -8%, rgba(167,10,27,.14), transparent 62%);
+}
+html[data-theme="light"] .hero::after{
+  background-image:linear-gradient(rgba(20,29,40,.045) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(20,29,40,.045) 1px, transparent 1px);
+}
+html[data-theme="light"] .hero .dot-mark{color:var(--ink3)}
+html[data-theme="light"] .hero .eyebrow{color:var(--red)}
+html[data-theme="light"] .hero h1{color:var(--ink)}
+html[data-theme="light"] .hero p.lead{color:var(--ink2)}
+html[data-theme="light"] .btn-ghost-dark{background:var(--surface2);color:var(--ink);border-color:var(--border)}
+html[data-theme="light"] .btn-ghost-dark:hover{background:var(--border)}
+html[data-theme="light"] .stat-pill{background:var(--surface2);border-color:var(--border);color:var(--ink2)}
+
+html[data-theme="light"] .cta-band{
+  background:#fff;border:1px solid var(--border);
+  box-shadow:0 1px 2px rgba(20,29,40,.04), 0 14px 32px -16px rgba(20,29,40,.14);
+}
+html[data-theme="light"] .cta-band::before{
+  background:radial-gradient(ellipse 700px 320px at 50% 0%, rgba(167,10,27,.10), transparent 65%);
+}
+html[data-theme="light"] .cta-band h2{color:var(--ink)}
+html[data-theme="light"] .cta-band p{color:var(--ink2)}
+html[data-theme="light"] .lead-form input,
+html[data-theme="light"] .lead-form textarea{background:#fff;border-color:var(--border);color:var(--ink)}
+html[data-theme="light"] .lead-form input::placeholder,
+html[data-theme="light"] .lead-form textarea::placeholder{color:var(--ink3)}
+
+html[data-theme="light"] footer{background:var(--surface2);border-top:1px solid var(--border)}
+html[data-theme="light"] .footer-grid{border-bottom-color:var(--border)}
+html[data-theme="light"] .footer-col h4{color:var(--ink3);opacity:1}
+html[data-theme="light"] .footer-col a,
+html[data-theme="light"] .footer-col p{color:var(--ink2)}
+html[data-theme="light"] .footer-col a:hover{color:var(--ink)}
+html[data-theme="light"] .footer-brand{color:var(--ink)}
+html[data-theme="light"] .footer-bottom p{color:var(--ink3)}
+html[data-theme="light"] .footer-dotmark{color:var(--ink3)}
 </style>
 </head>
 <body>
@@ -351,17 +408,14 @@ html[data-theme="dark"] .theme-toggle .i-sun{display:block}
         <div id="formStep">
           <h2>Chcete to také?</h2>
           <p>Napište e-mail, telefon a co byste na systému chtěli pozměnit — ozveme se vám zpět.</p>
-          <form class="lead-form" action="https://formsubmit.co/simon.pistora2@gmail.com" method="POST">
-            <input type="hidden" name="_subject" value="Nová poptávka — Digitální recepce">
-            <input type="hidden" name="_template" value="table">
-            <input type="hidden" name="_next" value="https://s-pistora.github.io/x_x/?odeslano=1#dotaznik">
-            <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+          <form class="lead-form" id="leadForm">
             <div class="lead-row">
               <input type="email" name="email" placeholder="Váš e-mail" required>
               <input type="tel" name="telefon" placeholder="Telefon">
             </div>
             <textarea name="co_pozmenit" placeholder="Co byste na systému chtěli pozměnit nebo doplnit?" rows="3" required></textarea>
             <button type="submit" class="btn btn-primary">Odeslat poptávku</button>
+            <p id="leadErr" class="lead-err hidden">Odeslání se nepovedlo — zkuste to prosím znovu, nebo napište přímo na e-mail v patičce.</p>
           </form>
         </div>
         <div id="thankYou" class="hidden">
@@ -380,9 +434,9 @@ html[data-theme="dark"] .theme-toggle .i-sun{display:block}
       <h2>S kým spolupracujeme</h2>
     </div>
     <div class="partner-row">
-      <span class="partner-chip"><img src="static/ept_logo.png" alt="EPT"/></span>
+      <span class="partner-chip"><img src="static/ept_logo.svg" alt="EPT"/></span>
       <span class="partner-chip partner-text">VELYOS</span>
-      <span class="partner-chip"><img src="static/praut_logo.png" alt="PRAUT"/></span>
+      <span class="partner-chip"><img src="static/praut_logo.svg" alt="PRAUT"/></span>
     </div>
   </div>
 </section>
@@ -406,7 +460,7 @@ html[data-theme="dark"] .theme-toggle .i-sun{display:block}
       </div>
     </div>
     <div class="footer-bottom">
-      <span class="dot-mark" style="color:rgba(255,255,255,.4)"><span class="d dk"></span><span class="d dr"></span><span class="d dk"></span></span>
+      <span class="dot-mark footer-dotmark"><span class="d dk"></span><span class="d dr"></span><span class="d dk"></span></span>
       <p>© 2026 · Digitální recepce</p>
     </div>
   </div>
@@ -419,10 +473,36 @@ function toggleTheme(){
   localStorage.setItem('ept_theme', next);
 }
 
-if (new URLSearchParams(window.location.search).get('odeslano') === '1') {
-  document.getElementById('formStep').classList.add('hidden');
-  document.getElementById('thankYou').classList.remove('hidden');
-}
+// TODO: po nasazení leads-server (viz /leads-server v repu) sem doplnit
+// skutečnou URL, např. 'https://ept-leads.onrender.com/api/lead'.
+const LEADS_API = 'https://REPLACE-ME.onrender.com/api/lead';
+
+document.getElementById('leadForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const f = e.target;
+  const btn = f.querySelector('button[type=submit]');
+  const errEl = document.getElementById('leadErr');
+  errEl.classList.add('hidden');
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(LEADS_API, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        email: f.email.value.trim(),
+        telefon: f.telefon.value.trim(),
+        zprava: f.co_pozmenit.value.trim()
+      })
+    });
+    if (!res.ok) throw new Error('bad status');
+    document.getElementById('formStep').classList.add('hidden');
+    document.getElementById('thankYou').classList.remove('hidden');
+  } catch (err) {
+    errEl.classList.remove('hidden');
+    btn.disabled = false;
+  }
+});
 </script>
 </body>
 </html>

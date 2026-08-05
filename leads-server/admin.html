@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Poptávky — admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#141d28;--ink2:#3c5063;--ink3:#6b7b88;
+  --bg:#0f151d;--surface:#161f2a;--surface2:#1c2632;--border:#2a3542;
+  --red:#e3051b;--red-bg:#341316;--red-border:#6b2530;
+  --amber-bg:#332708;--amber-border:#6b5320;--amber:#fbbf24;
+  --green-bg:#0f2a20;--green-border:#1f5c40;--green:#4ade80;
+  --r:8px;
+}
+body{
+  font-family:system-ui,sans-serif;background:var(--bg);color:#e9edf0;
+  min-height:100vh;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:2rem 1.25rem}
+h1{font-size:1.3rem;font-weight:800;margin-bottom:1.25rem;display:flex;align-items:center;gap:10px}
+.dot{width:8px;height:8px;border-radius:2px;background:var(--red);display:inline-block}
+
+/* přihlášení */
+#loginCard{max-width:320px;margin:4rem auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;text-align:center}
+#loginCard p{color:var(--ink3);margin-bottom:1.25rem;font-size:.9rem}
+input[type=password],input[type=text]{
+  width:100%;padding:11px 13px;border-radius:var(--r);border:1px solid var(--border);
+  background:var(--surface2);color:#e9edf0;font-size:1rem;margin-bottom:.75rem;
+}
+input:focus{outline:2px solid var(--red);outline-offset:1px}
+button{
+  padding:10px 18px;border-radius:var(--r);border:none;background:var(--red);color:#fff;
+  font-weight:700;font-size:.9rem;cursor:pointer;width:100%;
+}
+button:hover{background:#b8041a}
+button.ghost{background:var(--surface2);color:#e9edf0;border:1px solid var(--border);width:auto}
+.err{color:#fca5a5;font-size:.85rem;margin-top:.5rem;display:none}
+
+/* panel */
+.hidden{display:none!important}
+.toolbar{display:flex;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.toolbar input[type=text]{max-width:260px;margin:0}
+.toolbar select{padding:10px 12px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface2);color:#e9edf0}
+.toolbar .spacer{flex:1}
+.toolbar button{width:auto}
+
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+th,td{padding:10px 12px;text-align:left;font-size:.85rem;border-bottom:1px solid var(--border)}
+th{color:var(--ink3);text-transform:uppercase;font-size:.7rem;letter-spacing:.05em;background:var(--surface2)}
+tr:last-child td{border-bottom:none}
+td.msg{max-width:320px;white-space:pre-wrap;color:#c7d0d6}
+.stav{border:none;border-radius:20px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer}
+.stav-nove{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.stav-kontaktovano{background:var(--surface2);color:var(--ink3);border:1px solid var(--border)}
+.stav-vyrizeno{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.empty{color:var(--ink3);text-align:center;padding:2rem;font-size:.9rem}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1><span class="dot"></span> Poptávky z one-pageru</h1>
+
+  <div id="loginCard">
+    <p>Zadejte admin PIN</p>
+    <input type="password" id="pinInput" placeholder="PIN" autofocus/>
+    <button onclick="prihlasit()">Přihlásit</button>
+    <p class="err" id="loginErr">Nesprávný PIN.</p>
+  </div>
+
+  <div id="panel" class="hidden">
+    <div class="toolbar">
+      <input type="text" id="qInput" placeholder="Hledat v e-mailu / telefonu / zprávě…" oninput="nacist()"/>
+      <select id="stavFilter" onchange="nacist()">
+        <option value="">Všechny stavy</option>
+        <option value="nove">Nové</option>
+        <option value="kontaktovano">Kontaktováno</option>
+        <option value="vyrizeno">Vyřízeno</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="ghost" onclick="nacist()">Obnovit</button>
+      <button class="ghost" onclick="odhlasit()">Odhlásit</button>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Datum</th><th>E-mail</th><th>Telefon</th><th>Zpráva</th><th>Stav</th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="empty" class="empty hidden">Žádné poptávky neodpovídají filtru.</div>
+  </div>
+</div>
+
+<script>
+// Stejná relativní adresa jako u ostatních API volání v projektu — admin.html
+// se servíruje přímo z tohoto serveru, takže žádná pevná URL není potřeba.
+const API = '';
+let token = localStorage.getItem('leads_admin_token') || '';
+
+function zobrazPanel(){
+  document.getElementById('loginCard').classList.add('hidden');
+  document.getElementById('panel').classList.remove('hidden');
+  nacist();
+}
+
+if (token) zobrazPanel();
+
+async function prihlasit(){
+  const pin = document.getElementById('pinInput').value.trim();
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+  try {
+    const res = await fetch(API + '/api/admin/login', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({pin})
+    });
+    const d = await res.json();
+    if (!res.ok) { errEl.style.display = 'block'; return; }
+    token = d.token;
+    localStorage.setItem('leads_admin_token', token);
+    zobrazPanel();
+  } catch (e) {
+    errEl.textContent = 'Server neodpovídá.';
+    errEl.style.display = 'block';
+  }
+}
+
+function odhlasit(){
+  fetch(API + '/api/admin/logout', {method:'POST', headers:{'X-Auth-Token':token}}).catch(()=>{});
+  localStorage.removeItem('leads_admin_token');
+  location.reload();
+}
+
+async function nacist(){
+  const q = document.getElementById('qInput').value.trim();
+  const stav = document.getElementById('stavFilter').value;
+  const params = new URLSearchParams();
+  if (q) params.set('q', q);
+  if (stav) params.set('stav', stav);
+
+  const res = await fetch(API + '/api/admin/leads?' + params.toString(), {
+    headers: {'X-Auth-Token': token}
+  });
+  if (res.status === 401) { localStorage.removeItem('leads_admin_token'); location.reload(); return; }
+  const rows = await res.json();
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  document.getElementById('empty').classList.toggle('hidden', rows.length > 0);
+
+  for (const r of rows) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.vytvoreno.replace('T', ' ')}</td>
+      <td>${escapeHtml(r.email)}</td>
+      <td>${escapeHtml(r.telefon || '—')}</td>
+      <td class="msg">${escapeHtml(r.zprava)}</td>
+      <td></td>
+    `;
+    const stavTd = tr.lastElementChild;
+    const sel = document.createElement('select');
+    sel.className = 'stav stav-' + r.stav;
+    sel.innerHTML = `
+      <option value="nove" ${r.stav==='nove'?'selected':''}>Nové</option>
+      <option value="kontaktovano" ${r.stav==='kontaktovano'?'selected':''}>Kontaktováno</option>
+      <option value="vyrizeno" ${r.stav==='vyrizeno'?'selected':''}>Vyřízeno</option>
+    `;
+    sel.onchange = () => zmenitStav(r.id, sel.value, sel);
+    stavTd.appendChild(sel);
+    tbody.appendChild(tr);
+  }
+}
+
+async function zmenitStav(id, stav, selEl){
+  await fetch(API + `/api/admin/leads/${id}`, {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json', 'X-Auth-Token': token},
+    body: JSON.stringify({stav})
+  });
+  selEl.className = 'stav stav-' + stav;
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>
