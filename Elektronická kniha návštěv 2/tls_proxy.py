@@ -48,6 +48,13 @@ def preleje(zdroj, cil):
 def obsluz(klient):
     try:
         with socket.create_connection(APLIKACE, timeout=10) as app:
+            # create_connection nastaví timeout i pro čtení/zápis. Pro samotné
+            # přelévání ho ale MUSÍME vypnout: OCR skenu běží na CPU 15–40 s a po
+            # tu dobu neteče spojením žádný byte. S 10s timeoutem by recv vypršel,
+            # proxy by spojení zavřela a telefon by dostal "closed without
+            # response" (jméno by se nikdy nevyplnilo). Timeout je jen na CONNECT.
+            app.settimeout(None)
+            klient.settimeout(None)
             a = threading.Thread(target=preleje, args=(klient, app), daemon=True)
             b = threading.Thread(target=preleje, args=(app, klient), daemon=True)
             a.start(); b.start()

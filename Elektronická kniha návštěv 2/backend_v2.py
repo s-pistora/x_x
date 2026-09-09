@@ -138,6 +138,21 @@ def api_ocr():
         # rozvržení občanky; fallback Tesseract.
         jmeno, prijmeni, text, engine = ocr.precti_doklad(image)
 
+        # DOČASNÝ DEBUG (EPT_OCR_DEBUG=1): uloží snímek + přečtený text, ať se dá
+        # extrakce jména odladit offline. Odstranit po vyřešení.
+        if os.environ.get("EPT_OCR_DEBUG") == "1":
+            try:
+                import time as _t
+                _dir = os.path.join(os.path.dirname(__file__), "debug_ocr")
+                os.makedirs(_dir, exist_ok=True)
+                _stamp = _t.strftime("%H%M%S")
+                image.save(os.path.join(_dir, f"sken_{_stamp}.png"))
+                with open(os.path.join(_dir, "posledni_text.txt"), "w", encoding="utf-8") as _f:
+                    _f.write(f"engine={engine} jmeno={jmeno!r} prijmeni={prijmeni!r}\n---TEXT---\n{text}\n")
+                print(f"[OCR DEBUG] sken_{_stamp}.png | jmeno={jmeno!r} prijmeni={prijmeni!r}", flush=True)
+            except Exception as _e:
+                print(f"[OCR DEBUG] selhalo: {_e}", flush=True)
+
         if not jmeno and not prijmeni:
             with db.get_db() as conn:
                 db.zapis_audit(conn, None, "ocr_selhani", f"OCR ({engine}) nerozpoznalo jméno ani příjmení")

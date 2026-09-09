@@ -87,6 +87,63 @@ def predehrej():
             pass
 
 
+def _orizni_kartu(pil_image):
+    """
+    Najde v fotce obdélník občanky, srovná perspektivu a vrátí čistý výřez karty
+    (nebo None, když se karta spolehlivě nenajde – pak se OCR pustí na originál).
+
+    Proč: telefonem se doklad často vyfotí zdálky, karta zabírá jen část záběru
+    a kolem je stůl/klávesnice. EasyOCR pak čte z malého rozmazaného kousku a
+    text se rozsype. Oříznutím na kartu a zvětšením na plné rozlišení se čtení
+    dramaticky zlepší – teprve tím funguje sken i pro lidi mimo whitelist.
+    """
+    try:
+        import cv2
+    except Exception:
+        return None
+    try:
+        img = cv2.cvtColor(np.array(pil_image.convert("RGB")), cv2.COLOR_RGB2BGR)
+        h, w = img.shape[:2]
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        gray = cv2.bilateralFilter(gray, 11, 17, 17)
+        edged = cv2.Canny(gray, 30, 200)
+        edged = cv2.dilate(edged, np.ones((5, 5), np.uint8), iterations=1)
+        cnts, _ = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = sorted(cnts, key=cv2.contourArea, reverse=True)[:8]
+        plocha = w * h
+        for c in cnts:
+            peri = cv2.arcLength(c, True)
+            approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+            if len(approx) != 4:
+                continue
+            a = cv2.contourArea(approx)
+            # Aspoň 10 % plochy (jinak je to nějaký malý útvar), ne celý rám.
+            if not (0.10 * plocha < a < 0.99 * plocha):
+                continue
+            body = approx.reshape(4, 2).astype("float32")
+            s = body.sum(axis=1)
+            d = np.diff(body, axis=1)
+            tl, br = body[np.argmin(s)], body[np.argmax(s)]
+            tr, bl = body[np.argmin(d)], body[np.argmax(d)]
+            sirka = max(np.linalg.norm(tr - tl), np.linalg.norm(br - bl))
+            vyska = max(np.linalg.norm(bl - tl), np.linalg.norm(br - tr))
+            if vyska < 1:
+                continue
+            pomer = sirka / vyska
+            # Občanka (ID-1) je na šířku, poměr ~1.585. Tolerance kvůli náklonu.
+            if not (1.3 < pomer < 1.9):
+                continue
+            W, H = 1000, 630
+            src = np.array([tl, tr, br, bl], dtype="float32")
+            dst = np.array([[0, 0], [W - 1, 0], [W - 1, H - 1], [0, H - 1]], dtype="float32")
+            M = cv2.getPerspectiveTransform(src, dst)
+            warp = cv2.warpPerspective(img, M, (W, H))
+            return Image.fromarray(cv2.cvtColor(warp, cv2.COLOR_BGR2RGB))
+    except Exception:
+        return None
+    return None
+
+
 def _easyocr_boxy(pil_image):
     """
     Vrátí seznam boxů [{text, x1, x2, ycstred, vyska}] z EasyOCR (i se
@@ -96,9 +153,15 @@ def _easyocr_boxy(pil_image):
     reader = _ziskej_easyocr()
     if reader is None:
         return None
+    pil_image = pil_image.convert("RGB")
+    # Nejdřív zkusit najít a oříznout samotnou kartu – zdálky vyfocený doklad se
+    # tím zvětší na plné rozlišení a text přestane být rozsypaný. Když se karta
+    # nenajde, jede se na originál.
+    karta = _orizni_kartu(pil_image)
+    if karta is not None:
+        pil_image = karta
     # Malé/oříznuté obrázky (tiny náhledy, výřezy) EasyOCR čte mizerně – před
     # rozpoznáním je zvětšíme, aby byl text čitelný. Velké fotky nechá být.
-    pil_image = pil_image.convert("RGB")
     if pil_image.width < 1000:
         faktor = min(5, max(1, round(1200 / max(pil_image.width, 1))))
         if faktor > 1:

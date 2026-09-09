@@ -10,3 +10,5 @@ tessdata/
 .DS_Store
 ._*
 cert/
+# Dočasné debug snímky dokladů – CITLIVÉ, nikdy necommitovat.
+debug_ocr/
