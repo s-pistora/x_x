@@ -22,16 +22,6 @@ import numpy as np
 import pytesseract
 from PIL import Image
 
-# Velká a malá písmena latinky, která se smí objevit ve jméně na dokladu:
-# česká + německá diakritika. Drží se na JEDNOM místě, ať přidání dalšího
-# jazyka (nebo znaku) neznamená projít a upravit každý regex zvlášť. Dřív byly
-# znakové třídy rozepsané v každém vzoru a německé ä/ö/ü/ß v nich chyběly, takže
-# i správně přečtené „MÜLLER" se v Tesseract větvi rozsekalo na „M" + „LLER".
-# Pozn.: ß nemá běžně používanou velkou variantu a OCR ho i uvnitř verzálek
-# vrací malé (WEIß), proto je i mezi „velkými" znaky.
-_VELKA = "A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽÄÖÜßẞ"
-_MALA = "a-záčďéěíňóřšťúůýžäöüß"
-
 # Rozpoznávání pouštíme jen jedno v jednom okamžiku. EasyOCR (potažmo torch pod
 # ním) není vláknově bezpečný: když se model načítal na pozadí a současně přišel
 # první požadavek z jiného vlákna, celý server se zaseknul bez chyby a bez logu.
@@ -74,11 +64,8 @@ def _ziskej_easyocr():
         import torch
         torch.set_num_threads(1)   # viz poznámka u OMP_NUM_THREADS nahoře
         import easyocr
-        # čeština + němčina + angličtina (na dokladech bývají dva i tři jazyky),
-        # běh na CPU. 'de' přidává znaky ä ö ü ß – bez něj se ostré ß čte špatně
-        # (WEIß -> WEIB); Ü zvládá model latin_g2 i bez toho. Za běhu je rozdíl
-        # zanedbatelný, jen se o kousek prodlouží první načtení modelu.
-        _easyocr_reader = easyocr.Reader(["cs", "de", "en"], gpu=False, verbose=False)
+        # čeština + angličtina (na dokladu jsou oba jazyky), běh na CPU
+        _easyocr_reader = easyocr.Reader(["cs", "en"], gpu=False, verbose=False)
         return _easyocr_reader
     except Exception:
         _easyocr_nedostupne = True
@@ -245,19 +232,6 @@ _STOPWORDS = (
     "PLATNOST", "VALIDITY", "CISLO", "NUMBER", "DOKLADU", "RODNE",
     "PERSONAL", "TRVALY", "POBYT", "ADDRESS", "PROMO", "TYP", "TYPE",
     "DOCUMENT", "NO", "AUTHORITY", "STROJOVE", "MISTO", "MRZ",
-    # zdravotní karta / EHIC – „pojištěnce"/„pojišťovna" jsou fuzzy podobné
-    # příjmení „Pistora"; bez odfiltrování whitelist přiřadil cizí kartu známé
-    # osobě (viz uroci_znamou_osobu). Záměrně BEZ „KARTA/KARTY" – to je moc
-    # blízko jménu „Marta".
-    "POJISTENEC", "POJISTENCE", "POJISTOVNA", "POJISTOVNY", "POJISTENI",
-    "ZDRAVOTNI", "ZDRAVOTNIHO", "EVROPSKY", "EVROPSKEHO", "INSTITUCE",
-    "VSEOBECNA", "EHIC",
-    # řidičák
-    "RIDICSKY", "DRIVING", "LICENCE", "LICENSE", "PERMIS", "SKUPINA", "CATEGORY",
-    # německé doklady (Name/Vorname se řeší i jako popisky v _CFG níž)
-    "BUNDESREPUBLIK", "DEUTSCHLAND", "PERSONALAUSWEIS", "VORNAME",
-    "GEBURTSNAME", "GEBURTSDATUM", "GEBURTSORT", "FUHRERSCHEIN",
-    "STAATSANGEHORIGKEIT", "GULTIG",
 )
 
 # Značky, kde na občance končí jméno a začínají další údaje (datum/místo narození).
@@ -308,13 +282,13 @@ def extrahuj_jmeno(text):
     """
     # Strategie 1: fuzzy hledání klíčových slov (funguje i na zkomolené OCR)
     prijmeni_re = re.compile(
-        rf'(?:p[rř][íi]jmen[íi]|surname|svaname)[^{_VELKA}]*'
-        rf'([{_VELKA}][{_VELKA}{_MALA}\-]+)',
+        r'(?:p[rř][íi]jmen[íi]|surname|svaname)[^A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]*'
+        r'([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž\-]+)',
         re.IGNORECASE
     )
     jmeno_re = re.compile(
-        rf'(?:jm[eé]no|given\s*names?|grvex\s*names?|given|vorname)[^{_VELKA}]*'
-        rf'([{_VELKA}][{_VELKA}{_MALA}\-]+)',
+        r'(?:jm[eé]no|given\s*names?|grvex\s*names?|given)[^A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]*'
+        r'([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž\-]+)',
         re.IGNORECASE
     )
 
@@ -331,14 +305,14 @@ def extrahuj_jmeno(text):
     # (na občance je pořadí: PŘÍJMENÍ, pak JMÉNO)
     hranice = _HRANICE_RE.search(text)
     hlava = text[:hranice.start()] if hranice else text
-    velka_re = re.compile(rf'[{_VELKA}]{{2,}}')
+    velka_re = re.compile(r'[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]{2,}')
     velke_tokeny = [t for t in velka_re.findall(hlava) if _je_jmeno_token(t)]
     if len(velke_tokeny) >= 2:
         return velke_tokeny[1], velke_tokeny[0]  # (jméno, příjmení)
 
     # Strategie 3: klasická kapitalizovaná slova (Jan Novák)
     lines = [l.strip() for l in text.splitlines() if l.strip()]
-    vzor  = re.compile(rf'[{_VELKA}][{_MALA}]{{1,}}')
+    vzor  = re.compile(r'[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]{1,}')
     for line in lines:
         if re.search(r'\d{5,}', line): continue
         slova = [s for s in vzor.findall(line) if _je_jmeno_token(s)]
@@ -390,12 +364,12 @@ def _slova(text):
     return re.findall(r"[^\W\d_]+", text, re.UNICODE)
 
 
-def _label_skore(slovo, label_words):
+def _label_skore(slovo):
     """Nejlepší podobnost slova k některému popisku Příjmení/Jméno (0..1)."""
     n = _norm(slovo)
     if not n:
         return 0.0
-    return max(_podobnost(n, lw) for lw in label_words)
+    return max(_podobnost(n, lw) for lw in _LABEL_WORDS)
 
 
 # Jen 1 slovo. Druhé a třetí slovo bývá skoro vždy OCR šum ze zašuměné/
@@ -405,7 +379,7 @@ def _label_skore(slovo, label_words):
 _MAX_SLOV_HODNOTY = 1
 
 
-def _hodnota_radku(rb, cfg):
+def _hodnota_radku(rb):
     """
     Vrátí hodnotu (jméno-like slova) z jednoho řádku boxů seřazených podle x.
 
@@ -424,7 +398,7 @@ def _hodnota_radku(rb, cfg):
     for b in rb:
         slova.extend(_slova(b["text"]))
 
-    skore = [_label_skore(w, cfg["label_words"]) for w in slova]
+    skore = [_label_skore(w) for w in slova]
     i = 0
     if skore:
         maxskore = max(skore)
@@ -464,28 +438,22 @@ def _skore_label(boxy_radku, klice):
     return best
 
 
-def _klasifikuj_radek(boxy_radku, cfg):
+def _klasifikuj_radek(boxy_radku):
     """
-    Vrátí (je_prijmeni, je_jmeno). Nejdřív číselné markery pole (řidičák 1./2.,
-    EHIC 3./4.) – ty jsou jednoznačné. Když nejsou, fuzzy popisky: 'PŘÍJMENÍ' je
-    bohužel podobný slovu 'JMÉNO' (obsahuje 'JMEN'), proto řádek zařadíme podle
-    SILNĚJŠÍHO matche – ne jen podle prahu, aby se příjmení nepletlo se jménem.
+    Vrátí (je_prijmeni, je_jmeno). Popisek 'PŘÍJMENÍ' je bohužel podobný slovu
+    'JMÉNO' (obsahuje 'JMEN'), proto řádek zařadíme podle SILNĚJŠÍHO matche –
+    ne jen podle prahu, aby se příjmení nepletlo se jménem.
     """
-    mark = _cislo_markery(boxy_radku)
-    if mark & set(cfg["cislo_prijmeni"]):
-        return True, False
-    if mark & set(cfg["cislo_jmeno"]):
-        return False, True
-    sp = _skore_label(boxy_radku, cfg["klice_prijmeni"])
-    sj = _skore_label(boxy_radku, cfg["klice_jmeno"])
+    sp = _skore_label(boxy_radku, _KLICE_PRIJMENI)
+    sj = _skore_label(boxy_radku, _KLICE_JMENO)
     je_prijmeni = sp >= 0.55 and sp >= sj
     je_jmeno    = sj >= 0.55 and sj > sp
     return je_prijmeni, je_jmeno
 
 
-def _je_radek_hlavicka(boxy_radku, cfg):
+def _je_radek_hlavicka(boxy_radku):
     """Obsahuje řádek (i zkomoleně) popisek hlavičky dokladu (CZ, PRŮKAZ, ČÍSLO DOKLADU...)?"""
-    return _skore_label(boxy_radku, cfg["hlavicka"]) >= 0.7
+    return _skore_label(boxy_radku, _HLAVICKA_POPISKY) >= 0.7
 
 
 # Popisky polí ZA jménem (datum narození, pohlaví, ...) – kde okno pro hledání
@@ -499,118 +467,9 @@ _RADEK_HRANICE_POPISKY = (
 )
 
 
-def _je_radek_hranice(boxy_radku, cfg):
+def _je_radek_hranice(boxy_radku):
     """Obsahuje řádek (i zkomoleně) popisek pole ZA jménem (datum, pohlaví, ...)?"""
-    return _skore_label(boxy_radku, cfg["hranice"]) >= 0.72
-
-
-# ── Typ dokladu + sady popisků podle typu ────────────────────────────────────────
-# Extrakce jména cílí na pole PŘÍJMENÍ/JMÉNO podle rozvržení, jenže popisky se
-# doklad od dokladu liší (občanka: „Příjmení/Surname"; řidičák: číslovaná pole
-# „1./2."; němčina: „Name/Vorname"; EHIC: „3./4."). Typ se pozná SÁM z hlavičky
-# (návštěvník nic nevybírá) a podle něj se vybere sada popisků. Když si nejsme
-# jistí, spadne to na občanku – historicky odladěné, výchozí chování.
-TYP_OBCANKA = "obcanka"
-TYP_RIDICAK = "ridicak"
-TYP_ZDRAVOTNI = "zdravotni"          # průkaz pojištěnce / EHIC
-TYP_PERSONALAUSWEIS = "personalausweis"
-
-
-def rozpoznej_typ_dokladu(text):
-    """Určí typ dokladu z klíčových slov hlavičky. _norm slepí text do jednoho
-    řetězce velkých písmen bez diakritiky a mezer, takže hledáme podřetězce."""
-    n = _norm(text)
-
-    def ma(*frags):
-        return any(f in n for f in frags)
-
-    if ma("RIDICSKYPRUKAZ", "DRIVINGLICENCE", "FUHRERSCHEIN", "PERMISDECONDUIRE"):
-        return TYP_RIDICAK
-    if ma("ZDRAVOTNIHOPOJISTENI", "PRUKAZPOJISTENCE", "POJISTOVNA",
-          "POJISTENCE", "EVROPSKYPRUKAZ", "EHIC"):
-        return TYP_ZDRAVOTNI
-    if ma("PERSONALAUSWEIS", "BUNDESREPUBLIKDEUTSCHLAND"):
-        return TYP_PERSONALAUSWEIS
-    return TYP_OBCANKA
-
-
-# Sady popisků pro jednotlivé typy. Klíče:
-#   klice_prijmeni / klice_jmeno   – slovní popisky polí (fuzzy)
-#   cislo_prijmeni / cislo_jmeno   – číselné markery pole (řidičák 1./2., EHIC 3./4.)
-#   label_words                    – všechna slova popisků (co se v hodnotě přeskočí)
-#   hlavicka                       – slova hlavičky (konec bloku = konec hlavičky)
-#   hranice                        – popisky polí ZA jménem (kde okno pro jméno končí)
-#
-# POZOR u němčiny: „Name" = PŘÍJMENÍ, „Vorname" = JMÉNO. Proto u personalausweisu
-# NENÍ „NAME/NAMES" mezi klíči jména – jinak by se MÜLLER (Name) přiřadil jako
-# křestní jméno (přesně tahle tichá záměna se dřív dělala).
-_CFG = {
-    TYP_OBCANKA: {
-        "klice_prijmeni": _KLICE_PRIJMENI,
-        "klice_jmeno":    _KLICE_JMENO,
-        "cislo_prijmeni": (),
-        "cislo_jmeno":    (),
-        "label_words":    _LABEL_WORDS,
-        "hlavicka":       _HLAVICKA_POPISKY,
-        "hranice":        _RADEK_HRANICE_POPISKY,
-    },
-    TYP_RIDICAK: {
-        "klice_prijmeni": ("PRIJMENI", "SURNAME", "NAME"),
-        "klice_jmeno":    ("JMENO", "GIVEN", "GIVENNAMES", "NAMES", "VORNAME"),
-        "cislo_prijmeni": ("1",),
-        "cislo_jmeno":    ("2",),
-        "label_words":    ("PRIJMENI", "SURNAME", "JMENO", "GIVEN", "GIVENNAMES",
-                           "NAMES", "NAME", "VORNAME"),
-        "hlavicka":       ("CESKA", "REPUBLIKA", "RIDICSKY", "PRUKAZ", "DRIVING",
-                           "LICENCE", "FUHRERSCHEIN"),
-        "hranice":        ("DATUM", "NAROZENI", "DATE", "BIRTH", "MISTO", "PLACE",
-                           "PLATNOST", "VALIDITY", "VYDAL", "AUTHORITY",
-                           "SKUPINA", "CATEGORY"),
-    },
-    TYP_ZDRAVOTNI: {
-        "klice_prijmeni": ("PRIJMENI", "SURNAME", "NAME"),
-        "klice_jmeno":    ("JMENO", "GIVEN", "GIVENNAMES", "NAMES", "VORNAME"),
-        "cislo_prijmeni": ("3",),
-        "cislo_jmeno":    ("4",),
-        "label_words":    ("PRIJMENI", "SURNAME", "JMENO", "GIVEN", "GIVENNAMES",
-                           "NAMES", "NAME"),
-        "hlavicka":       ("EVROPSKY", "PRUKAZ", "ZDRAVOTNIHO", "POJISTENI",
-                           "POJISTOVNA", "POJISTENCE", "VSEOBECNA", "EHIC"),
-        "hranice":        ("DATUM", "NAROZENI", "OSOBNI", "IDENTIFIKACNI",
-                           "INSTITUCE", "CISLO", "KARTY", "PLATNOST", "EXPIRACE"),
-    },
-    TYP_PERSONALAUSWEIS: {
-        "klice_prijmeni": ("NAME", "SURNAME", "GEBURTSNAME"),
-        "klice_jmeno":    ("VORNAME", "GIVENNAMES", "GIVEN"),   # ZÁMĚRNĚ bez NAME/NAMES
-        "cislo_prijmeni": (),
-        "cislo_jmeno":    (),
-        "label_words":    ("NAME", "SURNAME", "GEBURTSNAME", "VORNAME", "GIVEN",
-                           "GIVENNAMES", "NAMES"),
-        "hlavicka":       ("BUNDESREPUBLIK", "DEUTSCHLAND", "PERSONALAUSWEIS",
-                           "IDENTITY", "CARD"),
-        "hranice":        ("GEBURTSDATUM", "GEBURTSORT", "STAATSANGEHORIGKEIT",
-                           "DATE", "BIRTH", "GULTIG"),
-    },
-}
-
-
-def _cislo_markery(boxy_radku):
-    """Čísla polí na začátku boxů řádku (řidičák 1./2., EHIC 3./4.). _slova()
-    číslice zahazuje, proto markery čteme ze surového textu boxu.
-
-    Rozlišujeme marker pole od data/čísla: za tečkou/závorkou markeru NÁSLEDUJE
-    text (např. „1. NOVÁK"), kdežto u data „1.1.1990" a čísla karty následuje
-    další číslice – tam marker nevzniká. Bere i samostatné číslo v boxu (OCR
-    tečku občas ztratí)."""
-    out = set()
-    for b in boxy_radku:
-        t = b["text"].strip()
-        m = re.match(r'^(\d{1,2})[.)](?!\s*\d)', t)   # „1." / „2)" + NE-číslice
-        if m:
-            out.add(m.group(1))
-        elif re.match(r'^\d{1,2}$', t):               # samostatné číslo v boxu
-            out.add(t)
-    return out
+    return _skore_label(boxy_radku, _RADEK_HRANICE_POPISKY) >= 0.72
 
 
 def _titulek(s):
@@ -634,7 +493,7 @@ def _seskup_radky(boxy):
     return radky
 
 
-def _jmeno_prijmeni_z_boxu(boxy, cfg):
+def _jmeno_prijmeni_z_boxu(boxy):
     """
     Vytáhne (jmeno, prijmeni) z boxů se souřadnicemi – ale JEN v okně mezi
     koncem hlavičky dokladu a začátkem dalších údajů (datum narození, pohlaví...).
@@ -648,14 +507,14 @@ def _jmeno_prijmeni_z_boxu(boxy, cfg):
     radky = []
     for r in _seskup_radky(boxy):
         rb = sorted(r["boxy"], key=lambda b: b["x1"])
-        je_prijm, je_jmeno = _klasifikuj_radek(rb, cfg)
+        je_prijm, je_jmeno = _klasifikuj_radek(rb)
         radky.append({
             "y":        r["y"],
-            "hod":      _hodnota_radku(rb, cfg),
+            "hod":      _hodnota_radku(rb),
             "prijm":    je_prijm,
             "jmeno":    je_jmeno,
-            "hlavicka": _je_radek_hlavicka(rb, cfg),
-            "hranice":  _je_radek_hranice(rb, cfg),
+            "hlavicka": _je_radek_hlavicka(rb),
+            "hranice":  _je_radek_hranice(rb),
         })
     radky.sort(key=lambda r: r["y"])
 
@@ -705,15 +564,18 @@ def precti_doklad(pil_image):
     """
     Hlavní funkce: vrátí (jmeno, prijmeni, text, engine).
 
-    Typ dokladu (občanka / řidičák / průkaz pojištěnce / Personalausweis) se
-    pozná SÁM z hlavičky (viz rozpoznej_typ_dokladu) a podle něj se vybere sada
-    popisků pro extrakci – s EasyOCR cílí PŘESNĚ na pole PŘÍJMENÍ a JMÉNO podle
-    rozvržení, v okně mezi hlavičkou dokladu a dalšími údaji (_jmeno_prijmeni_z_boxu).
-    Uzavřený seznam ZNÁMÝCH lidí (uroci_znamou_osobu) výsledek jen kanonizuje
-    nebo doplní, když si je jistý – už NEporovnává celý text (to dřív přiřazovalo
-    cizí karty známým lidem). Když si extrakce není jistá, vrátí prázdno –
-    prázdné pole s výzvou k ruční opravě je vždycky lepší než sebejistě špatný
-    údaj. Podrobnosti o pořadí a striktním režimu viz _vyhodnot.
+    Nejdřív zkusí porovnat celý OCR text proti uzavřenému seznamu ZNÁMÝCH lidí
+    (viz uroci_znamou_osobu) – to je spolehlivější než obecná extrakce, protože
+    stačí, aby bylo čitelné JMÉNO NEBO PŘÍJMENÍ (fuzzy) kdekoli v textu, a
+    zapíše se rovnou správná kanonická hodnota, ne to, co OCR doslova přečetlo.
+
+    Když žádný známý člověk s jistotou nesedí, spadne na obecnou extrakci:
+    s EasyOCR cílí PŘESNĚ na pole PŘÍJMENÍ a JMÉNO podle rozvržení občanky,
+    v okně mezi hlavičkou dokladu a dalšími údaji (viz _jmeno_prijmeni_z_boxu).
+    Když si tímhle způsobem není jistý, vrátí prázdné jméno/příjmení – ZÁMĚRNĚ
+    nepadá na hádání z celého textu (to je přesně ten mechanismus, který dřív
+    místo jména vracel útržky hlavičky dokladu). Prázdné pole s výzvou k ruční
+    opravě je vždycky lepší než sebejistě špatný údaj.
     """
     with _ocr_lock:
         return _precti_doklad_bez_zamku(pil_image)
@@ -723,45 +585,22 @@ def _precti_doklad_bez_zamku(pil_image):
     boxy = _easyocr_boxy(pil_image)
     if boxy is not None:
         text = "\n".join(b["text"] for b in boxy).strip()
-        return _vyhodnot(text, boxy, "easyocr")
+        znamy_jmeno, znamy_prijmeni = uroci_znamou_osobu(text)
+        if znamy_jmeno:
+            return znamy_jmeno, znamy_prijmeni, text, "easyocr"
+        if STRIKTNI_WHITELIST:
+            return "", "", text, "easyocr"
+        jmeno, prijmeni = _jmeno_prijmeni_z_boxu(boxy)
+        return _titulek(jmeno), _titulek(prijmeni), text, "easyocr"
+
     text = _ocr_tesseract(pil_image)
-    return _vyhodnot(text, None, "tesseract")
-
-
-def _vyhodnot(text, boxy, engine):
-    """Z OCR textu (a případně boxů) určí (jmeno, prijmeni, text, engine).
-
-    Pořadí je záměrné a opravuje starou chybu, kdy whitelist fuzzy porovnával
-    CELÝ text a dokladová slova („pojištěnce" ~ „Pistora") přiřkla cizí kartu
-    známé osobě – a to i v ostrém provozu, protože whitelist běžel PŘED
-    striktní kontrolou i před extrakcí:
-
-      1) Whitelist (uroci_znamou_osobu) je teď tvrdý – porovnává jen jméno-like
-         slova a vyžaduje vysokou shodu OBOU polí zvlášť. Pro známé zaměstnance
-         zůstává nejspolehlivější (vrací kanonický pravopis).
-      2) Striktní režim pustí ven jen osobu ze seznamu, jinak prázdno (žádná
-         obecná extrakce) – stejné chování jako dřív.
-      3) Volný režim: obecná extrakce cílená na ROZPOZNANÝ TYP dokladu; whitelist
-         pak výsledek jen KANONIZUJE nebo DOPLNÍ, ale nepřebije jiné jisté jméno.
-    """
-    znj, znp = uroci_znamou_osobu(text)
-
+    znamy_jmeno, znamy_prijmeni = uroci_znamou_osobu(text)
+    if znamy_jmeno:
+        return znamy_jmeno, znamy_prijmeni, text, "tesseract"
     if STRIKTNI_WHITELIST:
-        if znj:
-            return znj, znp, text, engine
-        return "", "", text, engine
-
-    typ = rozpoznej_typ_dokladu(text)
-    if boxy is not None:
-        jmeno, prijmeni = _jmeno_prijmeni_z_boxu(boxy, _CFG[typ])
-        jmeno, prijmeni = _titulek(jmeno), _titulek(prijmeni)
-    else:
-        j, p = extrahuj_jmeno(text)
-        jmeno, prijmeni = _titulek(j), _titulek(p)
-
-    if znj and (not (jmeno and prijmeni) or _stejna_osoba(jmeno, prijmeni, znj, znp)):
-        jmeno, prijmeni = znj, znp
-    return jmeno, prijmeni, text, engine
+        return "", "", text, "tesseract"
+    j, p = extrahuj_jmeno(text)
+    return _titulek(j), _titulek(p), text, "tesseract"
 
 
 # ── Uzavřený seznam ZNÁMÝCH lidí (testovací provoz) ──────────────────────────────
@@ -769,63 +608,42 @@ def _vyhodnot(text, boxy, engine):
 # místo toho text proti PŘESNĚ TĚMTO lidem – stačí čitelné jméno NEBO příjmení
 # kdekoli v OCR textu a zapíše se rovnou správná (kanonická) hodnota. Přidat
 # dalšího člověka = přidat řádek sem.
-ZNAMI_LIDE = []
+ZNAMI_LIDE = [
+    {"jmeno": "Simon",   "prijmeni": "Pistora"},
+    {"jmeno": "William", "prijmeni": "Varga"},
+]
 
 
 def _nejlepsi_shoda_v_textu(text, cil):
-    """Nejlepší podobnost JMÉNO-podobného slova v textu k cílovému slovu (0..1).
-
-    Hlavičková/popisná a dokladová slova (pojištěnec, pojišťovna, průkaz, ...)
-    se do porovnání NEPOUŠTĚJÍ – jinak se náhodně podobají příjmením (klasicky
-    „pojištěnce" ~ „Pistora") a whitelist by přiřkl cizí kartu známé osobě.
-    """
+    """Nejlepší podobnost libovolného slova v textu k cílovému slovu (0..1)."""
     cil_n = _norm(cil)
     nej = 0.0
     for w in _slova(text):
-        if not _je_jmeno_token(w):
-            continue
         n = _norm(w)
         if n:
             nej = max(nej, _podobnost(n, cil_n))
     return nej
 
 
-def _stejna_osoba(j1, p1, j2, p2):
-    """Jsou (j1,p1) a (j2,p2) fuzzy tatáž osoba? Používá se, aby whitelist směl
-    jen SROVNAT pravopis toho, co extrakce už našla – ne přepsat jiné jméno."""
-    return (_podobnost(_norm(j1), _norm(j2)) >= 0.6 and
-            _podobnost(_norm(p1), _norm(p2)) >= 0.6)
-
-
 def uroci_znamou_osobu(text):
     """
-    Vrátí (jmeno, prijmeni) známé osoby z OCR textu, nebo (None, None).
-
-    Jistota se posuzuje TVRDĚ: jméno i příjmení musí každé ZVLÁŠŤ sednout dost
-    vysoko (ne jen jejich součet – ten dřív propustil dvě náhodně podobná slova
-    a přiřkl cizí zdravotní kartu známé osobě), a vítěz musí mít jasný náskok
-    před druhým kandidátem. Reálné čtení známého jména dává u obou polí
-    ~0.85–1.0; po odfiltrování dokladových slov spadnou falešné shody hluboko
-    pod práh 0.72.
+    Vrátí (jmeno, prijmeni) známé osoby z OCR textu, nebo (None, None), když
+    si nejsme dost jistí (aspoň průměrně slušná shoda u obou slov A jasný
+    náskok před druhým kandidátem – jinak radši nic nevracet).
     """
     if not text:
         return None, None
-    nej = None            # (idx, skore_jmeno, skore_prijmeni)
-    druhe_soucet = 0.0
+    nej_idx, nej_skore, druhe_skore = -1, 0.0, 0.0
     for i, osoba in enumerate(ZNAMI_LIDE):
-        sj = _nejlepsi_shoda_v_textu(text, osoba["jmeno"])
-        sp = _nejlepsi_shoda_v_textu(text, osoba["prijmeni"])
-        soucet = sj + sp
-        if nej is None or soucet > nej[1] + nej[2]:
-            if nej is not None:
-                druhe_soucet = nej[1] + nej[2]
-            nej = (i, sj, sp)
-        elif soucet > druhe_soucet:
-            druhe_soucet = soucet
-    if nej is None:
-        return None, None
-    idx, sj, sp = nej
-    if sj >= 0.72 and sp >= 0.72 and (sj + sp) - druhe_soucet >= 0.2:
-        osoba = ZNAMI_LIDE[idx]
+        skore = (_nejlepsi_shoda_v_textu(text, osoba["jmeno"])
+                 + _nejlepsi_shoda_v_textu(text, osoba["prijmeni"]))
+        if skore > nej_skore:
+            druhe_skore = nej_skore
+            nej_skore = skore
+            nej_idx = i
+        elif skore > druhe_skore:
+            druhe_skore = skore
+    if nej_idx >= 0 and nej_skore >= 1.1 and nej_skore - druhe_skore >= 0.2:
+        osoba = ZNAMI_LIDE[nej_idx]
         return osoba["jmeno"], osoba["prijmeni"]
     return None, None
