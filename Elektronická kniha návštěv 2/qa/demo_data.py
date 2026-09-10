@@ -15,7 +15,7 @@ Data jsou postavená tak, aby šla vyzkoušet každá funkce:
   • dnes odešlí                          → tab Dnes, pevná Doba, skryté tlačítko odchodu
   • starší návštěvy                      → tab Historie, tab Vše, hledání podle data
   • lidé s telefonem i bez               → pole Telefon v modalu, SMS notifikace
-  • VRACEJÍCÍ SE lidé (dřív byli, teď ne) → hláška "Vítejte zpět" při novém zápisu
+  • VRACEJÍCÍ SE lidé (dřív byli, teď ne) → klik na jméno v tabulce ukáže víc než 1 návštěvu v historii
   • právě přítomní                       → detekce duplicity (409) při opakovaném zápisu
   • audit_log                            → historie akcí
 """
@@ -42,7 +42,7 @@ import db_manager  # noqa: E402 — až po chdir/sys.path
 # Fixní seed → stejný výsledek při každém spuštění, ale rozložení působí náhodně.
 random.seed(20260730)
 
-NOW = datetime.now()
+NOW = db_manager.ted()  # místní čas recepce (Europe/Prague), ne čas serveru
 F = "%Y-%m-%d %H:%M:%S"
 
 # Reálné dodavatelské a auditorské firmy odpovídající provozu závodu v Habartově.
@@ -156,15 +156,15 @@ def main():
     print(f"  26 záznamů za posledních 60 dnů")
 
     # ── 4) VRACEJÍCÍ SE LIDÉ ───────────────────────────────────────────────────
-    # Klíčové pro hlášku "Vítejte zpět": osoba MUSÍ mít dřívější DOKONČENOU
-    # návštěvu a NESMÍ být právě přítomná. Tyhle tři jsou na to připravené
-    # a jejich jména vypíšu, aby se to dalo hned vyzkoušet.
+    # Klíčové pro test historie návštěv (klik na jméno v tabulce): osoba MUSÍ
+    # mít dřívější DOKONČENOU návštěvu a NESMÍ být právě přítomná. Tyhle tři
+    # jsou na to připravené a jejich jména vypíšu, aby se to dalo hned vyzkoušet.
     vracejici = [
         ("Alois", "Zeman", "ČEZ Distribuce", 3),
         ("Blanka", "Šťastná", "TÜV SÜD Czech", 9),
         ("Cyril", "Havlíček", "Linde Gas", 21),
     ]
-    print("\nvracející se (dřív byli, teď NEjsou přítomní) — na hlášku „Vítejte zpět“:")
+    print("\nvracející se (dřív byli, teď NEjsou přítomní) — na test historie návštěv:")
     for j, p, firma, dnu in vracejici:
         # Dvě dokončené návštěvy v minulosti, ať je vidět i opakovaná historie.
         # Od nejstarší k nejnovější, aby první byla „novy_navstevnik“ a druhá

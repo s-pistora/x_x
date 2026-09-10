@@ -28,7 +28,7 @@ a{color:inherit;text-decoration:none}
 .nav-links a:hover{color:#fff}
 .nav-right{display:flex;align-items:center;gap:10px;margin-left:auto}
 .nav-cta{background:var(--red);color:#fff;font-size:.85rem;font-weight:700;padding:9px 16px;border-radius:var(--r);white-space:nowrap;transition:background .15s}
-.nav-cta:hover{background:#7d0815}
+.nav-cta:hover{background:#8f0a18}
 @media(max-width:760px){.nav-links{display:none}}
 
 /* ── Hero ────────────────────────────────────────────────────────────────── */
@@ -38,7 +38,7 @@ a{color:inherit;text-decoration:none}
 }
 .hero::before{
   content:"";position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(ellipse 900px 480px at 50% -8%, rgba(167,10,27,.28), transparent 62%);
+  background:radial-gradient(ellipse 900px 480px at 50% -8%, rgba(195,14,32,.28), transparent 62%);
 }
 .hero::after{
   content:"";position:absolute;inset:0;pointer-events:none;
@@ -49,16 +49,16 @@ a{color:inherit;text-decoration:none}
 }
 .hero-inner{position:relative;z-index:1;max-width:720px;margin:0 auto;text-align:center;padding:0 1.5rem}
 .hero .dot-mark{justify-content:center;color:rgba(255,255,255,.7);margin-bottom:1.25rem}
-.hero .eyebrow{color:rgba(255,255,255,.55);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem}
+.hero .eyebrow{justify-content:center;color:rgba(255,255,255,.55);margin-bottom:1.1rem}
 .hero h1{
-  font-family:'Cairo',sans-serif;font-weight:800;letter-spacing:-.02em;
-  color:#fff;font-size:2.6rem;line-height:1.15;margin-bottom:1.1rem;
+  font-family:'Cairo',sans-serif;font-weight:800;letter-spacing:-.03em;
+  color:#fff;font-size:2.85rem;line-height:1.08;margin-bottom:1.1rem;
 }
 .hero p.lead{color:rgba(255,255,255,.65);font-size:1.1rem;line-height:1.6;margin-bottom:2rem}
 .hero-ctas{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.75rem}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;font-size:.95rem;font-weight:700;border-radius:var(--r);border:none;cursor:pointer;font-family:inherit;transition:all .15s}
 .btn-primary{background:var(--red);color:#fff}
-.btn-primary:hover{background:#7d0815}
+.btn-primary:hover{background:#8f0a18}
 .btn-ghost-dark{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.25)}
 .btn-ghost-dark:hover{background:rgba(255,255,255,.16)}
 .stat-row{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
@@ -70,34 +70,48 @@ a{color:inherit;text-decoration:none}
 .stat-pill svg{flex-shrink:0;opacity:.8}
 
 /* ── Sekce obecně ────────────────────────────────────────────────────────── */
+/* Kicker (červené pravítko + popisek) — stejný jazyk jako záhlaví kapitol ve
+   visualbooku (tenká červená svislá linka vlevo od kategorie, viz str. 4-26). */
 section{padding:4.5rem 0}
-.section-head{max-width:600px;margin:0 auto 2.75rem;text-align:center}
-.section-head .eyebrow{color:var(--red);font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.6rem}
-.section-head h2{font-family:'Cairo',sans-serif;font-weight:800;letter-spacing:-.01em;font-size:1.85rem;color:var(--ink);margin-bottom:.75rem}
+.eyebrow{display:inline-flex;align-items:center;gap:.55rem;font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.eyebrow-rule{width:3px;height:1em;background:var(--red);flex-shrink:0;display:inline-block}
+.section-head{max-width:640px;margin:0 0 2.75rem;text-align:left}
+.section-head .eyebrow{color:var(--red);margin-bottom:.7rem}
+.section-head h2{font-family:'Cairo',sans-serif;font-weight:800;letter-spacing:-.015em;font-size:2rem;color:var(--ink);margin-bottom:.75rem}
 .section-head p{color:var(--ink2);font-size:1.02rem;line-height:1.55}
+
+/* ── Značkový pruh (plná červená + tučný bílý text) — přesně vzor "Hinweis"
+   pásů z manuálu (str. 2, 4, 9, 17…): plná signální barva, žádné zaoblení,
+   na celou šířku. */
+.brand-band{background:var(--red)}
+.brand-band .wrap{padding-top:1.15rem;padding-bottom:1.15rem}
+.brand-band p{color:#fff;font-size:.95rem;font-weight:600;line-height:1.5;text-align:center}
+.brand-band strong{font-weight:800}
 
 /* ── Feature grid ────────────────────────────────────────────────────────── */
 .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
 @media(max-width:700px){.feature-grid{grid-template-columns:1fr}}
+/* Manuál nezná měkké UI stíny — jeho boxy jsou ploché, s tenkým rámečkem a
+   ostrými rohy (viz "Logo Verwendungen" str. 7-9). Kartu proto místo stínu
+   odlišuje jen tenký rámeček a stejný červený vršek jako u .stat-green
+   v appce — jeden opakující se značkový detail napříč produktem. */
 .feature-card{
-  background:var(--surface,#fff);border:1px solid var(--border);border-radius:var(--r2);
+  background:var(--surface,#fff);border:1px solid var(--border);border-top:3px solid var(--red);
+  border-radius:6px;
   padding:1.75rem;
-  box-shadow:0 1px 2px rgba(20,29,40,.04), 0 8px 20px -10px rgba(20,29,40,.10);
-  transition:box-shadow .15s, transform .15s, border-color .15s;
+  transition:transform .15s, border-color .15s;
 }
-.feature-card:hover{transform:translateY(-3px)}
-html[data-theme="light"] .feature-card:hover{
-  box-shadow:0 1px 2px rgba(20,29,40,.05), 0 14px 28px -12px rgba(20,29,40,.16);
-}
-/* Tmavý stín by na tmavém pozadí nebyl vidět — v tmavém režimu proto místo
-   stínu zvýrazní kartu jemná červená (brandová) záře na okraji. */
-html[data-theme="dark"] .feature-card:hover{
-  border-color:rgba(227,5,27,.5);
-  box-shadow:0 0 0 1px rgba(227,5,27,.25), 0 16px 32px -14px rgba(0,0,0,.6);
-}
+.feature-card:hover{transform:translateY(-3px);border-color:var(--red)}
 .feature-icon{
-  width:42px;height:42px;border-radius:10px;background:var(--blue-bg);color:var(--red);
+  width:42px;height:42px;border-radius:12px;background:var(--slate);color:#fff;
   display:flex;align-items:center;justify-content:center;margin-bottom:1rem;
+  position:relative;
+}
+/* Malá červená tečka v rohu — ozvěna trojtečkové značky z loga, ne plošné
+   využití červené jako výplně (tu má manuál vyhrazenou jen pro akcent). */
+.feature-icon::after{
+  content:"";position:absolute;top:-4px;right:-4px;width:9px;height:9px;
+  border-radius:2px;background:var(--red);
 }
 .feature-card h3{font-family:'Cairo',sans-serif;font-weight:800;font-size:1.08rem;color:var(--ink);margin-bottom:.5rem}
 .feature-card p{color:var(--ink2);font-size:.92rem;line-height:1.55}
@@ -106,8 +120,10 @@ html[data-theme="dark"] .feature-card:hover{
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;position:relative}
 @media(max-width:760px){.steps{grid-template-columns:1fr}}
 .step{text-align:center;padding:0 .5rem}
+/* Zaoblený čtverec, ne kruh — přesně tvar teček z ept loga (border-radius
+   2px při 7px straně v .dot-mark), zvětšený na stejný poměr. */
 .step-num{
-  width:40px;height:40px;border-radius:50%;background:var(--red);color:#fff;
+  width:40px;height:40px;border-radius:12px;background:var(--red);color:#fff;
   display:flex;align-items:center;justify-content:center;font-family:'Cairo',sans-serif;
   font-weight:800;font-size:1.05rem;margin:0 auto 1rem;
 }
@@ -116,14 +132,20 @@ html[data-theme="dark"] .feature-card:hover{
 
 /* ── Zabezpečení — 3 sloupce ─────────────────────────────────────────────── */
 .sec-alt{background:var(--surface2)}
-/* Ve světlém režimu je --surface2 skoro totožné s --bg (rozdíl pár jednotek),
-   takže se pruh sekce vizuálně vůbec neoddělí od zbytku stránky. Čistá bílá
-   s jemnou linkou nahoře/dole dá pruhu skutečný, viditelný kontrast. */
+/* Světlý režim: přesná šedá z manuálu (str. 10) — Fläche #B3B3B3 s textem
+   #333333 ("dunkelgraue Schrift"), stejná dvojice, jakou manuál předepisuje
+   pro Ausbildung-inzeráty na šedém podkladu. Červená zůstává akcentem beze
+   změny (kicker, step-num, ikony) — manuál: "Rot sollte weiterhin als Akzent
+   verwendet werden." Bílé boxy (karty, loga) na šedé ploše čtou přesně jako
+   ty ve visualbooku (např. Infotafel str. 22). */
 html[data-theme="light"] .sec-alt{
-  background:#fff;
-  border-top:1px solid var(--border);
-  border-bottom:1px solid var(--border);
+  background:#B3B3B3;
+  border-top:1px solid rgba(0,0,0,.12);
+  border-bottom:1px solid rgba(0,0,0,.12);
 }
+html[data-theme="light"] .sec-alt h2,
+html[data-theme="light"] .sec-alt h3{color:#333}
+html[data-theme="light"] .sec-alt p{color:#333}
 .trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
 @media(max-width:760px){.trust-grid{grid-template-columns:1fr}}
 .trust-item{text-align:center;padding:0 .5rem}
@@ -133,12 +155,12 @@ html[data-theme="light"] .sec-alt{
 
 /* ── Závěrečná výzva ─────────────────────────────────────────────────────── */
 .cta-band{
-  background:var(--slate);border-radius:20px;padding:3rem 2rem;text-align:center;
+  background:var(--slate);border-radius:10px;padding:3rem 2rem;text-align:center;
   max-width:1100px;margin:0 auto;position:relative;overflow:hidden;
 }
 .cta-band::before{
   content:"";position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(ellipse 700px 320px at 50% 0%, rgba(167,10,27,.25), transparent 65%);
+  background:radial-gradient(ellipse 700px 320px at 50% 0%, rgba(195,14,32,.25), transparent 65%);
 }
 .cta-band-inner{position:relative;z-index:1}
 .cta-band h2{font-family:'Cairo',sans-serif;font-weight:800;color:#fff;font-size:1.7rem;margin-bottom:.65rem}
@@ -155,10 +177,11 @@ footer{background:var(--slate);padding:3rem 0 2rem;margin-top:1.5rem}
 
 /* ── S kým spolupracujeme ────────────────────────────────────────────────── */
 .partner-row{display:flex;justify-content:center;align-items:center;gap:1.5rem;flex-wrap:wrap}
+/* Plochý rámeček bez stínu — stejné plné boxy jako logo-swatche na
+   str. 7-9 manuálu, ne zavěšená UI karta. */
 .partner-chip{
-  background:#fff;border:1px solid var(--border);border-radius:var(--r2);
+  background:#fff;border:1px solid var(--border);border-radius:4px;
   width:10rem;height:4.25rem;display:inline-flex;align-items:center;justify-content:center;
-  box-shadow:0 1px 2px rgba(20,29,40,.04), 0 8px 20px -10px rgba(20,29,40,.10);
 }
 /* Loga mají hodně odlišný poměr stran (EPT skoro čtvercové, PRAUT dlouhý úzký
    wordmark) — object-fit:contain v pevně stejně velkém rámečku je zmenší na
@@ -198,7 +221,7 @@ html[data-theme="dark"] .theme-toggle .i-sun{display:block}
 }
 .lead-form input::placeholder,.lead-form textarea::placeholder{color:rgba(255,255,255,.45)}
 .lead-form input:focus,.lead-form textarea:focus{
-  outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(227,5,27,.25);
+  outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(195,14,32,.25);
 }
 .lead-form button{align-self:center;margin-top:.25rem}
 .lead-err{color:#ff9aa0;font-size:.85rem;text-align:center}
@@ -218,7 +241,7 @@ html[data-theme="light"] .theme-toggle:hover{background:var(--border)}
 
 html[data-theme="light"] .hero{background:#fff}
 html[data-theme="light"] .hero::before{
-  background:radial-gradient(ellipse 900px 480px at 50% -8%, rgba(167,10,27,.14), transparent 62%);
+  background:radial-gradient(ellipse 900px 480px at 50% -8%, rgba(195,14,32,.14), transparent 62%);
 }
 html[data-theme="light"] .hero::after{
   background-image:linear-gradient(rgba(20,29,40,.045) 1px, transparent 1px),
@@ -234,10 +257,9 @@ html[data-theme="light"] .stat-pill{background:var(--surface2);border-color:var(
 
 html[data-theme="light"] .cta-band{
   background:#fff;border:1px solid var(--border);
-  box-shadow:0 1px 2px rgba(20,29,40,.04), 0 14px 32px -16px rgba(20,29,40,.14);
 }
 html[data-theme="light"] .cta-band::before{
-  background:radial-gradient(ellipse 700px 320px at 50% 0%, rgba(167,10,27,.10), transparent 65%);
+  background:radial-gradient(ellipse 700px 320px at 50% 0%, rgba(195,14,32,.10), transparent 65%);
 }
 html[data-theme="light"] .cta-band h2{color:var(--ink)}
 html[data-theme="light"] .cta-band p{color:var(--ink2)}
@@ -283,7 +305,7 @@ html[data-theme="light"] .footer-dotmark{color:var(--ink3)}
 <header class="hero">
   <div class="hero-inner">
     <span class="dot-mark"><span class="d dk"></span><span class="d dr"></span><span class="d dk"></span></span>
-    <div class="eyebrow">Digitální recepce</div>
+    <div class="eyebrow"><span class="eyebrow-rule"></span>Digitální recepce</div>
     <h1>Recepce bez papíru a bez čekání</h1>
     <p class="lead">Návštěvník naskenuje doklad totožnosti, systém během pár vteřin
       rozpozná jméno a zapíše příchod. Recepce má vždy okamžitý přehled — kdo je
@@ -309,10 +331,16 @@ html[data-theme="light"] .footer-dotmark{color:var(--ink3)}
   </div>
 </header>
 
+<div class="brand-band">
+  <div class="wrap">
+    <p><strong>Nic neopouští budovu.</strong> Doklad se zahodí hned po přečtení, databáze zůstává jen ve vaší síti — žádný cloud, žádná měsíční platba za úložiště.</p>
+  </div>
+</div>
+
 <section id="funkce">
   <div class="wrap">
     <div class="section-head">
-      <div class="eyebrow">Co systém umí</div>
+      <div class="eyebrow"><span class="eyebrow-rule"></span>Co systém umí</div>
       <h2>Vše, co recepce potřebuje na jedné obrazovce</h2>
       <p>Od naskenování dokladu po přehled návštěv — bez ručního přepisování a bez papírové knihy.</p>
     </div>
@@ -356,7 +384,7 @@ html[data-theme="light"] .footer-dotmark{color:var(--ink3)}
 <section id="jak-to-funguje" class="sec-alt">
   <div class="wrap">
     <div class="section-head">
-      <div class="eyebrow">Postup</div>
+      <div class="eyebrow"><span class="eyebrow-rule"></span>Postup</div>
       <h2>Jak to funguje</h2>
       <p>Tři kroky mezi příchodem návštěvníka a zápisem v databázi.</p>
     </div>
@@ -383,7 +411,7 @@ html[data-theme="light"] .footer-dotmark{color:var(--ink3)}
 <section id="zabezpeceni">
   <div class="wrap">
     <div class="section-head">
-      <div class="eyebrow">Soukromí</div>
+      <div class="eyebrow"><span class="eyebrow-rule"></span>Soukromí</div>
       <h2>Zabezpečení a ochrana dat</h2>
       <p>Systém je navržený tak, aby s citlivými údaji návštěvníků zacházel co nejopatrněji.</p>
     </div>
@@ -436,7 +464,7 @@ html[data-theme="light"] .footer-dotmark{color:var(--ink3)}
 <section id="partneri" class="sec-alt">
   <div class="wrap">
     <div class="section-head">
-      <div class="eyebrow">Reference</div>
+      <div class="eyebrow"><span class="eyebrow-rule"></span>Reference</div>
       <h2>S kým spolupracujeme</h2>
     </div>
     <div class="partner-row">

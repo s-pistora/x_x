@@ -9,7 +9,7 @@
 :root{
   --ink:#141d28;--ink2:#3c5063;--ink3:#6b7b88;
   --bg:#0f151d;--surface:#161f2a;--surface2:#1c2632;--border:#2a3542;
-  --red:#e3051b;--red-bg:#341316;--red-border:#6b2530;
+  --red:#c30e20;--red-bg:#341316;--red-border:#6b2530;
   --amber-bg:#332708;--amber-border:#6b5320;--amber:#fbbf24;
   --green-bg:#0f2a20;--green-border:#1f5c40;--green:#4ade80;
   --r:8px;
@@ -20,7 +20,12 @@ body{
 }
 .wrap{max-width:1000px;margin:0 auto;padding:2rem 1.25rem}
 h1{font-size:1.3rem;font-weight:800;margin-bottom:1.25rem;display:flex;align-items:center;gap:10px}
-.dot{width:8px;height:8px;border-radius:2px;background:var(--red);display:inline-block}
+/* Trojtečková značka — stejný jazyk jako ve visualbooku (černá-červená-černá
+   před wordmarkem, str. 5) a napříč zbytkem produktu (one-pager, recepce). */
+.dot-mark{display:inline-flex;align-items:center;gap:5px;vertical-align:middle}
+.dot-mark .d{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.dot-mark .dk{background:#e9edf0}
+.dot-mark .dr{background:var(--red)}
 
 /* přihlášení */
 #loginCard{max-width:320px;margin:4rem auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;text-align:center}
@@ -61,7 +66,7 @@ td.msg{max-width:320px;white-space:pre-wrap;color:#c7d0d6}
 <body>
 
 <div class="wrap">
-  <h1><span class="dot"></span> Poptávky z one-pageru</h1>
+  <h1><span class="dot-mark"><span class="d dk"></span><span class="d dr"></span><span class="d dk"></span></span> Poptávky z one-pageru</h1>
 
   <div id="loginCard">
     <p>Zadejte admin PIN</p>

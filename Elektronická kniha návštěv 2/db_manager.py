@@ -3,8 +3,22 @@
 import sqlite3
 import unicodedata
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 DB_PATH = "navstevni_kniha.db"
+
+# Recepce je fyzicky v Habartově, ale server (kontejner/cloud) běžně jede
+# v UTC — obyčejné datetime.now() by pak zapisovalo čas o 1-2 hodiny posunutý
+# proti skutečným nástěnným hodinám na recepci (a nový příchozí by hned
+# ukazoval "2 h" v Doba místo pár vteřin). Čas se proto vždy počítá v místní
+# zóně, bez ohledu na to, v jaké zóně běží server.
+TZ = ZoneInfo("Europe/Prague")
+
+
+def ted():
+    """Aktuální čas v Europe/Prague, naivní (bez tzinfo) — ukládá se a
+    zobrazuje jako prostý řetězec, stejně jako doteď."""
+    return datetime.now(TZ).replace(tzinfo=None)
 
 
 def get_db():
@@ -63,7 +77,7 @@ def _normalizuj(jmeno, prijmeni):
 def zapis_audit(conn, navstevnik_id, action, details=""):
     conn.execute(
         "INSERT INTO audit_log (navstevnik_id, action, timestamp, details) VALUES (?,?,?,?)",
-        (navstevnik_id, action, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), details)
+        (navstevnik_id, action, ted().strftime("%Y-%m-%d %H:%M:%S"), details)
     )
 
 
@@ -76,21 +90,18 @@ def najdi_aktivni_navstevu(conn, jmeno, prijmeni):
     return None
 
 
-def najdi_posledni_navstevu(conn, jmeno, prijmeni):
-    """Vrátí poslední (uzavřenou) návštěvu té samé osoby, pokud existuje – pro 'vítejte zpět'.
-
-    Řadí se podle prichod_dt, ne podle id: „poslední“ je otázka na čas, a pořadí
-    vkládání se s časem krylo jen dokud data vznikala výhradně za provozu. Při
-    importu nebo naplnění demo daty mimo chronologické pořadí vracelo id DESC
-    nejstarší návštěvu, takže hláška ukazovala špatné datum. Formát
-    "YYYY-MM-DD HH:MM:SS" se řadí lexikograficky = chronologicky.
-    """
+def najdi_historii_osoby(jmeno, prijmeni):
+    """Vrátí úplně všechny návštěvy téže osoby (podle normalizovaného jména,
+    stejné srovnání jako u kontroly duplicity), od nejnovější – pro detail
+    "kolikrát tu už byl/a a jak dlouho se pokaždé zdržel/a"."""
     nj, npr = _normalizuj(jmeno, prijmeni)
-    for row in conn.execute("SELECT * FROM navstevnici WHERE odchod_dt IS NOT NULL "
-                            "ORDER BY prichod_dt DESC"):
-        if _normalizuj(row["jmeno"], row["prijmeni"]) == (nj, npr):
-            return row
-    return None
+    with get_db() as conn:
+        return [
+            dict(row) for row in conn.execute(
+                "SELECT * FROM navstevnici ORDER BY prichod_dt DESC"
+            )
+            if _normalizuj(row["jmeno"], row["prijmeni"]) == (nj, npr)
+        ]
 
 
 def zapis_prichod(jmeno, prijmeni, organizace, spz, phone_number):
@@ -98,8 +109,7 @@ def zapis_prichod(jmeno, prijmeni, organizace, spz, phone_number):
     Zapíše příchod návštěvníka. Kniha návštěv záměrně loguje KAŽDOU návštěvu jako
     samostatný řádek (historie), proto se duplicitě předchází jen v jednom případě:
     pokud je osoba PRÁVĚ TEĎ aktivní (ještě neodešla) – tehdy se druhý aktivní
-    záznam nezakládá. Pokud osoba už dříve byla a odešla, jde o novou návštěvu a
-    založí se nový řádek, jen s hláškou "vítejte zpět" odkazující na tu předchozí.
+    záznam nezakládá.
     """
     with get_db() as conn:
         aktivni = najdi_aktivni_navstevu(conn, jmeno, prijmeni)
@@ -113,14 +123,12 @@ def zapis_prichod(jmeno, prijmeni, organizace, spz, phone_number):
                         f"Pokus o opakovaný zápis, osoba je stále přítomna od {aktivni['prichod_dt']}")
             conn.commit()
             return {
-                "status":       "jiz_prihlasen",
-                "id":           aktivni["id"],
-                "prichod_dt":   aktivni["prichod_dt"],
-                "vitejte_zpet": False,
+                "status":     "jiz_prihlasen",
+                "id":         aktivni["id"],
+                "prichod_dt": aktivni["prichod_dt"],
             }
 
-        posledni = najdi_posledni_navstevu(conn, jmeno, prijmeni)
-        prichod = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        prichod = ted().strftime("%Y-%m-%d %H:%M:%S")
 
         cur = conn.execute(
             "INSERT INTO navstevnici (jmeno, prijmeni, organizace, spz, phone_number, prichod_dt) "
@@ -128,20 +136,13 @@ def zapis_prichod(jmeno, prijmeni, organizace, spz, phone_number):
             (jmeno, prijmeni, organizace, spz, phone_number, prichod)
         )
         new_id = cur.lastrowid
-
-        if posledni:
-            zapis_audit(conn, new_id, "opakovana_navsteva", f"Předchozí návštěva: {posledni['prichod_dt']}")
-        else:
-            zapis_audit(conn, new_id, "novy_navstevnik", "")
-
+        zapis_audit(conn, new_id, "novy_navstevnik", "")
         conn.commit()
 
         return {
-            "status":           "ok",
-            "id":               new_id,
-            "prichod_dt":       prichod,
-            "vitejte_zpet":     posledni is not None,
-            "posledni_navsteva": posledni["prichod_dt"] if posledni else None,
+            "status":     "ok",
+            "id":         new_id,
+            "prichod_dt": prichod,
         }
 
 

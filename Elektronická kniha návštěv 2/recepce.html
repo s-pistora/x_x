@@ -27,15 +27,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--i
 .topbar h1{font-size:1rem;font-weight:600;letter-spacing:.2px}
 .topbar .clock{font-size:.85rem;font-variant-numeric:tabular-nums;opacity:.85;font-family:ui-monospace,monospace}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:14px}
-.auth-area{display:flex;gap:6px}
-.auth-btn{padding:6px 12px;font-size:.78rem;font-weight:600;border-radius:20px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;transition:background .13s}
-.auth-btn:hover{background:rgba(255,255,255,.18)}
 .auth-status{display:flex;align-items:center;gap:8px}
-.auth-logout{padding:6px 11px;font-size:.75rem;font-weight:600;border-radius:20px;border:1px solid #a70a1b;background:#a70a1b;color:#fff;cursor:pointer}
-.auth-logout:hover{background:#7d0815;border-color:#7d0815}
+.auth-logout{padding:6px 11px;font-size:.75rem;font-weight:600;border-radius:20px;border:1px solid #c30e20;background:#c30e20;color:#fff;cursor:pointer}
+.auth-logout:hover{background:#8f0a18;border-color:#8f0a18}
 .lock-btn{font-size:1.15rem;padding:16px 20px;font-weight:700;border-radius:10px}
-.lock-hero-inner .lock-btn-slate{background:#3c5063}
-.lock-hero-inner .lock-btn-slate:hover{background:#2c3c4b}
 .lock-admin-link{margin-top:1.1rem;background:none;border:none;font-size:.95rem;color:var(--ink2);text-decoration:underline;cursor:pointer;padding:6px;display:block;width:100%;text-align:center}
 .lock-admin-link:hover{color:var(--ink)}
 .login-modal{max-width:340px;text-align:center;padding:2rem 1.75rem}
@@ -110,6 +105,8 @@ td{padding:13px 14px;border-bottom:1px solid var(--border);vertical-align:middle
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#fafafa}
 .td-name{font-weight:600;font-size:.9rem}
+.td-name-link{cursor:pointer;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;transition:text-decoration-color .13s}
+.td-name-link:hover{text-decoration-color:currentColor}
 .td-time{font-family:ui-monospace,monospace;font-size:.82rem;color:var(--ink2);white-space:nowrap}
 .td-time .date{font-size:.72rem;color:var(--ink3)}
 .td-org{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -155,10 +152,6 @@ tr:hover td{background:#fafafa}
       <svg class="i-sun" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
     </button>
     <span class="clock" id="clk">--:--:--  &nbsp; --.--.----</span>
-    <div class="auth-area" id="authArea">
-      <button class="auth-btn" onclick="openLogin('admin')">Admin</button>
-      <button class="auth-btn" onclick="openLogin('spravce')">Správce</button>
-    </div>
     <div class="auth-status hidden" id="authStatus">
       <button class="auth-logout" onclick="logout()">Odhlásit</button>
     </div>
@@ -170,11 +163,8 @@ tr:hover td{background:#fafafa}
     <div class="dot-mark lock-hero-mark dot-anim"><span class="d dk"></span><span class="d dr"></span><span class="d dk"></span></div>
     <h2>Vítejte v návštěvní knize</h2>
     <p>Pro pokračování se přihlaste.</p>
-    <button class="btn btn-primary btn-full lock-btn" onclick="openLogin('admin')">
-      Přihlásit se jako admin
-    </button>
-    <button class="btn btn-primary btn-full lock-btn lock-btn-slate" onclick="openLogin('spravce')" style="margin-top:.75rem">
-      Přihlásit se jako správce
+    <button class="btn btn-primary btn-full lock-btn" onclick="openLogin()">
+      Přihlásit se
     </button>
   </div>
 </div>
@@ -435,6 +425,21 @@ tr:hover td{background:#fafafa}
   </div>
 </div>
 
+<!-- Klik na jméno v tabulce: kolikrát tu už osoba byla a jak dlouho se
+     pokaždé zdržela. Párování osob je stejné jako u "vítejte zpět" (jméno +
+     příjmení bez diakritiky) — návštěvník nemá vlastní řádek, jen řádky
+     jednotlivých návštěv. -->
+<div id="historieModal" class="modal-bg hidden">
+  <div class="modal audit-modal">
+    <h3 id="historieTitle">Historie návštěv</h3>
+    <p class="confirm-text" id="historieSouhrn"></p>
+    <div class="audit-wrap"><table class="audit-tbl"><tbody id="historieTbody"></tbody></table></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeHistorie()">Zavřít</button>
+    </div>
+  </div>
+</div>
+
 <!-- Evakuační seznam: samostatný blok, na obrazovce skrytý, do tisku jediný
      viditelný. Recepční ho nemusí nikam hledat — jedno kliknutí a tiskne. -->
 <div id="evakuace" class="evak-only">
@@ -466,41 +471,34 @@ let filter = 'aktivni';
 let modalId = null;
 let data = [];
 let videoStream = null;
-// Do tohohle dashboardu se přihlašuje jen admin a správce — oba mají
-// stejný, plný přístup (žádná omezená zaměstnanecká role tu není; řadoví
-// zaměstnanci se jen skenují u vchodu přes /sken, bez účtu).
-let authRole = sessionStorage.getItem('ept_role');
+// Do tohohle dashboardu se přihlašuje jen jedna recepční s plným přístupem
+// ke všem záznamům (žádné role; řadoví zaměstnanci se jen skenují u vchodu
+// přes /sken, bez účtu).
+let prihlasen = !!sessionStorage.getItem('ept_token');
 let authToken = sessionStorage.getItem('ept_token');
-let pendingRole = null;
 
 // ── Přihlášení ────────────────────────────────────────────────────────────────
 function authHeaders() {
   return authToken ? { 'X-Auth-Token': authToken } : {};
 }
 
-function applyRole() {
-  const authArea   = document.getElementById('authArea');
+function applyAuthState() {
   const authStatus = document.getElementById('authStatus');
   const dashboard  = document.getElementById('dashboard');
   const lock       = document.getElementById('lockScreen');
 
-  if (authRole) {
-    authArea.classList.add('hidden');
+  if (prihlasen) {
     authStatus.classList.remove('hidden');
     dashboard.classList.remove('hidden');
     lock.classList.add('hidden');
   } else {
-    authArea.classList.remove('hidden');
     authStatus.classList.add('hidden');
     dashboard.classList.add('hidden');
     lock.classList.remove('hidden');
   }
 }
 
-function openLogin(r) {
-  pendingRole = r;
-  document.getElementById('loginTitle').textContent =
-    'Přihlášení – ' + (r === 'admin' ? 'Admin' : 'Správce');
+function openLogin() {
   document.getElementById('loginPin').value = '';
   document.getElementById('loginAlert').classList.add('hidden');
   document.getElementById('loginModal').classList.remove('hidden');
@@ -519,7 +517,7 @@ async function doLogin() {
     const res = await fetch(API + '/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: pendingRole, pin })
+      body: JSON.stringify({ pin })
     });
     const d = await res.json();
     if (!res.ok) {
@@ -530,11 +528,10 @@ async function doLogin() {
       btn.disabled = false;
       return;
     }
-    authToken = d.token; authRole = d.role;
+    authToken = d.token; prihlasen = true;
     sessionStorage.setItem('ept_token', authToken);
-    sessionStorage.setItem('ept_role', authRole);
     closeLogin();
-    applyRole();
+    applyAuthState();
     filter = 'aktivni';
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelector('.tab').classList.add('active');
@@ -556,10 +553,9 @@ function logout() {
 }
 
 function forceLogout() {
-  authToken = null; authRole = null;
+  authToken = null; prihlasen = false;
   sessionStorage.removeItem('ept_token');
-  sessionStorage.removeItem('ept_role');
-  applyRole();
+  applyAuthState();
   document.getElementById('hodinovyPanel').innerHTML = '<div class="empty">Načítám…</div>';
 }
 
@@ -792,7 +788,7 @@ async function hledat() {
 
 // ── Načtení dat ───────────────────────────────────────────────────────────────
 async function nactiData() {
-  if (!authRole || filter === 'hledat') return;
+  if (!prihlasen || filter === 'hledat') return;
   try {
     const [rData, rStats] = await Promise.all([
       fetch(API + '/navstevnici?filter=' + filter, { headers: authHeaders() }),
@@ -815,7 +811,7 @@ async function nactiData() {
 // Nezávislé na aktivní záložce vpravo — vždy ukazuje živý příchozí provoz.
 async function nactiHodinovyPrehled() {
   const panel = document.getElementById('hodinovyPanel');
-  if (!authRole) return;
+  if (!prihlasen) return;
   try {
     const res = await fetch(API + '/navstevnici?filter=dnes', { headers: authHeaders() });
     if (res.status === 401) return; // forceLogout už řeší hlavní nactiData()
@@ -880,8 +876,25 @@ function tickTrvani() {
   document.querySelectorAll('.td-duration-live[data-prichod]').forEach(td => {
     td.textContent = fmtTrvani(trvaniMin(td.dataset.prichod, new Date()));
   });
+  if (!document.getElementById('historieModal').classList.contains('hidden')) {
+    aktualizujHistorieSouhrn();
+  }
 }
 setInterval(tickTrvani, 1000);
+
+// Souhrnná věta v modalu historie ("Celkem N návštěv · celková doba…") —
+// dopočítává k uzavřeným návštěvám ještě živý úsek té právě probíhající,
+// aby součet neukazoval neaktuální číslo, dokud je osoba v budově.
+function aktualizujHistorieSouhrn() {
+  const el = document.getElementById('historieSouhrn');
+  const pocet = Number(el.dataset.pocet || 0);
+  if (!pocet) return;
+  const closedMin = Number(el.dataset.closedMin || 0);
+  const activniPrichod = el.dataset.activniPrichod;
+  const celkemMin = closedMin + (activniPrichod ? trvaniMin(activniPrichod, new Date()) : 0);
+  const slovoNavsteva = pocet === 1 ? 'návštěva' : (pocet >= 2 && pocet <= 4 ? 'návštěvy' : 'návštěv');
+  el.textContent = `Celkem ${pocet} ${slovoNavsteva} · celková doba v budově: ${fmtTrvani(celkemMin)}`;
+}
 
 function renderTbl() {
   const tbody = document.getElementById('tbl');
@@ -891,7 +904,7 @@ function renderTbl() {
   }
   tbody.innerHTML = data.map(r => `
     <tr>
-      <td class="td-name">${esc(r.jmeno)} ${esc(r.prijmeni)}</td>
+      <td class="td-name"><span class="td-name-link" onclick="otevriHistorii(${r.id})" title="Zobrazit historii návštěv">${esc(r.jmeno)} ${esc(r.prijmeni)}</span></td>
       <td class="td-org">${esc(r.organizace || '—')}</td>
       <td style="font-family:ui-monospace,monospace;font-size:.82rem">${esc(r.spz || '—')}</td>
       <td class="td-time">${fmtDT(r.prichod_dt)}</td>
@@ -963,9 +976,7 @@ async function zapsat() {
 
     if (res.ok) {
       const cas = d.prichod_dt ? d.prichod_dt.slice(11, 16) : '';
-      showAlert('fAlert', 'success', d.vitejte_zpet && d.zprava
-        ? '✓ ' + d.zprava
-        : `✓ ${jmeno} ${prijmeni} zapsán/a${cas ? ' v ' + cas : ''}.`);
+      showAlert('fAlert', 'success', `✓ ${jmeno} ${prijmeni} zapsán/a${cas ? ' v ' + cas : ''}.`);
       ['fJmeno','fPrijmeni','fOrg','fSpz','fTelefon'].forEach(id => document.getElementById(id).value = '');
       nactiData();
       nactiHodinovyPrehled();
@@ -1135,6 +1146,52 @@ async function otevriAudit() {
 }
 function closeAudit() { document.getElementById('auditModal').classList.add('hidden'); }
 
+// ── Historie návštěv osoby ────────────────────────────────────────────────────
+// Kolikrát tu už byl/a a jak dlouho se pokaždé zdržel/a — klik na jméno v tabulce.
+async function otevriHistorii(id) {
+  const tb = document.getElementById('historieTbody');
+  const souhrnEl = document.getElementById('historieSouhrn');
+  document.getElementById('historieTitle').textContent = 'Historie návštěv';
+  souhrnEl.textContent = '';
+  delete souhrnEl.dataset.pocet;
+  delete souhrnEl.dataset.closedMin;
+  delete souhrnEl.dataset.activniPrichod;
+  tb.innerHTML = '<tr><td class="empty">Načítám…</td></tr>';
+  document.getElementById('historieModal').classList.remove('hidden');
+  try {
+    const res = await fetch(API + '/navstevnici/' + id + '/historie', { headers: authHeaders() });
+    if (res.status === 401) { forceLogout(); return; }
+    const d = await res.json();
+    if (!res.ok) {
+      tb.innerHTML = `<tr><td class="empty">${esc(d.error || 'Historii se nepodařilo načíst.')}</td></tr>`;
+      return;
+    }
+
+    document.getElementById('historieTitle').textContent = `${d.jmeno} ${d.prijmeni}`;
+
+    // Aktivní návštěva (pokud existuje) se do "celkové doby" počítá živě —
+    // jinak by hned po zavření a znovuotevření modalu ukazovala starý,
+    // neaktuální součet, dokud osoba neodejde.
+    const aktivni = d.navstevy.find(n => n.doba_min === null);
+    souhrnEl.dataset.pocet = d.pocet_navstev;
+    souhrnEl.dataset.closedMin = d.celkovy_cas_min;
+    souhrnEl.dataset.activniPrichod = aktivni ? aktivni.prichod_dt : '';
+    aktualizujHistorieSouhrn();
+
+    tb.innerHTML = d.navstevy.map(n => `
+      <tr>
+        <td class="au-cas">${fmtDT(n.prichod_dt)}</td>
+        <td>${esc(n.organizace || '—')}</td>
+        <td class="${n.doba_min === null ? 'td-duration-live' : ''}"${n.doba_min === null ? ` data-prichod="${n.prichod_dt}"` : ''}>${
+          n.doba_min !== null ? fmtTrvani(n.doba_min) : fmtTrvani(trvaniMin(n.prichod_dt, new Date()))
+        }</td>
+      </tr>`).join('');
+  } catch (e) {
+    tb.innerHTML = '<tr><td class="empty">Spojení se systémem selhalo.</td></tr>';
+  }
+}
+function closeHistorie() { document.getElementById('historieModal').classList.add('hidden'); }
+
 // ── Export ──────────────────────────────────────────────────────────────────
 // Stahování přes fetch + blob, protože prostý odkaz by neposlal auth hlavičku.
 async function exportCsv() {
@@ -1174,7 +1231,7 @@ function showAlert(id, type, msg) {
 function showModalAlert(type, msg) { showAlert('mAlertDiv', type, msg); }
  
 // Init
-applyRole();
+applyAuthState();
 nactiData();
 nactiHodinovyPrehled();
 setInterval(nactiData, 20000);

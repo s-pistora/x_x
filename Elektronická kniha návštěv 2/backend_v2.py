@@ -35,39 +35,33 @@ db.init_db()
 # v cache); sken jich posílá víc, takže se to schová do průběhu skenování.
 # Rozpoznávání jde přes zámek v ocr_processor, aby nikdy neběželo dvakrát zaráz.
 
-# ── Přihlášení (admin / správce) ──────────────────────────────────────────
+# ── Přihlášení (jedna recepční) ────────────────────────────────────────────
 # Řadoví zaměstnanci se do tohohle rozhraní vůbec nepřihlašují — ti se jen
 # naskenují u vchodu přes /sken (bez účtu). Recepční dashboard je jen pro
-# admina a správce, oba mají plný přístup ke všem záznamům a hledání.
-# Prototyp — PINy jde přepsat proměnnými prostředí ADMIN_PIN / SPRAVCE_PIN.
+# jednu recepční s plným přístupem ke všem záznamům a hledání — žádné role.
+# Prototyp — PIN jde přepsat proměnnou prostředí RECEPCE_PIN.
 # Tokeny žijí jen v paměti procesu, po restartu serveru je nutné se přihlásit znovu.
-ADMIN_PIN   = os.environ.get("ADMIN_PIN", "ept-admin-2026")
-SPRAVCE_PIN = os.environ.get("SPRAVCE_PIN", "ept-spravce-2026")
-TOKENS = {}  # token -> "admin" | "spravce"
+RECEPCE_PIN = os.environ.get("RECEPCE_PIN", "ept-admin-2026")
+TOKENS = set()  # platné auth tokeny
 
-def aktualni_role():
-    return TOKENS.get(request.headers.get("X-Auth-Token"))
+def je_prihlasen():
+    return request.headers.get("X-Auth-Token") in TOKENS
 
 @app.route("/api/login", methods=["POST"])
 def api_login():
     d = request.json or {}
-    role = d.get("role")
-    pin  = (d.get("pin") or "").strip()
+    pin = (d.get("pin") or "").strip()
 
-    if role == "admin" and pin == ADMIN_PIN:
-        pass
-    elif role == "spravce" and pin == SPRAVCE_PIN:
-        pass
-    else:
+    if pin != RECEPCE_PIN:
         return jsonify({"error": "Nesprávné heslo."}), 401
 
     token = secrets.token_hex(16)
-    TOKENS[token] = role
-    return jsonify({"token": token, "role": role})
+    TOKENS.add(token)
+    return jsonify({"token": token})
 
 @app.route("/api/logout", methods=["POST"])
 def api_logout():
-    TOKENS.pop(request.headers.get("X-Auth-Token"), None)
+    TOKENS.discard(request.headers.get("X-Auth-Token"))
     return jsonify({"status": "ok"})
 
 # ── Hlavní stránka ────────────────────────────────────────────────────────────
@@ -168,7 +162,7 @@ AUDIT_POPISKY = {
 
 @app.route("/api/audit", methods=["GET"])
 def api_audit():
-    if aktualni_role() not in ("admin", "spravce"):
+    if not je_prihlasen():
         return jsonify({"error": "Přihlaste se prosím."}), 401
 
     limit = min(int(request.args.get("limit", 100)), 500)
@@ -192,7 +186,7 @@ def api_audit():
 # ── Export do CSV ─────────────────────────────────────────────────────────────
 @app.route("/api/export.csv", methods=["GET"])
 def api_export_csv():
-    if aktualni_role() not in ("admin", "spravce"):
+    if not je_prihlasen():
         return jsonify({"error": "Přihlaste se prosím."}), 401
 
     with db.get_db() as conn:
@@ -217,7 +211,7 @@ def api_export_csv():
 
     # BOM: bez něj Excel na Windows rozsype diakritiku (Nováková → NovÃ¡kovÃ¡)
     data = "﻿" + buf.getvalue()
-    nazev = f"navstevy-{datetime.now().strftime('%Y-%m-%d')}.csv"
+    nazev = f"navstevy-{db.ted().strftime('%Y-%m-%d')}.csv"
     return Response(data, mimetype="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="{nazev}"'})
 
@@ -225,10 +219,10 @@ def api_export_csv():
 # ── Statistiky ────────────────────────────────────────────────────────────────
 @app.route("/api/stats", methods=["GET"])
 def api_stats():
-    if not aktualni_role():
+    if not je_prihlasen():
         return jsonify({"error": "Přihlaste se prosím."}), 401
 
-    dnes = datetime.now().strftime("%Y-%m-%d")
+    dnes = db.ted().strftime("%Y-%m-%d")
     with db.get_db() as conn:
         aktivni = conn.execute(
             "SELECT COUNT(*) FROM navstevnici WHERE odchod_dt IS NULL"
@@ -247,7 +241,7 @@ def api_stats():
 def api_navstevnici():
     if request.method == "POST":
         # Zápis příchodu je otevřený – dělá ho recepční i samoobslužný sken-kiosek.
-        # (Chceš-li i zápis za login, přidej sem kontrolu aktualni_role() jako u GET.)
+        # (Chceš-li i zápis za login, přidej sem kontrolu je_prihlasen() jako u GET.)
         d = request.json or {}
         jmeno    = (d.get("jmeno")    or "").strip()
         prijmeni = (d.get("prijmeni") or "").strip()
@@ -274,28 +268,18 @@ def api_navstevnici():
             }), 409
 
         if phone_number:
-            cas = datetime.now().strftime("%H:%M:%S")
+            cas = db.ted().strftime("%H:%M:%S")
             zprava = f"Ahoj {jmeno} {prijmeni}, byl jsi úspěšně přihlášen/a do systému dne {cas}."
             send_sms_notification(phone_number, zprava)
 
-        odpoved = {
-            "status":       "ok",
-            "id":           vysledek["id"],
-            "prichod_dt":   vysledek["prichod_dt"],
-            "vitejte_zpet": vysledek["vitejte_zpet"],
-        }
-        if vysledek["vitejte_zpet"]:
-            posledni_dt = datetime.strptime(vysledek["posledni_navsteva"], "%Y-%m-%d %H:%M:%S")
-            odpoved["zprava"] = (
-                f"Vítejte zpět, {jmeno} {prijmeni}! "
-                f"Poslední přihlášení: {posledni_dt.strftime('%d.%m.%Y v %H:%M')}."
-            )
+        return jsonify({
+            "status":     "ok",
+            "id":         vysledek["id"],
+            "prichod_dt": vysledek["prichod_dt"],
+        })
 
-        return jsonify(odpoved)
-
-    # GET — filtrování + hledání (admin i správce vidí úplně vše)
-    role = aktualni_role()
-    if role not in ("admin", "spravce"):
+    # GET — filtrování + hledání (jedna recepční, vidí úplně vše)
+    if not je_prihlasen():
         return jsonify({"error": "Přihlaste se prosím."}), 401
 
     filtr     = request.args.get("filter", "aktivni")
@@ -304,7 +288,7 @@ def api_navstevnici():
     hodina_od = (request.args.get("hodina_od") or "").strip()
     hodina_do = (request.args.get("hodina_do") or "").strip()
 
-    dnes = datetime.now().strftime("%Y-%m-%d")
+    dnes = db.ted().strftime("%Y-%m-%d")
     where  = []
     params = []
 
@@ -341,7 +325,7 @@ def api_navstevnici():
 # ── Úprava záznamu PATCH ──────────────────────────────────────────────────────
 @app.route("/api/navstevnici/<int:nav_id>", methods=["PATCH"])
 def api_navstevnik_patch(nav_id):
-    if aktualni_role() not in ("admin", "spravce"):
+    if not je_prihlasen():
         return jsonify({"error": "Přihlaste se prosím."}), 401
 
     d = request.json or {}
@@ -357,7 +341,7 @@ def api_navstevnik_patch(nav_id):
         if d.get("odchod"):
             if row["odchod_dt"]:
                 return jsonify({"error": "Odchod již byl zapsán."}), 400
-            odchod = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            odchod = db.ted().strftime("%Y-%m-%d %H:%M:%S")
             conn.execute(
                 "UPDATE navstevnici SET odchod_dt=? WHERE id=?",
                 (odchod, nav_id)
@@ -389,6 +373,47 @@ def api_navstevnik_patch(nav_id):
             )
 
     return jsonify({"status": "ok"})
+
+
+# ── Historie návštěv jedné osoby ───────────────────────────────────────────────
+# Stejné párování osob jako u "vítejte zpět" (jméno+příjmení bez diakritiky) —
+# osoba nemá v databázi vlastní řádek, každá návštěva je samostatný záznam.
+@app.route("/api/navstevnici/<int:nav_id>/historie", methods=["GET"])
+def api_navstevnik_historie(nav_id):
+    if not je_prihlasen():
+        return jsonify({"error": "Přihlaste se prosím."}), 401
+
+    with db.get_db() as conn:
+        row = conn.execute("SELECT * FROM navstevnici WHERE id=?", (nav_id,)).fetchone()
+    if not row:
+        return jsonify({"error": "Záznam nenalezen."}), 404
+
+    navstevy = db.najdi_historii_osoby(row["jmeno"], row["prijmeni"])
+
+    celkovy_cas_min = 0
+    vysledek = []
+    for n in navstevy:
+        doba_min = None
+        if n["odchod_dt"]:
+            d = (datetime.strptime(n["odchod_dt"], "%Y-%m-%d %H:%M:%S")
+                 - datetime.strptime(n["prichod_dt"], "%Y-%m-%d %H:%M:%S"))
+            doba_min = int(d.total_seconds() // 60)
+            celkovy_cas_min += doba_min
+        vysledek.append({
+            "id":         n["id"],
+            "organizace": n["organizace"] or "",
+            "prichod_dt": n["prichod_dt"],
+            "odchod_dt":  n["odchod_dt"],
+            "doba_min":   doba_min,
+        })
+
+    return jsonify({
+        "jmeno":           row["jmeno"],
+        "prijmeni":        row["prijmeni"],
+        "pocet_navstev":   len(navstevy),
+        "celkovy_cas_min": celkovy_cas_min,
+        "navstevy":        vysledek,
+    })
 
 # ── Start ─────────────────────────────────────────────────────────────────────
 # init_db() se volá výš, při importu — pod WSGI se tenhle blok nespustí.

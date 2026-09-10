@@ -1,7 +1,9 @@
 /* ept connectors — brand theme override for recepce.html / sken.html
-   Hodnoty odvozené z ept-connectors.com (viz visualbook). Reuse-uje existující
-   CSS proměnné aplikace (--blue = primární akcent, --red = signální/finální akce),
-   takže se nemusí sahat na markup ani JS. */
+   Hodnoty přesně podle Corporate Design Manual (Stand März 2025): jediná
+   značková červená je HKS 13 K / Pantone 2035 C / #c30e20, tmavé plochy
+   (Dunkelblau) #263D4D. Reuse-uje existující CSS proměnné aplikace
+   (--blue = primární akcent, --red = signální/finální akce), takže se
+   nemusí sahat na markup ani JS. */
 
 :root{
   --ink:#141d28;
@@ -11,13 +13,15 @@
   --surface2:#f4f6f7;
   --border:#d7dadc;
   --border2:#c3c8cb;
-  --slate:#0d131b; /* stejný tón jako pozadí lock-hero — topbar a hero drží pohromadě, žádný švík */
+  /* Dunkelblau (manuál str. 10) jako "Verlauf" pro pozadí a hochwertigere
+     Gestaltungen — přesně dva CMYK stopy z manuálu převedené do RGB. */
+  --slate:linear-gradient(180deg,#234459 0%,#15212a 100%);
 
-  --blue:#a70a1b;        /* ept primární červená — CTA, aktivní tab, focus */
+  --blue:#c30e20;        /* ept Rot (HKS 13 K / Pantone 2035 C) — CTA, aktivní tab, focus */
   --blue-bg:#fbeaea;
   --blue-border:#e6b8ba;
 
-  --red:#e3051b;         /* ept signální červená — odchod / finální akce */
+  --red:#c30e20;         /* ept Rot — odchod / finální akce (manuál definuje jen jednu červenou) */
   --red-bg:#fdeceb;
   --red-border:#f6c3c2;
 
@@ -26,7 +30,7 @@
   --green-border:#a7f3d0;
   --amber-border:#fde68a;
 
-  --focus:#e3051b;       /* prstenec při ovládání klávesnicí, čitelný na obou pozadích */
+  --focus:#c30e20;       /* prstenec při ovládání klávesnicí, čitelný na obou pozadích */
 
   --r:6px;
   --r2:8px;
@@ -44,7 +48,7 @@
    je v téhle paletě i barva chyby). Jemné halo ho odliší — prstenec+halo je
    univerzální jazyk fokusu, plný červený rám je jazyk validační chyby. */
 input:focus-visible,
-.seg-input:focus-within{box-shadow:0 0 0 4px rgba(227,5,27,.16)}
+.seg-input:focus-within{box-shadow:0 0 0 4px rgba(195,14,32,.16)}
 .seg-input:focus-within{border-color:var(--focus)}
 
 /* velmi jemná blueprint mřížka na pozadí — stejný motiv jako topbar a lock
@@ -89,11 +93,11 @@ h1,h2,h3,
 .topbar-logo img{height:19px;display:block}
 
 /* CTA tlačítka → značková červená (hover stavy jsou v originále natvrdo v hex, proto override zvlášť) */
-.btn-primary:hover{background:#7d0815}
-.btn-green{background:#a70a1b}
-.btn-green:hover{background:#7d0815}
-.btn-blue{background:#a70a1b}
-.btn-blue:hover{background:#7d0815}
+.btn-primary:hover{background:#8f0a18}
+.btn-green{background:#c30e20}
+.btn-green:hover{background:#8f0a18}
+.btn-blue{background:#c30e20}
+.btn-blue:hover{background:#8f0a18}
 
 /* info alerty necháváme neutrální (slate), aby "info" nepůsobilo jako chyba,
    protože --blue teď nese značkovou červenou */
@@ -118,7 +122,7 @@ h1,h2,h3,
 }
 
 /* sken.html — rámeček skeneru má barvy natvrdo v hex, ne přes proměnné */
-.sf-inner{border-color:rgba(167,10,27,.75)}
+.sf-inner{border-color:rgba(195,14,32,.75)}
 .sf-label{color:#ff9aa0}
 .scan-anim{background:linear-gradient(90deg,transparent,#ff9aa0,transparent)}
 
@@ -141,7 +145,7 @@ h1,h2,h3,
 .topbar-mark{color:#fff}
 
 /* Nejdůležitější číslo na obrazovce — "Aktuálně přítomní" — dostane značkový akcent */
-.stat-green{border-top:3px solid #a70a1b}
+.stat-green{border-top:3px solid #c30e20}
 
 /* ── Oprava přetékání layoutu ───────────────────────────────────────────────
    Položky gridu mají implicitně min-width:auto, takže se sloupec s tabulkou
@@ -183,7 +187,7 @@ th,td{padding-left:11px;padding-right:11px}
   min-height:calc(100vh - 56px);
   display:flex;align-items:center;justify-content:center;
   background:
-    radial-gradient(ellipse 900px 480px at 50% -8%, rgba(167,10,27,.25), transparent 62%),
+    radial-gradient(ellipse 900px 480px at 50% -8%, rgba(195,14,32,.25), transparent 62%),
     var(--slate);
 }
 .lock-hero::before{
@@ -202,13 +206,16 @@ th,td{padding-left:11px;padding-right:11px}
   box-shadow:0 24px 60px -20px rgba(0,0,0,.5);
 }
 .lock-hero-mark{justify-content:center;margin-bottom:1.75rem;color:rgba(255,255,255,.85)}
-.lock-hero h2{color:#fff;font-size:1.9rem;margin-bottom:.6rem}
+/* Cairo webfont nemá rozumné výchozí line-height (normal) — na dvouřádkovém
+   nadpisu (mobil, úzká karta) to bez explicitní hodnoty nafouklo mezeru mezi
+   řádky na téměř dvojnásobek velikosti písma. */
+.lock-hero h2{color:#fff;font-size:1.9rem;line-height:1.2;margin-bottom:.6rem}
 .lock-hero p{color:rgba(255,255,255,.6);margin-bottom:2rem;font-size:1.05rem}
 
 /* Světlý režim lock screenu — stejný layout, obrácená paleta */
 html[data-theme="light"] .lock-hero{
   background:
-    radial-gradient(ellipse 900px 480px at 50% -8%, rgba(167,10,27,.1), transparent 62%),
+    radial-gradient(ellipse 900px 480px at 50% -8%, rgba(195,14,32,.1), transparent 62%),
     #eef1f2;
 }
 html[data-theme="light"] .lock-hero::before{
@@ -272,7 +279,7 @@ html[data-theme="dark"] .alert-error,html[data-theme="dark"] .al-error{color:#fc
 html[data-theme="dark"] .alert-amber,html[data-theme="dark"] .al-warn{color:#fbbf24}
 html[data-theme="dark"] .alert-info,html[data-theme="dark"] .al-info{background:#1c2632;color:#a9b7c2;border-color:#38434f}
 
-/* ── Přepínač den/noc — malé kolečko v topbaru, stejný jazyk jako auth-btn ── */
+/* ── Přepínač den/noc — malé kolečko v topbaru ── */
 .theme-toggle{
   width:32px;height:32px;padding:0;flex-shrink:0;
   border-radius:50%;border:1px solid rgba(255,255,255,.25);
@@ -290,11 +297,6 @@ html[data-theme="dark"] .theme-toggle .i-sun{display:block}
 /* ══════════════════════════════════════════════════════════════════════════
    Opravy z vizuálního QA (45 snímků, nezávislý review každého stavu)
    ══════════════════════════════════════════════════════════════════════════ */
-
-/* Na zamčené obrazovce vedly ke stejné akci dvě cesty: tlačítka Admin/Správce
-   v topbaru a tlačítka v hero kartě. Dva prostředky pro jedno rozhodnutí = váhání.
-   Dokud je vidět lock screen, volí se rolí jen v kartě. */
-body:has(#lockScreen:not(.hidden)) #authArea{display:none}
 
 /* Prázdné stavy (nic nenalezeno, zadejte dotaz) byly nejmenším a nejsvětlejším
    textem na obrazovce, přitom v tu chvíli nesou jedinou informaci, která platí. */
@@ -336,7 +338,7 @@ html[data-theme="dark"] .au-ocr_selhani{color:#fca5a5}
   body.tisk-evakuace #evakuace{display:block !important}
   body.tisk-evakuace{background:#fff !important;background-image:none !important}
   #evakuace{color:#000;font-family:'Inter',system-ui,sans-serif;padding:0}
-  .evak-head{border-bottom:3px solid #a70a1b;padding-bottom:8px;margin-bottom:14px}
+  .evak-head{border-bottom:3px solid #c30e20;padding-bottom:8px;margin-bottom:14px}
   .evak-head h1{font-family:'Cairo',sans-serif;font-size:20pt;font-weight:800;margin:0}
   .evak-head p{font-size:10pt;margin:4px 0 0}
   .evak-tbl{width:100%;border-collapse:collapse;font-size:11pt}
@@ -397,3 +399,17 @@ html[data-theme="dark"] .au-ocr_selhani{color:#fca5a5}
      zapisuje odchod, je omyl palcem drahý — víc místa mezi nimi je pojistka. */
   .modal-footer{gap:1rem}
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Značkový tvarový jazyk — stejný jako na one-pageru: zaoblený čtverec místo
+   kruhu (přesně poměr teček z loga, border-radius ≈ 2/7 strany), ploché boxy
+   bez měkkého UI stínu (manuál pracuje jen s tenkým rámečkem, viz "Logo
+   Verwendungen" str. 7-9). Spinner zůstává kruhový záměrně — animace
+   rotujícího prstenu je univerzální jazyk "načítá se", ne značková forma.
+   ══════════════════════════════════════════════════════════════════════════ */
+.confirm-icon{border-radius:13px}     /* recepce.html, 48px kruh → čtverec */
+.step-num{border-radius:6px}          /* sken.html, 22px kruh → čtverec */
+.success-icon{border-radius:18px}     /* sken.html, 64px kruh → čtverec */
+
+.card{box-shadow:none}
+.topbar{box-shadow:none;border-bottom:1px solid rgba(255,255,255,.08)}

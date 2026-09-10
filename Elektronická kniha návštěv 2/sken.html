@@ -554,9 +554,7 @@ async function zapsat() {
       document.getElementById('successScreen').classList.remove('hidden');
       document.getElementById('succName').textContent = jmeno + ' ' + prijmeni;
       const cas = d.prichod_dt ? d.prichod_dt.slice(11, 16) : new Date().toLocaleTimeString('cs-CZ');
-      document.getElementById('succSub').textContent = d.vitejte_zpet && d.zprava
-        ? d.zprava
-        : 'Příchod zapsán v ' + cas + '.';
+      document.getElementById('succSub').textContent = 'Příchod zapsán v ' + cas + '.';
     } else {
       zobrazAlert('aResult', 'error', '⚠ ' + (d.error || ('Chyba ' + res.status + ': Neznámá chyba serveru.')));
     }

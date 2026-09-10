@@ -26,14 +26,14 @@ PINy jsou v `.env` (do gitu se necommitují).
 | 2 | Vyfoť doklad | Formulář se vyplní jménem, fotka se zahodí |
 | 3 | Potvrď příchod | Do 20 s se objeví nový řádek na recepci |
 | 4 | Zkus zapsat stejnou osobu znovu | „je již přítomen/a od …", žádná duplicita |
-| 5 | Zapiš někoho z vracejících se | Hláška „Vítejte zpět" s datem poslední návštěvy |
+| 5 | Klikni na jméno někoho z vracejících se v tabulce | Modal s historií: kolikrát tu byl/a a jak dlouho se pokaždé zdržel/a |
 | 6 | Stiskni **Tisk** | Tiskový seznam osob v budově, se sloupcem na podpis |
 | 7 | Stiskni **Audit** | Historie akcí včetně pokusů o duplicitní zápis |
 | 8 | Stiskni **Export** | CSV pro Excel, s diakritikou |
 
-Na „Vítejte zpět" jsou připravení **Alois Zeman**, **Blanka Šťastná**
-a **Cyril Havlíček** — mají dřívější dokončenou návštěvu a nejsou přítomní.
-Každý funguje jen jednou; po zápisu už je v budově.
+Pro krok 5 jsou připravení **Alois Zeman**, **Blanka Šťastná**
+a **Cyril Havlíček** — každý má dřívější dokončenou návštěvu, takže klik
+na jméno ukáže víc než jeden řádek historie.
 
 ## Rozpoznávání dokladu
 
