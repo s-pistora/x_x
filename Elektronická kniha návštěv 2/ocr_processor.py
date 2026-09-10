@@ -608,10 +608,7 @@ def _precti_doklad_bez_zamku(pil_image):
 # místo toho text proti PŘESNĚ TĚMTO lidem – stačí čitelné jméno NEBO příjmení
 # kdekoli v OCR textu a zapíše se rovnou správná (kanonická) hodnota. Přidat
 # dalšího člověka = přidat řádek sem.
-ZNAMI_LIDE = [
-    {"jmeno": "Simon",   "prijmeni": "Pistora"},
-    {"jmeno": "William", "prijmeni": "Varga"},
-]
+ZNAMI_LIDE = []
 
 
 def _nejlepsi_shoda_v_textu(text, cil):
