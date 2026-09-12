@@ -9,17 +9,25 @@
 // ohledu na to, co má recepce uložené v localStorage pro sebe.
 document.documentElement.dataset.theme = 'light';
 </script>
+<link rel="stylesheet" href="/static/ept-fonts.css">
+<link rel="stylesheet" href="/static/ept-theme.css">
 <style>
+/* Barvy níže jsou natvrdo podle Corporate Design Manualu ept GmbH (Kernfarben,
+   str. 10): Rot #c30e20, Schwarz #000, Grau #B3B3B3/#333, Dunkelblau #263D4D.
+   Tenhle <style> je v <head> záměrně AŽ PO ept-theme.css, aby přebil jeho
+   proměnné vlastními – ept-theme.css je sdílený s recepce.html/sken.html a
+   má jen přibližné odstíny, kiosek má jet na přesných hodnotách z manuálu. */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 :root{
-  --ink:#0f172a;--ink2:#475569;--ink3:#94a3b8;
-  --bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;
+  --ink:#000000;--ink2:#333333;--ink3:#8a8a8a;
+  --bg:#ffffff;--surface:#fff;--border:#dcdcdc;
   --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;
-  --blue:#1d4ed8;--blue-bg:#eff6ff;--blue-border:#bfdbfe;
-  --red:#dc2626;--red-bg:#fef2f2;--red-border:#fecaca;
+  --blue:#c30e20;--blue-bg:#fbeaec;--blue-border:#eec1c6;
+  --red:#c30e20;--red-bg:#fbeaec;--red-border:#eec1c6;
   --amber:#d97706;--amber-bg:#fffbeb;--amber-border:#fde68a;
-  --slate:#334155;
+  --slate:#263d4d;
+  --focus:#c30e20;
   --r:16px;--r2:22px;
 }
 body{
@@ -31,13 +39,14 @@ body{
 
 /* ── Horní lišta (jen logo + krokovník, žádné ovládání) ─────────────────── */
 .topbar{background:var(--slate);color:#fff;padding:0 1.5rem;height:64px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.topbar-logo{margin-left:auto}
 .topbar-logo img{height:26px;display:block}
-.steps{display:flex;align-items:center;gap:0;margin-left:auto}
-.step{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:600;color:#94a3b8}
-.step.active{color:#93c5fd}
+.steps{display:flex;align-items:center;gap:0}
+.step{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:600;color:#8ba0ae}
+.step.active{color:#ff9aa0}
 .step.done{color:#6ee7b7}
 .step-num{width:26px;height:26px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0}
-.step-line{width:28px;height:1px;background:#475569;margin:0 4px}
+.step-line{width:28px;height:1px;background:#3d5566;margin:0 4px}
 .step span.lbl{display:none}
 @media (min-width:760px){ .step span.lbl{display:inline} }
 
@@ -73,11 +82,11 @@ p.sub{font-size:1.15rem;color:var(--ink2);line-height:1.5;max-width:560px}
 .cam-ph{display:flex;flex-direction:column;align-items:center;gap:12px;color:#5b6b8a;padding:2rem}
 .cam-ph p{font-size:1rem;opacity:.8}
 .scan-frame{position:absolute;inset:0;pointer-events:none;display:none}
-.sf-inner{position:absolute;top:10%;left:8%;right:8%;bottom:10%;border:3px solid rgba(99,179,255,.75);border-radius:12px}
-.sf-label{position:absolute;bottom:calc(10% - 30px);left:50%;transform:translateX(-50%);color:#63b3ff;font-size:.85rem;font-weight:700;white-space:nowrap;background:rgba(0,0,0,.55);padding:4px 14px;border-radius:20px}
-.scan-anim{position:absolute;left:8%;right:8%;height:3px;background:linear-gradient(90deg,transparent,#63b3ff,transparent);animation:scanAnim 2.5s ease-in-out infinite}
+.sf-inner{position:absolute;top:10%;left:8%;right:8%;bottom:10%;border:3px solid rgba(195,14,32,.8);border-radius:12px}
+.sf-label{position:absolute;bottom:calc(10% - 30px);left:50%;transform:translateX(-50%);color:#ff9aa0;font-size:.85rem;font-weight:700;white-space:nowrap;background:rgba(0,0,0,.55);padding:4px 14px;border-radius:20px}
+.scan-anim{position:absolute;left:8%;right:8%;height:3px;background:linear-gradient(90deg,transparent,#ff9aa0,transparent);animation:scanAnim 2.5s ease-in-out infinite}
 @keyframes scanAnim{0%{top:12%}50%{top:86%}100%{top:12%}}
-.spinner{width:26px;height:26px;border:3px solid #bfdbfe;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;flex-shrink:0}
+.spinner{width:26px;height:26px;border:3px solid var(--blue-border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .alert{padding:14px 18px;border-radius:var(--r);font-size:1rem;line-height:1.5;display:flex;align-items:flex-start;gap:10px;width:100%;max-width:560px;text-align:left}
@@ -123,13 +132,10 @@ input[type=text].err{border-color:var(--red)}
 .success-name{font-size:2.2rem;font-weight:800}
 .countdown-ring{width:52px;height:52px;border-radius:50%;border:4px solid var(--green-border);border-top-color:var(--green);animation:spin 6s linear infinite}
 </style>
-<link rel="stylesheet" href="/static/ept-fonts.css">
-<link rel="stylesheet" href="/static/ept-theme.css">
 </head>
 <body>
 
 <div class="topbar">
-  <span class="topbar-logo"><img src="/static/ept_logo.png" alt="ept"/></span>
   <div class="steps" id="stepsBar">
     <div class="step" id="stp1"><div class="step-num">1</div><span class="lbl">Doklad</span></div>
     <div class="step-line"></div>
@@ -139,6 +145,8 @@ input[type=text].err{border-color:var(--red)}
     <div class="step-line"></div>
     <div class="step" id="stp4"><div class="step-num">4</div><span class="lbl">Potvrzení</span></div>
   </div>
+  <!-- Logo je dle Corporate Design Manuálu ept (str. 5-6) závazně vpravo nahoře. -->
+  <span class="topbar-logo"><img src="/static/ept_logo.png" alt="ept"/></span>
 </div>
 
 <div class="stage">
@@ -147,9 +155,9 @@ input[type=text].err{border-color:var(--red)}
   <div class="screen" id="screenIdle">
     <div class="dot-mark dot-anim" style="transform:scale(1.6);margin-bottom:1rem"><span class="d dk"></span><span class="d dr"></span><span class="d dk"></span></div>
     <h1 class="hd">Vítejte</h1>
-    <p class="sub">Klepnutím na tlačítko zahájíte odbavení návštěvy.</p>
+    <p class="sub">Klepnutím na tlačítko zapíšete svou návštěvu.</p>
     <button class="btn btn-blue" onclick="zahajit()" style="max-width:420px;padding:28px 32px;font-size:1.4rem">
-      Zahájit odbavení
+      Zapsat příchod
     </button>
   </div>
 
@@ -175,10 +183,10 @@ input[type=text].err{border-color:var(--red)}
     <div id="camErr" class="alert al-error hidden"></div>
     <div id="ocrStatus" class="alert al-info hidden"><div class="spinner"></div><span id="ocrStatusText"></span></div>
 
-    <div class="btn-row">
+    <div class="btn-row" id="camBtnRow">
       <button class="btn btn-blue" id="btnSnap" onclick="udelFoto()" disabled>Sejmout doklad</button>
     </div>
-    <button class="btn btn-ghost" onclick="preskocitSken()">Zadat jméno ručně</button>
+    <button class="btn btn-ghost" id="btnRucne" onclick="preskocitSken()">Zadat jméno ručně</button>
   </div>
 
   <!-- KROK 1b – POTVRZENÍ JMÉNA ────────────────────────────────────────── -->
@@ -232,7 +240,7 @@ input[type=text].err{border-color:var(--red)}
     <div id="finalAlert" class="alert hidden"></div>
     <div class="btn-row">
       <button class="btn btn-ghost" onclick="goScreen('screenHost')">← Zpět</button>
-      <button class="btn btn-green" id="btnFinal" onclick="zapsat()">Potvrdit příchod</button>
+      <button class="btn btn-blue" id="btnFinal" onclick="zapsat()">Potvrdit příchod</button>
     </div>
   </div>
 
@@ -288,6 +296,13 @@ function zahajit() {
 // ── Kamera ────────────────────────────────────────────────────────────────
 async function spustKameru() {
   document.getElementById('camErr').classList.add('hidden');
+  // Reset stavu z případného předchozího selhání (kiosek jede ve smyčce pro
+  // dalšího návštěvníka) – box i tlačítko na sejmutí musí být zpátky vidět.
+  document.getElementById('camZone').classList.remove('hidden');
+  document.getElementById('camBtnRow').classList.remove('hidden');
+  const btnRucneReset = document.getElementById('btnRucne');
+  btnRucneReset.classList.remove('btn-blue');
+  btnRucneReset.classList.add('btn-ghost');
   try {
     camStream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
@@ -305,9 +320,17 @@ async function spustKameru() {
       NotReadableError: 'Kameru už používá jiná aplikace.',
     };
     const err = document.getElementById('camErr');
-    err.textContent = (duvody[e.name] || 'Kameru se nepodařilo spustit.') + ' Zadejte prosím jméno ručně.';
+    err.textContent = duvody[e.name] || 'Kameru se nepodařilo spustit.';
     err.classList.remove('hidden');
-    document.getElementById('camPh').querySelector('p').textContent = 'Kamera není dostupná';
+    // Prázdný černý box "kamera není dostupná" jen zabírá místo a na kratších
+    // obrazovkách (iPad na výšku i naležato) tlačil záchranné "Zadat jméno
+    // ručně" pod scroll, kde ho na neobsluhovaném kiosku nikdo nenajde – bez
+    // kamery nemá box smysl zobrazovat vůbec, rovnou uvolní místo tlačítku.
+    document.getElementById('camZone').classList.add('hidden');
+    document.getElementById('camBtnRow').classList.add('hidden');
+    const btnRucne = document.getElementById('btnRucne');
+    btnRucne.classList.remove('btn-ghost');
+    btnRucne.classList.add('btn-blue');
   }
 }
 
