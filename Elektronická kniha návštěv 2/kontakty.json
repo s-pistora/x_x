@@ -1,0 +1,12 @@
+[
+  {"id": 1, "jmeno": "Simon Pistora", "oddeleni": "Vedení společnosti"},
+  {"id": 2, "jmeno": "William Varga", "oddeleni": "Obchodní oddělení"},
+  {"id": 3, "jmeno": "Jana Nováková", "oddeleni": "Obchodní oddělení"},
+  {"id": 4, "jmeno": "Petr Svoboda", "oddeleni": "IT podpora"},
+  {"id": 5, "jmeno": "Eva Dvořáková", "oddeleni": "Personální oddělení (HR)"},
+  {"id": 6, "jmeno": "Tomáš Procházka", "oddeleni": "Účetní oddělení"},
+  {"id": 7, "jmeno": "Lucie Horáková", "oddeleni": "Marketing"},
+  {"id": 8, "jmeno": "Martin Kučera", "oddeleni": "Výroba"},
+  {"id": 9, "jmeno": "Kateřina Veselá", "oddeleni": "Nákup"},
+  {"id": 10, "jmeno": "Jakub Černý", "oddeleni": "Logistika"}
+]
