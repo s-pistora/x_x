@@ -57,11 +57,11 @@ _easyocr_reader = None
 _easyocr_nedostupne = False
 
 # Striktní režim: když text nesedí na nikoho z uzavřeného seznamu ZNAMI_LIDE,
-# vrátí se PRÁZDNÉ jméno místo obecné extrakce z dokladu. Prázdné pole s výzvou
-# k ručnímu doplnění je bezpečnější než sebejistě vyplněné cizí jméno — obecná
-# extrakce umí přečíst kterýkoliv doklad, což je při testovacím provozu
-# omezeném na dva lidi nežádoucí. Vypnout: OCR_STRICT_WHITELIST=0
-STRIKTNI_WHITELIST = os.environ.get("OCR_STRICT_WHITELIST", "1") != "0"
+# vrátí se PRÁZDNÉ jméno místo obecné extrakce z dokladu. VÝCHOZÍ stav je teď
+# VYPNUTO (obecná extrakce čte jméno z libovolného dokladu) — uzavřený seznam
+# ZNAMI_LIDE se pro běžný provoz nepoužívá. Striktní režim jde znovu zapnout
+# přes OCR_STRICT_WHITELIST=1 (jen pro omezené testovací demo na známé osoby).
+STRIKTNI_WHITELIST = os.environ.get("OCR_STRICT_WHITELIST", "0") == "1"
 
 
 def _ziskej_easyocr():
@@ -252,6 +252,9 @@ _STOPWORDS = (
     "POJISTENEC", "POJISTENCE", "POJISTOVNA", "POJISTOVNY", "POJISTENI",
     "ZDRAVOTNI", "ZDRAVOTNIHO", "EVROPSKY", "EVROPSKEHO", "INSTITUCE",
     "VSEOBECNA", "EHIC",
+    # zkratky českých zdravotních pojišťoven – na kartě stojí samostatně a bez
+    # nich by se braly za jméno (klasicky „VZP" vyšlo jako příjmení).
+    "VZP", "VOZP", "CPZP", "OZP", "ZPMV", "RBP", "ZPS",
     # řidičák
     "RIDICSKY", "DRIVING", "LICENCE", "LICENSE", "PERMIS", "SKUPINA", "CATEGORY",
     # německé doklady (Name/Vorname se řeší i jako popisky v _CFG níž)
@@ -504,6 +507,18 @@ def _je_radek_hranice(boxy_radku, cfg):
     return _skore_label(boxy_radku, cfg["hranice"]) >= 0.72
 
 
+def _radek_ma_data(boxy_radku):
+    """Vypadá řádek jako ÚDAJ (ne jméno)? Tj. obsahuje datum nebo delší číslo
+    (číslo pojištěnce/karty, datum narození/platnosti). Slouží jako spodní
+    hranice okna se jménem u zdravotních karet, kde jméno nemá popisek."""
+    t = " ".join(b["text"] for b in boxy_radku)
+    if re.search(r'\d{2}[.\-/ ]\d{2}[.\-/ ]\d{2,4}', t):   # datum
+        return True
+    if re.search(r'\d{4,}', t):                            # delší číslo
+        return True
+    return False
+
+
 # ── Typ dokladu + sady popisků podle typu ────────────────────────────────────────
 # Extrakce jména cílí na pole PŘÍJMENÍ/JMÉNO podle rozvržení, jenže popisky se
 # doklad od dokladu liší (občanka: „Příjmení/Surname"; řidičák: číslovaná pole
@@ -578,6 +593,10 @@ _CFG = {
                            "POJISTOVNA", "POJISTENCE", "VSEOBECNA", "EHIC"),
         "hranice":        ("DATUM", "NAROZENI", "OSOBNI", "IDENTIFIKACNI",
                            "INSTITUCE", "CISLO", "KARTY", "PLATNOST", "EXPIRACE"),
+        # Přední strana průkazu pojištěnce tiskne jméno POHROMADĚ bez popisků
+        # („NOVÁK JAN"). Když se v okně nenajde žádný popisek Příjmení/Jméno,
+        # vezme se jméno pozičně z tohoto bloku (viz _jmeno_prijmeni_z_boxu).
+        "jmeno_pohromade": True,
     },
     TYP_PERSONALAUSWEIS: {
         "klice_prijmeni": ("NAME", "SURNAME", "GEBURTSNAME"),
@@ -651,6 +670,7 @@ def _jmeno_prijmeni_z_boxu(boxy, cfg):
         je_prijm, je_jmeno = _klasifikuj_radek(rb, cfg)
         radky.append({
             "y":        r["y"],
+            "boxy":     rb,
             "hod":      _hodnota_radku(rb, cfg),
             "prijm":    je_prijm,
             "jmeno":    je_jmeno,
@@ -658,6 +678,36 @@ def _jmeno_prijmeni_z_boxu(boxy, cfg):
             "hranice":  _je_radek_hranice(rb, cfg),
         })
     radky.sort(key=lambda r: r["y"])
+
+    # Zdravotní karty (EHIC / průkaz pojištěnce): jméno tu bývá BEZ spolehlivých
+    # popisků a hlavičkové slovo „pojištění/pojišťovna" se fuzzy plete s
+    # příjmením (POJISTOVNA ~ PISTORA), takže popiskové kotvení tu i přiřkne
+    # nesmysl. Proto zakotvíme na řádku hlavičky ("EVROPSKÝ PRŮKAZ ZDRAVOTNÍHO
+    # POJIŠTĚNÍ" / "Průkaz pojištěnce") a vezmeme první dvě jméno-like slova POD
+    # ním, dokud nenarazíme na řádek s daty (datum/číslo). Na české kartě je
+    # pořadí PŘÍJMENÍ, pak JMÉNO. Řádek hlavičky je vždy silná víceslovná shoda,
+    # takže má vyšší skóre než náhodná shoda jednoho příjmení s popiskem.
+    if cfg.get("jmeno_pohromade"):
+        nej_hl, anchor = 0.0, None
+        for r in radky:
+            s = _skore_label(r["boxy"], cfg["hlavicka"])
+            if s > nej_hl:
+                nej_hl, anchor = s, r
+        if anchor is not None and nej_hl >= 0.7:
+            tokeny = []
+            for r in radky:
+                if r["y"] <= anchor["y"]:
+                    continue
+                if r["hranice"] or _radek_ma_data(r["boxy"]):
+                    break
+                tokeny.extend(w for b in r["boxy"]
+                              for w in _slova(b["text"]) if _je_jmeno_token(w))
+                if len(tokeny) >= 2:
+                    break
+            if len(tokeny) >= 2:
+                return tokeny[1], tokeny[0]   # (jmeno, prijmeni)
+            if len(tokeny) == 1:
+                return "", tokeny[0]
 
     # Konec hlavičky = konec SOUVISLÉHO bloku hlavičkových řádků odshora (ne
     # kdekoli na kartě!). "ČESKÁ REPUBLIKA" je na dokladu i podruhé dole u
@@ -683,6 +733,7 @@ def _jmeno_prijmeni_z_boxu(boxy, cfg):
     jmeno_radek    = next((r for r in okno if r["jmeno"]), None)
 
     # Bez ANI JEDNOHO jistého popisku v okně nemá smysl cokoliv hádat.
+    # (Zdravotní karty bez popisků řeší header-kotvená větev na začátku funkce.)
     if prijmeni_radek is None and jmeno_radek is None:
         return "", ""
 

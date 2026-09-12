@@ -138,7 +138,7 @@ se zapojuje ostré SMS odesílání.
 | `PORT` | `5050` (`5051` pod `start_demo.sh`) | port, na kterém poslouchá Flask aplikace |
 | `EPT_PUBLIC_PORT` | — | veřejný port (za TLS proxy), používá se pro výpis adresy při startu |
 | `EPT_HTTPS` | — | `1` = adresy se vypisují jako `https://` (QR/log), appka samotná TLS neřeší |
-| `OCR_STRICT_WHITELIST` | `1` | `1` = OCR přizná jméno jen známým lidem z `ZNAMI_LIDE`, jinak vrátí prázdno; `0` = obecná extrakce z libovolného dokladu |
+| `OCR_STRICT_WHITELIST` | `0` | `0` (výchozí) = obecná extrakce jména z libovolného dokladu; `1` = OCR přizná jméno jen známým lidem z `ZNAMI_LIDE`, jinak vrátí prázdno (jen pro omezené testovací demo) |
 | `EPT_OCR_DEBUG` | — | `1` = uloží fotky + přečtený text do `debug_ocr/` pro ladění extrakce |
 | `SMS_ENABLED` | `false` | `false` = SMS jen do konzole (mock); `true` = ostré odeslání přes Twilio |
 | `SMS_COOLDOWN_SECONDS` | `10` | minimální rozestup mezi dvěma SMS na stejné číslo |

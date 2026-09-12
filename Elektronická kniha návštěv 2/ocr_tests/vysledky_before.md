@@ -129,3 +129,49 @@ _Legenda: „—“ = prázdné pole (OCR nic jistého nevrátilo)._
 Degradace (_sum / _rotace / _rozmazani / _jpeg40) v tomhle baseline výsledky
 neměnily — chování je dané logikou extrakce, ne kvalitou obrázku.
 
+## Režim: OCR_STRICT_WHITELIST=1  ·  modul=`_baseline_ocr`
+
+| Doklad | Degradace | jméno | příjmení | engine |
+|---|---|---|---|---|
+| obcanka | (čistá) | — | — | easyocr |
+| obcanka | šum | — | — | easyocr |
+| obcanka | rotace | — | — | easyocr |
+| obcanka | rozmazání | — | — | easyocr |
+| obcanka | jpeg40 | — | — | easyocr |
+| ridicak_se_slovy | (čistá) | — | — | easyocr |
+| ridicak_se_slovy | šum | — | — | easyocr |
+| ridicak_se_slovy | rotace | — | — | easyocr |
+| ridicak_se_slovy | rozmazání | — | — | easyocr |
+| ridicak_se_slovy | jpeg40 | — | — | easyocr |
+| ridicak_jen_cisla | (čistá) | — | — | easyocr |
+| ridicak_jen_cisla | šum | — | — | easyocr |
+| ridicak_jen_cisla | rotace | — | — | easyocr |
+| ridicak_jen_cisla | rozmazání | — | — | easyocr |
+| ridicak_jen_cisla | jpeg40 | — | — | easyocr |
+| personalausweis | (čistá) | — | — | easyocr |
+| personalausweis | šum | — | — | easyocr |
+| personalausweis | rotace | — | — | easyocr |
+| personalausweis | rozmazání | — | — | easyocr |
+| personalausweis | jpeg40 | — | — | easyocr |
+| ceske_jmeno_ss | (čistá) | — | — | easyocr |
+| ceske_jmeno_ss | šum | — | — | easyocr |
+| ceske_jmeno_ss | rotace | — | — | easyocr |
+| ceske_jmeno_ss | rozmazání | — | — | easyocr |
+| ceske_jmeno_ss | jpeg40 | — | — | easyocr |
+| zdravotni_predni_pohromade | (čistá) | Simon | Pistora | easyocr |
+| zdravotni_predni_pohromade | šum | Simon | Pistora | easyocr |
+| zdravotni_predni_pohromade | rotace | Simon | Pistora | easyocr |
+| zdravotni_predni_pohromade | rozmazání | Simon | Pistora | easyocr |
+| zdravotni_predni_pohromade | jpeg40 | Simon | Pistora | easyocr |
+| zdravotni_predni_oddelene | (čistá) | Simon | Pistora | easyocr |
+| zdravotni_predni_oddelene | šum | Simon | Pistora | easyocr |
+| zdravotni_predni_oddelene | rotace | Simon | Pistora | easyocr |
+| zdravotni_predni_oddelene | rozmazání | Simon | Pistora | easyocr |
+| zdravotni_predni_oddelene | jpeg40 | Simon | Pistora | easyocr |
+| zdravotni_ehic_zadni | (čistá) | — | — | easyocr |
+| zdravotni_ehic_zadni | šum | — | — | easyocr |
+| zdravotni_ehic_zadni | rotace | — | — | easyocr |
+| zdravotni_ehic_zadni | rozmazání | — | — | easyocr |
+| zdravotni_ehic_zadni | jpeg40 | — | — | easyocr |
+
+_Legenda: „—“ = prázdné pole (OCR nic jistého nevrátilo)._
