@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>Vstupní kiosek</title>
+<script>
+// Kiosek je veřejná obrazovka u vchodu – jede vždy ve světlém režimu bez
+// ohledu na to, co má recepce uložené v localStorage pro sebe.
+document.documentElement.dataset.theme = 'light';
+</script>
+<link rel="stylesheet" href="/static/ept-fonts.css">
+<link rel="stylesheet" href="/static/ept-theme.css">
+<style>
+/* Barvy níže jsou natvrdo podle Corporate Design Manualu ept GmbH (Kernfarben,
+   str. 10): Rot #c30e20, Schwarz #000, Grau #B3B3B3/#333, Dunkelblau #263D4D.
+   Tenhle <style> je v <head> záměrně AŽ PO ept-theme.css, aby přebil jeho
+   proměnné vlastními – ept-theme.css je sdílený s recepce.html/sken.html a
+   má jen přibližné odstíny, kiosek má jet na přesných hodnotách z manuálu. */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+:root{
+  --ink:#000000;--ink2:#333333;--ink3:#8a8a8a;
+  --bg:#ffffff;--surface:#fff;--border:#dcdcdc;
+  --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;
+  --blue:#c30e20;--blue-bg:#fbeaec;--blue-border:#eec1c6;
+  --red:#c30e20;--red-bg:#fbeaec;--red-border:#eec1c6;
+  --amber:#d97706;--amber-bg:#fffbeb;--amber-border:#fde68a;
+  --slate:#263d4d;
+  --focus:#c30e20;
+  --r:16px;--r2:22px;
+}
+body{
+  font-family:system-ui,'Inter',sans-serif;background:var(--bg);color:var(--ink);
+  min-height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+  user-select:none;
+}
+.hidden{display:none!important}
+
+/* ── Horní lišta (jen logo + krokovník, žádné ovládání) ─────────────────── */
+.topbar{background:var(--slate);color:#fff;padding:0 1.5rem;height:64px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.topbar-logo{margin-left:auto}
+.topbar-logo img{height:26px;display:block}
+.steps{display:flex;align-items:center;gap:0}
+.step{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:600;color:#8ba0ae}
+.step.active{color:#ff9aa0}
+.step.done{color:#6ee7b7}
+.step-num{width:26px;height:26px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0}
+.step-line{width:28px;height:1px;background:#3d5566;margin:0 4px}
+.step span.lbl{display:none}
+@media (min-width:760px){ .step span.lbl{display:inline} }
+
+/* ── Střed obrazovky, jedna "karta" na krok ─────────────────────────────── */
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;overflow-y:auto}
+.screen{width:100%;max-width:720px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:1.25rem}
+
+.big-icon{width:96px;height:96px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.big-icon.green{background:var(--green-bg)}
+.big-icon.amber{background:var(--amber-bg)}
+
+h1.hd{font-size:2rem;font-weight:800;letter-spacing:-.01em}
+p.sub{font-size:1.15rem;color:var(--ink2);line-height:1.5;max-width:560px}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:22px 32px;font-size:1.25rem;font-weight:700;border-radius:var(--r);
+  border:none;cursor:pointer;font-family:inherit;width:100%;max-width:520px;
+  transition:transform .12s, background .12s;touch-action:manipulation;
+}
+.btn:active{transform:scale(.97)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-green{background:var(--green);color:#fff}
+.btn-ghost{background:var(--surface);color:var(--ink2);border:2px solid var(--border);font-size:1.05rem;padding:16px 26px}
+.btn:disabled{opacity:.45}
+.btn-row{display:flex;gap:.75rem;width:100%;max-width:520px;flex-wrap:wrap}
+.btn-row .btn{flex:1;min-width:200px}
+
+/* ── Kamera / sken ────────────────────────────────────────────────────────── */
+.cam-zone{position:relative;background:#0d1117;border-radius:var(--r2);overflow:hidden;width:100%;max-width:640px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
+#vidEl{width:100%;height:100%;object-fit:cover;display:none}
+#canvEl{display:none}
+.cam-ph{display:flex;flex-direction:column;align-items:center;gap:12px;color:#5b6b8a;padding:2rem}
+.cam-ph p{font-size:1rem;opacity:.8}
+.scan-frame{position:absolute;inset:0;pointer-events:none;display:none}
+.sf-inner{position:absolute;top:10%;left:8%;right:8%;bottom:10%;border:3px solid rgba(195,14,32,.8);border-radius:12px}
+.sf-label{position:absolute;bottom:calc(10% - 30px);left:50%;transform:translateX(-50%);color:#ff9aa0;font-size:.85rem;font-weight:700;white-space:nowrap;background:rgba(0,0,0,.55);padding:4px 14px;border-radius:20px}
+.scan-anim{position:absolute;left:8%;right:8%;height:3px;background:linear-gradient(90deg,transparent,#ff9aa0,transparent);animation:scanAnim 2.5s ease-in-out infinite}
+@keyframes scanAnim{0%{top:12%}50%{top:86%}100%{top:12%}}
+.spinner{width:26px;height:26px;border:3px solid var(--blue-border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.alert{padding:14px 18px;border-radius:var(--r);font-size:1rem;line-height:1.5;display:flex;align-items:flex-start;gap:10px;width:100%;max-width:560px;text-align:left}
+.al-info{background:var(--blue-bg);color:#1e40af;border:1px solid var(--blue-border)}
+.al-success{background:var(--green-bg);color:#065f46;border:1px solid var(--green-border)}
+.al-error{background:var(--red-bg);color:#991b1b;border:1px solid var(--red-border)}
+.al-warn{background:var(--amber-bg);color:#92400e;border:1px solid var(--amber-border)}
+
+/* ── Vstupní pole (jméno / organizace) ───────────────────────────────────── */
+.field-group{width:100%;max-width:520px;display:flex;flex-direction:column;gap:1rem}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+label.lbl{display:block;font-size:.85rem;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;text-align:left}
+input[type=text]{
+  width:100%;padding:18px 16px;border:2px solid var(--border);border-radius:var(--r);
+  font-size:1.3rem;font-family:inherit;color:var(--ink);outline:none;background:var(--surface);
+  transition:border-color .15s;
+}
+input[type=text]:focus{border-color:var(--blue)}
+input[type=text].err{border-color:var(--red)}
+
+/* ── Seznam kontaktů (za kým jdete) ───────────────────────────────────────── */
+.host-search{width:100%;max-width:640px}
+.host-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.9rem;width:100%;max-width:900px;max-height:48vh;overflow-y:auto;padding:.25rem}
+.host-card{
+  background:var(--surface);border:2px solid var(--border);border-radius:var(--r);
+  padding:18px 16px;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:4px;
+  transition:border-color .12s, transform .12s;
+}
+.host-card:active{transform:scale(.97)}
+.host-card.selected{border-color:var(--blue);background:var(--blue-bg)}
+.host-name{font-size:1.1rem;font-weight:700}
+.host-dept{font-size:.85rem;color:var(--ink2)}
+.host-empty{color:var(--ink3);font-size:1rem;padding:2rem}
+
+/* ── Shrnutí (poslední potvrzení) ─────────────────────────────────────────── */
+.summary{width:100%;max-width:520px;background:var(--surface);border:2px solid var(--border);border-radius:var(--r2);padding:1.5rem;display:flex;flex-direction:column;gap:.9rem;text-align:left}
+.summary-row{display:flex;justify-content:space-between;gap:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.summary-row:last-child{border-bottom:none;padding-bottom:0}
+.summary-k{font-size:.8rem;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px}
+.summary-v{font-size:1.15rem;font-weight:700;text-align:right}
+
+/* ── Úspěch + odpočet ─────────────────────────────────────────────────────── */
+.success-name{font-size:2.2rem;font-weight:800}
+.countdown-ring{width:52px;height:52px;border-radius:50%;border:4px solid var(--green-border);border-top-color:var(--green);animation:spin 6s linear infinite}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="steps" id="stepsBar">
+    <div class="step" id="stp1"><div class="step-num">1</div><span class="lbl">Doklad</span></div>
+    <div class="step-line"></div>
+    <div class="step" id="stp2"><div class="step-num">2</div><span class="lbl">Firma</span></div>
+    <div class="step-line"></div>
+    <div class="step" id="stp3"><div class="step-num">3</div><span class="lbl">Návštěva</span></div>
+    <div class="step-line"></div>
+    <div class="step" id="stp4"><div class="step-num">4</div><span class="lbl">Potvrzení</span></div>
+  </div>
+  <!-- Logo je dle Corporate Design Manuálu ept (str. 5-6) závazně vpravo nahoře. -->
+  <span class="topbar-logo"><img src="/static/ept_logo.png" alt="ept"/></span>
+</div>
+
+<div class="stage">
+
+  <!-- IDLE ─────────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screenIdle">
+    <div class="dot-mark dot-anim" style="transform:scale(1.6);margin-bottom:1rem"><span class="d dk"></span><span class="d dr"></span><span class="d dk"></span></div>
+    <h1 class="hd">Vítejte</h1>
+    <p class="sub">Klepnutím na tlačítko zapíšete svou návštěvu.</p>
+    <button class="btn btn-blue" onclick="zahajit()" style="max-width:420px;padding:28px 32px;font-size:1.4rem">
+      Zapsat příchod
+    </button>
+  </div>
+
+  <!-- KROK 1 – SKEN DOKLADU ────────────────────────────────────────────── -->
+  <div class="screen hidden" id="screenScan">
+    <h1 class="hd">Vložte doklad totožnosti</h1>
+    <p class="sub">Přiložte občanský průkaz nebo jiný doklad k tabletu a vycentrujte ho do rámečku.</p>
+
+    <div class="cam-zone" id="camZone">
+      <div class="cam-ph" id="camPh">
+        <svg width="52" height="52" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <p>Spouštím kameru…</p>
+      </div>
+      <video id="vidEl" autoplay playsinline muted></video>
+      <canvas id="canvEl"></canvas>
+      <div class="scan-frame" id="scanFrame">
+        <div class="sf-inner"></div>
+        <div class="sf-label">Vycentrujte doklad do rámečku</div>
+        <div class="scan-anim"></div>
+      </div>
+    </div>
+
+    <div id="camErr" class="alert al-error hidden"></div>
+    <div id="ocrStatus" class="alert al-info hidden"><div class="spinner"></div><span id="ocrStatusText"></span></div>
+
+    <div class="btn-row" id="camBtnRow">
+      <button class="btn btn-blue" id="btnSnap" onclick="udelFoto()" disabled>Sejmout doklad</button>
+    </div>
+    <button class="btn btn-ghost" id="btnRucne" onclick="preskocitSken()">Zadat jméno ručně</button>
+  </div>
+
+  <!-- KROK 1b – POTVRZENÍ JMÉNA ────────────────────────────────────────── -->
+  <div class="screen hidden" id="screenName">
+    <h1 class="hd">Zkontrolujte jméno</h1>
+    <p class="sub">Doklad se nikde neukládá – jen se z něj jednorázově přečetlo jméno.</p>
+    <div id="ocrResultAlert" class="alert hidden"></div>
+    <div class="field-group">
+      <div class="field-row">
+        <div><label class="lbl">Jméno</label><input type="text" id="rJmeno" placeholder="Jméno"/></div>
+        <div><label class="lbl">Příjmení</label><input type="text" id="rPrijmeni" placeholder="Příjmení"/></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goScreen('screenScan')">← Sejmout znovu</button>
+      <button class="btn btn-blue" onclick="potvrditJmeno()">Pokračovat</button>
+    </div>
+  </div>
+
+  <!-- KROK 2 – ORGANIZACE ──────────────────────────────────────────────── -->
+  <div class="screen hidden" id="screenOrg">
+    <h1 class="hd">Z jaké firmy/organizace jste?</h1>
+    <p class="sub">Doplňte název společnosti, kterou zastupujete.</p>
+    <div class="field-group">
+      <input type="text" id="rOrg" placeholder="Název firmy / organizace"/>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-blue" onclick="potvrditOrg()">Pokračovat</button>
+    </div>
+    <button class="btn btn-ghost" onclick="potvrditOrg(true)">Nechci uvádět / přeskočit</button>
+  </div>
+
+  <!-- KROK 3 – ZA KÝM JDETE ────────────────────────────────────────────── -->
+  <div class="screen hidden" id="screenHost">
+    <h1 class="hd">Za kým jdete?</h1>
+    <p class="sub">Vyberte osobu, za kterou v naší firmě přicházíte.</p>
+    <div class="host-search">
+      <input type="text" id="hostSearch" placeholder="Hledat jméno nebo oddělení…" oninput="vykresliKontakty()"/>
+    </div>
+    <div class="host-grid" id="hostGrid"></div>
+  </div>
+
+  <!-- KROK 4 – SHRNUTÍ / POTVRZENÍ ─────────────────────────────────────── -->
+  <div class="screen hidden" id="screenFinal">
+    <h1 class="hd">Zkontrolujte a potvrďte</h1>
+    <div class="summary">
+      <div class="summary-row"><span class="summary-k">Jméno</span><span class="summary-v" id="sumJmeno"></span></div>
+      <div class="summary-row"><span class="summary-k">Organizace</span><span class="summary-v" id="sumOrg"></span></div>
+      <div class="summary-row"><span class="summary-k">Za kým jdete</span><span class="summary-v" id="sumHost"></span></div>
+    </div>
+    <div id="finalAlert" class="alert hidden"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goScreen('screenHost')">← Zpět</button>
+      <button class="btn btn-blue" id="btnFinal" onclick="zapsat()">Potvrdit příchod</button>
+    </div>
+  </div>
+
+  <!-- ÚSPĚCH ────────────────────────────────────────────────────────────── -->
+  <div class="screen hidden" id="screenSuccess">
+    <div class="big-icon green">
+      <svg width="44" height="44" fill="none" stroke="var(--green)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="success-name" id="succName"></div>
+    <p class="sub" id="succSub"></p>
+    <div class="countdown-ring"></div>
+    <button class="btn btn-ghost" onclick="resetKiosk()">Hotovo – další návštěvník</button>
+  </div>
+
+</div>
+
+<script>
+const API = '/api';
+let camStream = null;
+let vybranyKontakt = null;   // {id, jmeno, oddeleni}
+let kontaktyCache = null;
+let uspechTimer = null;
+
+// ── Navigace mezi obrazovkami ────────────────────────────────────────────
+const KROK_OBRAZOVKY = { screenScan: 1, screenName: 1, screenOrg: 2, screenHost: 3, screenFinal: 4 };
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  const krok = KROK_OBRAZOVKY[id] || 0;
+  [1, 2, 3, 4].forEach(n => {
+    const s = document.getElementById('stp' + n);
+    s.classList.remove('active', 'done');
+    if (krok && n < krok) s.classList.add('done');
+    if (n === krok) s.classList.add('active');
+  });
+}
+
+function zobrazAlert(id, typ, msg) {
+  const m = { success: 'al-success', error: 'al-error', warn: 'al-warn', info: 'al-info' };
+  const el = document.getElementById(id);
+  el.className = 'alert ' + (m[typ] || 'al-info');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+function skrytAlert(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ── Start kiosku (z idle obrazovky) ──────────────────────────────────────
+function zahajit() {
+  goScreen('screenScan');
+  spustKameru();
+}
+
+// ── Kamera ────────────────────────────────────────────────────────────────
+async function spustKameru() {
+  document.getElementById('camErr').classList.add('hidden');
+  // Reset stavu z případného předchozího selhání (kiosek jede ve smyčce pro
+  // dalšího návštěvníka) – box i tlačítko na sejmutí musí být zpátky vidět.
+  document.getElementById('camZone').classList.remove('hidden');
+  document.getElementById('camBtnRow').classList.remove('hidden');
+  const btnRucneReset = document.getElementById('btnRucne');
+  btnRucneReset.classList.remove('btn-blue');
+  btnRucneReset.classList.add('btn-ghost');
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+    });
+    const v = document.getElementById('vidEl');
+    v.srcObject = camStream;
+    v.style.display = 'block';
+    document.getElementById('camPh').style.display = 'none';
+    document.getElementById('scanFrame').style.display = 'block';
+    document.getElementById('btnSnap').disabled = false;
+  } catch (e) {
+    const duvody = {
+      NotAllowedError:  'Přístup ke kameře je zakázaný.',
+      NotFoundError:    'Zařízení žádnou kameru nenašlo.',
+      NotReadableError: 'Kameru už používá jiná aplikace.',
+    };
+    const err = document.getElementById('camErr');
+    err.textContent = duvody[e.name] || 'Kameru se nepodařilo spustit.';
+    err.classList.remove('hidden');
+    // Prázdný černý box "kamera není dostupná" jen zabírá místo a na kratších
+    // obrazovkách (iPad na výšku i naležato) tlačil záchranné "Zadat jméno
+    // ručně" pod scroll, kde ho na neobsluhovaném kiosku nikdo nenajde – bez
+    // kamery nemá box smysl zobrazovat vůbec, rovnou uvolní místo tlačítku.
+    document.getElementById('camZone').classList.add('hidden');
+    document.getElementById('camBtnRow').classList.add('hidden');
+    const btnRucne = document.getElementById('btnRucne');
+    btnRucne.classList.remove('btn-ghost');
+    btnRucne.classList.add('btn-blue');
+  }
+}
+
+function stopKameru() {
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  const v = document.getElementById('vidEl');
+  v.srcObject = null;
+  v.style.display = 'none';
+  document.getElementById('scanFrame').style.display = 'none';
+}
+
+function preskocitSken() {
+  stopKameru();
+  document.getElementById('rJmeno').value = '';
+  document.getElementById('rPrijmeni').value = '';
+  skrytAlert('ocrResultAlert');
+  goScreen('screenName');
+}
+
+// Stejná technika jako v mobilním skenu (sken.html): série snímků, výběr
+// nejostřejšího, OCR nejlepších kandidátů – jen kratší (kiosek stojí pevně
+// na místě blíž k dokladu, netřeba tolik snímků jako z ruky na telefonu).
+const POCET_SNIMKU = 16;
+const PAUZA_MS = 110;
+const MAX_OCR_POKUSU = 8;
+
+function pauza(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function ostrostSnimku(ctx, w, h) {
+  const px = ctx.getImageData(0, 0, w, h).data;
+  let suma = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w - 1; x++) {
+      const i = (y * w + x) * 4;
+      const j = i + 4;
+      const g1 = 0.299 * px[i]   + 0.587 * px[i+1] + 0.114 * px[i+2];
+      const g2 = 0.299 * px[j]   + 0.587 * px[j+1] + 0.114 * px[j+2];
+      const dx = g1 - g2;
+      suma += dx * dx;
+    }
+  }
+  return suma;
+}
+
+async function ocrSnimek(dataUrl) {
+  try {
+    const b64 = dataUrl.split(',')[1];
+    const res = await fetch(API + '/ocr', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: b64 })
+    });
+    if (!res.ok) return null;
+    const d = await res.json();
+    return d.error ? null : d;
+  } catch (e) { return null; }
+}
+
+async function udelFoto() {
+  const v = document.getElementById('vidEl');
+  const c = document.getElementById('canvEl');
+  if (!v.videoWidth) return;
+
+  document.getElementById('btnSnap').disabled = true;
+  c.width = v.videoWidth; c.height = v.videoHeight;
+  const ctx = c.getContext('2d');
+
+  const maleC = document.createElement('canvas');
+  const mw = 240, mh = Math.max(1, Math.round(240 * c.height / c.width));
+  maleC.width = mw; maleC.height = mh;
+  const maleCtx = maleC.getContext('2d');
+
+  const vyrezX = v.videoWidth  * 0.08, vyrezY = v.videoHeight * 0.10;
+  const vyrezW = v.videoWidth  * 0.84, vyrezH = v.videoHeight * 0.80;
+
+  zobrazAlert('ocrStatus', 'info', '');
+  document.getElementById('ocrStatus').classList.remove('hidden');
+  const stText = document.getElementById('ocrStatusText');
+
+  const snimky = [];
+  for (let i = 0; i < POCET_SNIMKU; i++) {
+    ctx.drawImage(v, 0, 0);
+    maleCtx.drawImage(v, vyrezX, vyrezY, vyrezW, vyrezH, 0, 0, mw, mh);
+    const ostrost = ostrostSnimku(maleCtx, mw, mh);
+    snimky.push({ dataUrl: c.toDataURL('image/jpeg', 0.92), ostrost });
+    stText.textContent = `Snímám doklad… ${i + 1}/${POCET_SNIMKU}`;
+    await pauza(PAUZA_MS);
+  }
+
+  stopKameru();
+  snimky.sort((a, b) => b.ostrost - a.ostrost);
+
+  let jmeno = '', prijmeni = '';
+  for (let i = 0; i < Math.min(MAX_OCR_POKUSU, snimky.length); i++) {
+    stText.textContent = `Rozpoznávám doklad… (${i + 1})`;
+    const d = await ocrSnimek(snimky[i].dataUrl);
+    if (!d) continue;
+    if (!jmeno && d.jmeno) jmeno = d.jmeno;
+    if (!prijmeni && d.prijmeni) prijmeni = d.prijmeni;
+    if (jmeno && prijmeni) break;
+  }
+
+  document.getElementById('ocrStatus').classList.add('hidden');
+  document.getElementById('btnSnap').disabled = false;
+
+  document.getElementById('rJmeno').value = jmeno;
+  document.getElementById('rPrijmeni').value = prijmeni;
+
+  if (jmeno && prijmeni) {
+    zobrazAlert('ocrResultAlert', 'success', '✓ Jméno rozpoznáno – zkontrolujte a pokračujte.');
+  } else if (jmeno || prijmeni) {
+    zobrazAlert('ocrResultAlert', 'warn', 'Podařilo se přečíst jen část jména – doplňte zbytek ručně.');
+  } else {
+    zobrazAlert('ocrResultAlert', 'warn', 'Jméno se z dokladu nepodařilo rozpoznat – vyplňte ho ručně.');
+  }
+  goScreen('screenName');
+}
+
+// ── Krok: potvrzení jména ────────────────────────────────────────────────
+function potvrditJmeno() {
+  const jmenoEl = document.getElementById('rJmeno');
+  const prijmeniEl = document.getElementById('rPrijmeni');
+  const jmeno = jmenoEl.value.trim();
+  const prijmeni = prijmeniEl.value.trim();
+  jmenoEl.classList.toggle('err', !jmeno);
+  prijmeniEl.classList.toggle('err', !prijmeni);
+  if (!jmeno || !prijmeni) {
+    zobrazAlert('ocrResultAlert', 'error', 'Vyplňte prosím jméno i příjmení.');
+    return;
+  }
+  document.getElementById('rOrg').value = '';
+  goScreen('screenOrg');
+}
+
+// ── Krok: organizace ──────────────────────────────────────────────────────
+function potvrditOrg() {
+  goScreen('screenHost');
+  nactiKontakty();
+}
+
+// ── Krok: za kým jdete ────────────────────────────────────────────────────
+async function nactiKontakty() {
+  const grid = document.getElementById('hostGrid');
+  if (kontaktyCache) { vykresliKontakty(); return; }
+  grid.innerHTML = '<div class="host-empty">Načítám seznam…</div>';
+  try {
+    const res = await fetch(API + '/kontakty');
+    kontaktyCache = res.ok ? await res.json() : [];
+  } catch (e) {
+    kontaktyCache = [];
+  }
+  vykresliKontakty();
+}
+
+function normalizuj(s) {
+  return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
+function vykresliKontakty() {
+  const grid = document.getElementById('hostGrid');
+  const q = normalizuj(document.getElementById('hostSearch').value.trim());
+  const seznam = (kontaktyCache || []).filter(k =>
+    !q || normalizuj(k.jmeno).includes(q) || normalizuj(k.oddeleni).includes(q)
+  );
+  if (!seznam.length) {
+    grid.innerHTML = '<div class="host-empty">Nikdo nenalezen.</div>';
+    return;
+  }
+  grid.innerHTML = seznam.map(k => `
+    <div class="host-card" onclick='vybratKontakt(${JSON.stringify(k)})'>
+      <div class="host-name">${escapeHtml(k.jmeno)}</div>
+      <div class="host-dept">${escapeHtml(k.oddeleni || '')}</div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function vybratKontakt(kontakt) {
+  vybranyKontakt = kontakt;
+  zobrazSouhrn();
+  goScreen('screenFinal');
+}
+
+// ── Krok: shrnutí + zápis ─────────────────────────────────────────────────
+function zobrazSouhrn() {
+  const jmeno = document.getElementById('rJmeno').value.trim();
+  const prijmeni = document.getElementById('rPrijmeni').value.trim();
+  const org = document.getElementById('rOrg').value.trim();
+  document.getElementById('sumJmeno').textContent = `${jmeno} ${prijmeni}`;
+  document.getElementById('sumOrg').textContent = org || '—';
+  document.getElementById('sumHost').textContent = vybranyKontakt ? vybranyKontakt.jmeno : '—';
+  skrytAlert('finalAlert');
+}
+
+async function zapsat() {
+  const jmeno = document.getElementById('rJmeno').value.trim();
+  const prijmeni = document.getElementById('rPrijmeni').value.trim();
+  const organizace = document.getElementById('rOrg').value.trim();
+  const navstiva_koho = vybranyKontakt ? vybranyKontakt.jmeno : '';
+
+  const btn = document.getElementById('btnFinal');
+  btn.disabled = true;
+  btn.textContent = 'Ukládám…';
+
+  try {
+    const res = await fetch(API + '/navstevnici', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jmeno, prijmeni, organizace, navstiva_koho })
+    });
+    let d = {};
+    try { d = await res.json(); } catch (e) { d = {}; }
+
+    if (res.ok) {
+      ukazUspech(jmeno, prijmeni, d);
+    } else if (res.status === 409 && d.status === 'jiz_prihlasen') {
+      // Osoba je už v budově – kiosek to bere jako informaci, ne jako chybu.
+      ukazUspech(jmeno, prijmeni, d, `${jmeno} ${prijmeni} je již v budově evidován/a od ${(d.prichod_dt || '').slice(11, 16)}.`);
+    } else {
+      zobrazAlert('finalAlert', 'error', d.error || `Chyba serveru (${res.status}).`);
+    }
+  } catch (e) {
+    zobrazAlert('finalAlert', 'error', 'Spojení se systémem selhalo. Zkuste to prosím znovu.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Potvrdit příchod';
+}
+
+function ukazUspech(jmeno, prijmeni, d, zprava) {
+  document.getElementById('succName').textContent = `${jmeno} ${prijmeni}`;
+  const cas = d.prichod_dt ? d.prichod_dt.slice(11, 16) : new Date().toLocaleTimeString('cs-CZ').slice(0, 5);
+  document.getElementById('succSub').textContent = zprava
+    || (d.vitejte_zpet && d.zprava ? d.zprava : `Příchod zapsán v ${cas}. Děkujeme a příjemný pobyt.`);
+  goScreen('screenSuccess');
+
+  // Kiosek se sám vrátí na úvodní obrazovku pro dalšího návštěvníka.
+  clearTimeout(uspechTimer);
+  uspechTimer = setTimeout(resetKiosk, 8000);
+}
+
+// ── Reset zpět na úvod ────────────────────────────────────────────────────
+function resetKiosk() {
+  clearTimeout(uspechTimer);
+  stopKameru();
+  vybranyKontakt = null;
+  ['rJmeno', 'rPrijmeni', 'rOrg'].forEach(id => document.getElementById(id).value = '');
+  const hs = document.getElementById('hostSearch');
+  if (hs) hs.value = '';
+  document.getElementById('rJmeno').classList.remove('err');
+  document.getElementById('rPrijmeni').classList.remove('err');
+  skrytAlert('ocrResultAlert');
+  skrytAlert('finalAlert');
+  goScreen('screenIdle');
+}
+</script>
+</body>
+</html>

@@ -77,6 +77,11 @@ Před backendem (jen pro demo/produkci s HTTPS):
   (místo Flaskova dev serveru).
 - `recepce.html` — hlavní frontend: dashboard recepce (desktop/tablet).
 - `sken.html` — mobilní frontend: krokový self-service sken dokladu.
+- `ipad.html` — kiosek pro iPad na vstupu (náhrada recepce): sken dokladu →
+  organizace → výběr osoby, za kterou se jde → zápis příchodu, samoobslužně
+  ve smyčce (bez přihlášení). Viz sekce „iPad kiosek" níže.
+- `kontakty.json` — seznam osob k výběru v kroku „za kým jdete" na iPad
+  kiosku (aktuálně fiktivní data; nahradí se skutečným seznamem od firmy).
 - `static/` — loga a CSS (`ept-theme.css`, `ept-fonts.css`) sdílené
   frontendy.
 - `nastav_https.sh` — vygeneruje self-signed TLS certifikát pro
@@ -174,10 +179,12 @@ sám sebe.
 |---|---|---|---|
 | `/` | GET | — | vrátí `recepce.html` |
 | `/sken` | GET | — | vrátí `sken.html` |
+| `/ipad` | GET | — | vrátí `ipad.html` (kiosek na vstupu) |
 | `/api/login` | POST | — | `{role: "admin"\|"spravce", pin}` → `{token, role}` nebo `401` |
 | `/api/logout` | POST | token | zruší token |
 | `/api/ocr` | POST | — (bez přihlášení, používá i sken-kiosek) | `{image: "<base64>"}` → `{text, jmeno, prijmeni, engine}` |
-| `/api/navstevnici` | POST | — (otevřené, zapisuje i recepce i sken-kiosek) | `{jmeno, prijmeni, organizace?, spz?, phone_number?}` → zápis příchodu; `409` při duplicitě aktivní návštěvy |
+| `/api/kontakty` | GET | — (bez přihlášení, používá iPad kiosek) | seznam osob pro krok „za kým jdete" — čte se z `kontakty.json` |
+| `/api/navstevnici` | POST | — (otevřené, zapisuje i recepce, sken-kiosek i iPad kiosek) | `{jmeno, prijmeni, organizace?, spz?, phone_number?, navstiva_koho?}` → zápis příchodu; `409` při duplicitě aktivní návštěvy |
 | `/api/navstevnici` | GET | admin/správce | seznam s filtrováním: `filter=aktivni\|dnes\|vse\|hledat`, `q` (jméno/příjmení), `datum`, `hodina_od`, `hodina_do` |
 | `/api/navstevnici/<id>` | PATCH | admin/správce | `{odchod: true}` zapíše odchod; nebo `{organizace?, spz?, phone_number?}` upraví záznam |
 | `/api/stats` | GET | jakýkoli přihlášený | `{aktivni, dnes, celkem}` |
@@ -201,6 +208,7 @@ CREATE TABLE navstevnici (
     organizace   TEXT DEFAULT '',
     spz          TEXT DEFAULT '',
     phone_number TEXT DEFAULT '',
+    navstiva_koho TEXT DEFAULT '',  -- za kým jde (jen z iPad kiosku, viz ipad.html)
     prichod_dt   TEXT NOT NULL,     -- 'YYYY-MM-DD HH:MM:SS'
     odchod_dt    TEXT               -- NULL = návštěvník je stále v budově
 );
@@ -290,6 +298,31 @@ Krokový průvodce (`step1` → `step2` → `step3`):
    s potvrzením zápisu.
 - Kamera vyžaduje zabezpečený původ (https, nebo `localhost`) — proto
   celý TLS setup (`nastav_https.sh`, `tls_proxy.py`).
+
+### `ipad.html` — vstupní kiosek (náhrada recepce, bez přihlášení)
+Jeden iPad stojí místo recepce u vstupu a jede v nekonečné smyčce, jeden
+návštěvník po druhém, bez účtu (stejně jako `sken.html`). Krokový průvodce:
+1. **Úvod** (`screenIdle`) — klepnutím se zahájí odbavení a spustí kamera.
+2. **Doklad** (`screenScan` → `screenName`) — stejná technika jako
+   `sken.html` (série snímků, výběr nejostřejšího, `POST /api/ocr`), jen s
+   méně snímky (kiosek stojí pevně blíž k dokladu). Selže-li kamera nebo OCR,
+   je vždy k dispozici „Zadat jméno ručně".
+3. **Firma** (`screenOrg`) — návštěvník doplní organizaci (nepovinné,
+   jde přeskočit).
+4. **Za kým jdete** (`screenHost`) — mřížka osob z `GET /api/kontakty`
+   (`kontakty.json`), s vyhledáváním bez diakritiky; klepnutím na kartu se
+   rovnou pokračuje dál. **Seznam je zatím fiktivní** — až firma pošle
+   skutečný seznam zaměstnanců, stačí ho naimportovat do `kontakty.json`
+   (žádná změna API/frontendu).
+5. **Shrnutí** (`screenFinal`) — `POST /api/navstevnici` s
+   `navstiva_koho` navíc oproti `sken.html`. `409 jiz_prihlasen` se
+   zobrazí jako informace, ne jako chyba.
+6. **Úspěch** (`screenSuccess`) — potvrzení a automatický návrat na krok 1
+   po 8 s (nebo tlačítkem hned) — kiosek je tak připravený na dalšího
+   návštěvníka bez zásahu obsluhy.
+- Nepoužívá přepínač světlý/tmavý režim ani `localStorage` z recepce —
+  veřejná obrazovka vždy jede ve světlém režimu bez ohledu na to, co má
+  recepce nastavené pro sebe.
 
 ### Sdílené statické zdroje (`static/`)
 `ept-theme.css`, `ept-fonts.css` a loga (`ept_logo.*`, `praut_logo.*`)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify, send_from_directory, Response
 from flask_cors import CORS
-import base64, csv, io, os, secrets, socket
+import base64, csv, io, json, os, secrets, socket
 from datetime import datetime
 from PIL import Image
 
@@ -78,6 +78,24 @@ def index():
 @app.route('/sken')
 def sken():
     return send_from_directory('.', 'sken.html')
+
+@app.route('/ipad')
+def ipad():
+    return send_from_directory('.', 'ipad.html')
+
+# ── Kontakty (koho návštěvník navštěvuje) ─────────────────────────────────────
+# Bez přihlášení – kiosek na iPadu jede bez účtu stejně jako /sken. Seznam je
+# zatím fiktivní (kontakty.json); firma pošle skutečný seznam zaměstnanců a
+# ten se do stejného souboru jen naimportuje (žádná změna API/frontendu).
+KONTAKTY_PATH = os.path.join(os.path.dirname(__file__), "kontakty.json")
+
+@app.route("/api/kontakty", methods=["GET"])
+def api_kontakty():
+    try:
+        with open(KONTAKTY_PATH, "r", encoding="utf-8") as f:
+            return jsonify(json.load(f))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return jsonify([])
 
 # ── Adresa v místní síti ──────────────────────────────────────────────────────
 # Používá se pro výpis adres při startu serveru: sken se otevírá na telefonu,
@@ -212,14 +230,14 @@ def api_export_csv():
 
     with db.get_db() as conn:
         rows = conn.execute(
-            "SELECT jmeno, prijmeni, organizace, spz, phone_number, prichod_dt, odchod_dt "
+            "SELECT jmeno, prijmeni, organizace, spz, phone_number, navstiva_koho, prichod_dt, odchod_dt "
             "FROM navstevnici ORDER BY prichod_dt DESC"
         ).fetchall()
 
     buf = io.StringIO()
     # Excel v české lokalizaci čeká středník, ne čárku
     w = csv.writer(buf, delimiter=";", quoting=csv.QUOTE_MINIMAL)
-    w.writerow(["Jméno", "Příjmení", "Organizace", "SPZ", "Telefon",
+    w.writerow(["Jméno", "Příjmení", "Organizace", "SPZ", "Telefon", "Za kým jde",
                 "Příchod", "Odchod", "Doba (min)"])
     for r in rows:
         doba = ""
@@ -228,7 +246,8 @@ def api_export_csv():
                  - datetime.strptime(r["prichod_dt"], "%Y-%m-%d %H:%M:%S"))
             doba = int(d.total_seconds() // 60)
         w.writerow([r["jmeno"], r["prijmeni"], r["organizace"] or "", r["spz"] or "",
-                    r["phone_number"] or "", r["prichod_dt"], r["odchod_dt"] or "", doba])
+                    r["phone_number"] or "", r["navstiva_koho"] or "",
+                    r["prichod_dt"], r["odchod_dt"] or "", doba])
 
     # BOM: bez něj Excel na Windows rozsype diakritiku (Nováková → NovÃ¡kovÃ¡)
     data = "﻿" + buf.getvalue()
@@ -277,7 +296,8 @@ def api_navstevnici():
             if not phone_number:
                 return jsonify({"error": "Neplatný formát telefonu. Použijte +420xxxxxxxxx nebo 9 číslic."}), 400
 
-        vysledek = db.zapis_prichod(jmeno, prijmeni, d.get("organizace", ""), d.get("spz", ""), phone_number)
+        vysledek = db.zapis_prichod(jmeno, prijmeni, d.get("organizace", ""), d.get("spz", ""),
+                                     phone_number, d.get("navstiva_koho", ""))
 
         # Osoba je právě teď aktivní (ještě neodešla) – nezakládáme duplicitní řádek.
         if vysledek["status"] == "jiz_prihlasen":
