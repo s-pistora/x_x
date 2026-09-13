@@ -65,6 +65,8 @@ Před backendem (jen pro demo/produkci s HTTPS):
   občanky; whitelist známých osob pro testovací provoz.
 - `sms_notifier.py` — validace telefonu, odeslání SMS (mock do konzole,
   nebo ostrá Twilio integrace) s rate-limitem (cooldown).
+- `email_notifier.py` — e-mail hostiteli při odbavení na iPad kiosku (mock
+  do konzole, nebo ostrá Resend integrace přes jejich REST API).
 - `tls_proxy.py` — jednoduché TLS zakončení ze standardní knihovny
   (přelévá bajty do Flasku na localhostu), protože Flaskův dev server
   se s `ssl_context` ukázal nespolehlivý.
@@ -72,6 +74,14 @@ Před backendem (jen pro demo/produkci s HTTPS):
   (místo Flaskova dev serveru).
 - `recepce.html` — hlavní frontend: dashboard recepce (desktop/tablet).
 - `sken.html` — mobilní frontend: krokový self-service sken dokladu.
+- `ipad.html` — kiosek pro iPad na vstupu (náhrada recepce): sken dokladu →
+  organizace → výběr osoby, za kterou se jde → zápis příchodu, samoobslužně
+  ve smyčce (bez přihlášení). Viz sekce „iPad kiosek" níže.
+- `kontakty.json` — seznam osob k výběru v kroku „za kým jdete" na iPad
+  kiosku (aktuálně fiktivní data; nahradí se skutečným seznamem od firmy).
+  Pole `email` (nepovinné, prázdné = neposílá se nic) — na něj jde
+  notifikace přes `email_notifier.py`, když si návštěvník tuhle osobu
+  vybere. Nikdy se neposílá do frontendu, viz `GET /api/kontakty`.
 - `static/` — loga a CSS (`ept-theme.css`, `ept-fonts.css`) sdílené
   frontendy.
 - `nastav_https.sh` — vygeneruje self-signed TLS certifikát pro
@@ -169,10 +179,13 @@ sám sebe.
 |---|---|---|---|
 | `/` | GET | — | vrátí `recepce.html` |
 | `/sken` | GET | — | vrátí `sken.html` |
+| `/ipad` | GET | — | vrátí `ipad.html` (kiosek na vstupu) |
 | `/api/login` | POST | — | `{role: "admin"\|"spravce", pin}` → `{token, role}` nebo `401` |
 | `/api/logout` | POST | token | zruší token |
 | `/api/ocr` | POST | — (bez přihlášení, používá i sken-kiosek) | `{image: "<base64>"}` → `{text, jmeno, prijmeni, engine}` |
-| `/api/navstevnici` | POST | — (otevřené, zapisuje i recepce i sken-kiosek) | `{jmeno, prijmeni, organizace?, spz?, phone_number?}` → zápis příchodu; `409` při duplicitě aktivní návštěvy |
+| `/api/kontakty` | GET | — (bez přihlášení, používá iPad kiosek) | seznam osob pro krok „za kým jdete" — čte se z `kontakty.json` |
+| `/api/navstevnici` | POST | — (otevřené, zapisuje i recepce, sken-kiosek i iPad kiosek) | `{jmeno, prijmeni, organizace?, spz?, phone_number?, navstiva_koho?}` → zápis příchodu; `409` při duplicitě aktivní návštěvy |
+| `/api/odchod` | POST | — (otevřené, jen iPad kiosek) | `{jmeno, prijmeni}` → dohledá aktivní návštěvu a zapíše odchod; `404` bez shody |
 | `/api/navstevnici` | GET | admin/správce | seznam s filtrováním: `filter=aktivni\|dnes\|vse\|hledat`, `q` (jméno/příjmení), `datum`, `hodina_od`, `hodina_do` |
 | `/api/navstevnici/<id>` | PATCH | admin/správce | `{odchod: true}` zapíše odchod; nebo `{organizace?, spz?, phone_number?}` upraví záznam |
 | `/api/stats` | GET | jakýkoli přihlášený | `{aktivni, dnes, celkem}` |
@@ -196,6 +209,7 @@ CREATE TABLE navstevnici (
     organizace   TEXT DEFAULT '',
     spz          TEXT DEFAULT '',
     phone_number TEXT DEFAULT '',
+    navstiva_koho TEXT DEFAULT '',  -- za kým jde (jen z iPad kiosku, viz ipad.html)
     prichod_dt   TEXT NOT NULL,     -- 'YYYY-MM-DD HH:MM:SS'
     odchod_dt    TEXT               -- NULL = návštěvník je stále v budově
 );
@@ -226,16 +240,41 @@ se vždy přesně to, co bylo zadáno/rozpoznáno.
   bez chyby/logu). Model se načítá líně při prvním skenu (~3–17 s podle
   toho, jestli je v cache).
 - **Záloha: Tesseract** (`pytesseract`) — použije se, když EasyOCR není
-  nainstalované nebo nic nevrátí.
+  nainstalované nebo nic nevrátí (typicky iPad/iSH bez PyTorche). Prochází
+  STEJNÝM zpracováním jako EasyOCR (`_tesseract_boxy`): oříznutí karty,
+  zvětšení, navíc binarizace (`_pripravit_pro_tesseract`, adaptivní práh
+  přes OpenCV — Tesseract je na členité pozadí občanky mnohem citlivější
+  než neuronka) a `image_to_data` pro souřadnice slov, takže jede přes
+  stejnou cílenou extrakci (`_jmeno_prijmeni_z_boxu`) jako EasyOCR, ne
+  přes slabší celotextovou extrakci `extrahuj_jmeno`. Ta zůstává jako
+  úplně poslední záchrana, jen když se ani boxy nepodaří získat.
 - **Oříznutí karty** (`_orizni_kartu`, přes OpenCV): najde v širší fotce
   obdélník s poměrem stran občanky (~1.585), narovná perspektivu a
-  zvětší — zásadně zlepšuje čitelnost fotek z telefonu z dálky.
+  zvětší — zásadně zlepšuje čitelnost fotek z telefonu z dálky. Sdílené
+  oběma enginy.
 - **Cílená extrakce** (`_jmeno_prijmeni_z_boxu`): hledá pole
   PŘÍJMENÍ/SURNAME a JMÉNO/GIVEN NAMES fuzzy porovnáním (kvůli OCR
   překlepům v popiscích), **jen v okně** mezi koncem hlavičky dokladu a
   začátkem dalších údajů (datum narození, pohlaví...). Mimo toto okno
   se jméno nikdy nehledá. Bez jistého popisku v okně vrátí **prázdno**
-  — záměrně nehádá, aby se nezapsalo špatné jméno.
+  — záměrně nehádá, aby se nezapsalo špatné jméno. Otestováno na
+  syntetických dokladech i s Tesseractem: za dobrých podmínek (i s
+  náklonem/rozostřením/nerovnoměrným pozadím) čte stejně přesně jako
+  EasyOCR a je řádově rychlejší. Za fakt špatných podmínek (odlesk +
+  stín + velký náklon) oba enginy degradují, ale Tesseract v tom testu
+  bezpečně vrátil prázdno (popisky nešly rozpoznat), zatímco EasyOCR
+  jednou vrátilo sebejisté, ale ŠPATNÉ jméno — mechanismus prázdna tedy
+  funguje jako pojistka u obou enginů, ne jen jako teorie.
+- **Evropský průkaz zdravotního pojištění (EHIC)** — jiné rozvržení než
+  občanka (popisek NAD hodnotou, ne vlevo od ní; číslovaná pole 3
+  Příjmení, 4 Jméno...). Rozpozná se podle hlavičky karty
+  (`_je_zdravotni_karta`, `_HLAVICKA_ZDRAVOTKY` — POZOR: bez slova
+  "PRŮKAZ", to je na OBOU typech dokladu, takže by nerozlišilo nic).
+  `_jmeno_prijmeni_zdravotka` využívá pevné pořadí polí dané EU šablonou
+  (Jméno je vždy o 2 řádky pod Příjmení), takže funguje i když se popisek
+  „4 Jméno" samotný OCR nepozná (reálně pozorováno: „uco", skóre jistoty
+  jen 0.25 — příliš rozbité na fuzzy match, ale pořadí polí drží).
+  Ověřeno na reálné fotce (Evropský průkaz zdravotního pojištění).
 - **Whitelist známých osob** (`ZNAMI_LIDE`, `uroci_znamou_osobu`):
   testovací provoz je omezen jen na vybrané lidi (aktuálně Simon
   Pistora, William Varga) — stačí čitelné jméno NEBO příjmení kdekoli v
@@ -243,6 +282,14 @@ se vždy přesně to, co bylo zadáno/rozpoznáno.
   člověka = přidání řádku do `ZNAMI_LIDE`. Vypnutelné přes
   `OCR_STRICT_WHITELIST=0`, pak se použije obecná extrakce nad
   libovolným dokladem (nedoporučeno na produkčním demu).
+  Bezpečnostní pojistka: nestačí vysoký SOUČET podobnosti jména a
+  příjmení — reálně chyceno, že cizí doklad (zdravotní karta Ernesta
+  Pešty) omylem prošel jako Simon Pistora, protože náhodný šum dal
+  jedno vysoké skóre (PEŠTA~PISTORA 0.67) a jedno nízké (šum~SIMON
+  0.60), součet 1.27 nad tehdejším prahem 1.1. Od teď se navíc
+  vyžaduje, aby i HORŠÍ z dvojice skóre bylo aspoň 0.7 (skutečné shody
+  mají obě skóre 0.80–1.00, viz debug_ocr fotky) — jinak hrozí přiřazení
+  cizí identity, což je horší než prázdné pole.
 - Zamykáno globálním `_ocr_lock` — rozpoznávání nikdy neběží dvakrát
   zaráz (EasyOCR/torch není vláknově bezpečné).
 
@@ -286,6 +333,45 @@ Krokový průvodce (`step1` → `step2` → `step3`):
 - Kamera vyžaduje zabezpečený původ (https, nebo `localhost`) — proto
   celý TLS setup (`nastav_https.sh`, `tls_proxy.py`).
 
+### `ipad.html` — vstupní kiosek (náhrada recepce, bez přihlášení)
+Jeden iPad stojí místo recepce u vstupu a jede v nekonečné smyčce, jeden
+návštěvník po druhém, bez účtu (stejně jako `sken.html`). Krokový průvodce:
+1. **Úvod** (`screenIdle`) — klepnutím se zahájí odbavení a spustí kamera.
+2. **Doklad** (`screenScan` → `screenName`) — stejná technika jako
+   `sken.html` (série snímků, výběr nejostřejšího, `POST /api/ocr`), jen s
+   méně snímky (kiosek stojí pevně blíž k dokladu). Selže-li kamera nebo OCR,
+   je vždy k dispozici „Zadat jméno ručně".
+3. **Firma** (`screenOrg`) — návštěvník doplní organizaci (nepovinné,
+   jde přeskočit).
+4. **Za kým jdete** (`screenHost`) — mřížka osob z `GET /api/kontakty`
+   (`kontakty.json`), s vyhledáváním bez diakritiky; klepnutím na kartu se
+   rovnou pokračuje dál. **Seznam je zatím fiktivní** — až firma pošle
+   skutečný seznam zaměstnanců, stačí ho naimportovat do `kontakty.json`
+   (žádná změna API/frontendu).
+5. **Shrnutí** (`screenFinal`) — `POST /api/navstevnici` s
+   `navstiva_koho` navíc oproti `sken.html`. `409 jiz_prihlasen` se
+   zobrazí jako informace, ne jako chyba.
+6. **Úspěch** (`screenSuccess`) — potvrzení a automatický návrat na krok 1
+   po 8 s (nebo tlačítkem hned) — kiosek je tak připravený na dalšího
+   návštěvníka bez zásahu obsluhy.
+- **Samoobslužný odchod** — tlačítko „Odcházím – odepsat se" na úvodní
+  obrazovce (`zahajitOdchod()`) spustí STEJNOU obrazovku skenu/potvrzení
+  jména (`rezimOdchodu = true`), ale po potvrzení jména se místo firmy/
+  hostitele rovnou zavolá `POST /api/odchod` (`zapsatOdchod()`) — appka
+  dohledá AKTIVNÍ návštěvu podle jména (`db.najdi_aktivni_navstevu`,
+  fuzzy na diakritiku/velikost písmen) a zapíše `odchod_dt`. Bez shody
+  (jiné jméno, nebo osoba už odešla) vrátí `404` s chybovou hláškou,
+  appka to ukáže jako alert a nechá zkusit znovu. Úspěšná obrazovka
+  ukáže, kolik minut/hodin byla osoba v budově.
+- Nepoužívá přepínač světlý/tmavý režim ani `localStorage` z recepce —
+  veřejná obrazovka vždy jede ve světlém režimu bez ohledu na to, co má
+  recepce nastavené pro sebe.
+- **Zaseknutí skenu**: `udelFoto()` je celá obalená try/catch/finally a
+  `fetch` na `/api/ocr` má 15s timeout (`AbortController`) — appka se
+  nikdy nezasekne natrvalo na "Snímám/Rozpoznávám doklad…" bez možnosti
+  pokračovat, i kdyby OCR na serveru selhalo nebo se zaseklo (viz
+  poznámka o torch/EasyOCR threading rizicích u `backend_v2.py` výš).
+
 ### Sdílené statické zdroje (`static/`)
 `ept-theme.css`, `ept-fonts.css` a loga (`ept_logo.*`, `praut_logo.*`)
 — použitá v obou HTML stránkách i v `one-pager.html`/`docs/index.html`.
@@ -300,6 +386,29 @@ Krokový průvodce (`step1` → `step2` → `step3`):
   přeskočí (`status: "cooldown"`), stav žije jen v paměti procesu.
 - Odesílá se při úspěšném zápisu příchodu (pokud je vyplněný telefon) a
   při změně telefonu na existujícím záznamu.
+
+## E-mail hostiteli (`email_notifier.py`)
+- Jen z **iPad kiosku** — tam se jako jediném vybírá `navstiva_koho`
+  (krok „za kým jdete"). Recepce/sken tohle pole neposílají, takže tam
+  se e-mail nikdy neodešle.
+- Po úspěšném zápisu příchodu (ne při `409 jiz_prihlasen`) se `navstiva_koho`
+  dohledá v `kontakty.json` podle přesné shody `jmeno` (`najdi_kontakt_podle_jmena`
+  v `backend_v2.py`) a pokud má kontakt vyplněný `email`, pošle se mu
+  zpráva, že mu dorazila návštěva. Bez shody nebo bez emailu se nic
+  neděje — žádná chyba, jen ticho (u fiktivních kontaktů bez emailu je to
+  čekaný stav).
+- **`email` v `kontakty.json` se NIKDY neposílá do frontendu** —
+  `GET /api/kontakty` (veřejný, nepřihlášený endpoint pro kiosek) vrací jen
+  `id`/`jmeno`/`oddeleni`. Email čte jen server, pro odeslání notifikace.
+- Bez `EMAIL_ENABLED=true` se e-mail jen vypíše do konzole/logu (mock, bez
+  nutnosti Resend účtu) — bezpečný výchozí stav pro vývoj.
+- Ostrá integrace: **Gmail SMTP** (`smtplib` + `email.message` ze
+  standardní knihovny, žádná závislost navíc), ne transakční API služba.
+  Důvod přechodu z Resendu: Resend (a podobné služby jako SendGrid) bez
+  vlastní ověřené domény pustí e-mail JEN na adresu vlastníka účtu — reálně
+  ověřeno, viz commit historie. Gmail SMTP po přihlášení (`GMAIL_ADDRESS` +
+  `GMAIL_APP_PASSWORD` z myaccount.google.com/apppasswords) žádné takové
+  omezení nemá, jde poslat komukoliv.
 
 ## TLS / HTTPS (`tls_proxy.py`, `nastav_https.sh`)
 Prohlížeče pustí kameru (`getUserMedia`) jen na zabezpečeném původu.

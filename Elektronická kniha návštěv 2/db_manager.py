@@ -28,6 +28,7 @@ def init_db():
                 organizace   TEXT DEFAULT '',
                 spz          TEXT DEFAULT '',
                 phone_number TEXT DEFAULT '',
+                navstiva_koho TEXT DEFAULT '',
                 prichod_dt   TEXT NOT NULL,
                 odchod_dt    TEXT
             )
@@ -35,6 +36,9 @@ def init_db():
         # Migrace pro DB založené před přidáním telefonu
         if not _ma_sloupec(conn, "navstevnici", "phone_number"):
             conn.execute("ALTER TABLE navstevnici ADD COLUMN phone_number TEXT DEFAULT ''")
+        # Migrace pro DB založené před přidáním iPad kiosku (koho návštěvník navštěvuje)
+        if not _ma_sloupec(conn, "navstevnici", "navstiva_koho"):
+            conn.execute("ALTER TABLE navstevnici ADD COLUMN navstiva_koho TEXT DEFAULT ''")
 
         conn.execute("""
             CREATE TABLE IF NOT EXISTS audit_log (
@@ -93,7 +97,7 @@ def najdi_posledni_navstevu(conn, jmeno, prijmeni):
     return None
 
 
-def zapis_prichod(jmeno, prijmeni, organizace, spz, phone_number):
+def zapis_prichod(jmeno, prijmeni, organizace, spz, phone_number, navstiva_koho=""):
     """
     Zapíše příchod návštěvníka. Kniha návštěv záměrně loguje KAŽDOU návštěvu jako
     samostatný řádek (historie), proto se duplicitě předchází jen v jednom případě:
@@ -123,9 +127,9 @@ def zapis_prichod(jmeno, prijmeni, organizace, spz, phone_number):
         prichod = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         cur = conn.execute(
-            "INSERT INTO navstevnici (jmeno, prijmeni, organizace, spz, phone_number, prichod_dt) "
-            "VALUES (?,?,?,?,?,?)",
-            (jmeno, prijmeni, organizace, spz, phone_number, prichod)
+            "INSERT INTO navstevnici (jmeno, prijmeni, organizace, spz, phone_number, navstiva_koho, prichod_dt) "
+            "VALUES (?,?,?,?,?,?,?)",
+            (jmeno, prijmeni, organizace, spz, phone_number, navstiva_koho, prichod)
         )
         new_id = cur.lastrowid
 
