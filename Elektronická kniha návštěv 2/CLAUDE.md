@@ -239,16 +239,41 @@ se vždy přesně to, co bylo zadáno/rozpoznáno.
   bez chyby/logu). Model se načítá líně při prvním skenu (~3–17 s podle
   toho, jestli je v cache).
 - **Záloha: Tesseract** (`pytesseract`) — použije se, když EasyOCR není
-  nainstalované nebo nic nevrátí.
+  nainstalované nebo nic nevrátí (typicky iPad/iSH bez PyTorche). Prochází
+  STEJNÝM zpracováním jako EasyOCR (`_tesseract_boxy`): oříznutí karty,
+  zvětšení, navíc binarizace (`_pripravit_pro_tesseract`, adaptivní práh
+  přes OpenCV — Tesseract je na členité pozadí občanky mnohem citlivější
+  než neuronka) a `image_to_data` pro souřadnice slov, takže jede přes
+  stejnou cílenou extrakci (`_jmeno_prijmeni_z_boxu`) jako EasyOCR, ne
+  přes slabší celotextovou extrakci `extrahuj_jmeno`. Ta zůstává jako
+  úplně poslední záchrana, jen když se ani boxy nepodaří získat.
 - **Oříznutí karty** (`_orizni_kartu`, přes OpenCV): najde v širší fotce
   obdélník s poměrem stran občanky (~1.585), narovná perspektivu a
-  zvětší — zásadně zlepšuje čitelnost fotek z telefonu z dálky.
+  zvětší — zásadně zlepšuje čitelnost fotek z telefonu z dálky. Sdílené
+  oběma enginy.
 - **Cílená extrakce** (`_jmeno_prijmeni_z_boxu`): hledá pole
   PŘÍJMENÍ/SURNAME a JMÉNO/GIVEN NAMES fuzzy porovnáním (kvůli OCR
   překlepům v popiscích), **jen v okně** mezi koncem hlavičky dokladu a
   začátkem dalších údajů (datum narození, pohlaví...). Mimo toto okno
   se jméno nikdy nehledá. Bez jistého popisku v okně vrátí **prázdno**
-  — záměrně nehádá, aby se nezapsalo špatné jméno.
+  — záměrně nehádá, aby se nezapsalo špatné jméno. Otestováno na
+  syntetických dokladech i s Tesseractem: za dobrých podmínek (i s
+  náklonem/rozostřením/nerovnoměrným pozadím) čte stejně přesně jako
+  EasyOCR a je řádově rychlejší. Za fakt špatných podmínek (odlesk +
+  stín + velký náklon) oba enginy degradují, ale Tesseract v tom testu
+  bezpečně vrátil prázdno (popisky nešly rozpoznat), zatímco EasyOCR
+  jednou vrátilo sebejisté, ale ŠPATNÉ jméno — mechanismus prázdna tedy
+  funguje jako pojistka u obou enginů, ne jen jako teorie.
+- **Evropský průkaz zdravotního pojištění (EHIC)** — jiné rozvržení než
+  občanka (popisek NAD hodnotou, ne vlevo od ní; číslovaná pole 3
+  Příjmení, 4 Jméno...). Rozpozná se podle hlavičky karty
+  (`_je_zdravotni_karta`, `_HLAVICKA_ZDRAVOTKY` — POZOR: bez slova
+  "PRŮKAZ", to je na OBOU typech dokladu, takže by nerozlišilo nic).
+  `_jmeno_prijmeni_zdravotka` využívá pevné pořadí polí dané EU šablonou
+  (Jméno je vždy o 2 řádky pod Příjmení), takže funguje i když se popisek
+  „4 Jméno" samotný OCR nepozná (reálně pozorováno: „uco", skóre jistoty
+  jen 0.25 — příliš rozbité na fuzzy match, ale pořadí polí drží).
+  Ověřeno na reálné fotce (Evropský průkaz zdravotního pojištění).
 - **Whitelist známých osob** (`ZNAMI_LIDE`, `uroci_znamou_osobu`):
   testovací provoz je omezen jen na vybrané lidi (aktuálně Simon
   Pistora, William Varga) — stačí čitelné jméno NEBO příjmení kdekoli v
@@ -256,6 +281,14 @@ se vždy přesně to, co bylo zadáno/rozpoznáno.
   člověka = přidání řádku do `ZNAMI_LIDE`. Vypnutelné přes
   `OCR_STRICT_WHITELIST=0`, pak se použije obecná extrakce nad
   libovolným dokladem (nedoporučeno na produkčním demu).
+  Bezpečnostní pojistka: nestačí vysoký SOUČET podobnosti jména a
+  příjmení — reálně chyceno, že cizí doklad (zdravotní karta Ernesta
+  Pešty) omylem prošel jako Simon Pistora, protože náhodný šum dal
+  jedno vysoké skóre (PEŠTA~PISTORA 0.67) a jedno nízké (šum~SIMON
+  0.60), součet 1.27 nad tehdejším prahem 1.1. Od teď se navíc
+  vyžaduje, aby i HORŠÍ z dvojice skóre bylo aspoň 0.7 (skutečné shody
+  mají obě skóre 0.80–1.00, viz debug_ocr fotky) — jinak hrozí přiřazení
+  cizí identity, což je horší než prázdné pole.
 - Zamykáno globálním `_ocr_lock` — rozpoznávání nikdy neběží dvakrát
   zaráz (EasyOCR/torch není vláknově bezpečné).
 

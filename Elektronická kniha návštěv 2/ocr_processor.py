@@ -190,17 +190,94 @@ def _ocr_tesseract(pil_image):
         return pytesseract.image_to_string(pil_image)
 
 
+def _pripravit_pro_tesseract(pil_image):
+    """
+    Černobílá binarizace + odšumění pro Tesseract. EasyOCR je neuronka a
+    zvládne i členité pozadí občanky (hologram, vodotisk, foto přes text) –
+    klasický Tesseract na tohle je mnohem citlivější a bez předzpracování na
+    reálné fotce prakticky nečte. Adaptivní práh se přizpůsobí lokálnímu
+    kontrastu po částech obrázku, takže funguje i na nerovnoměrně nasvícené
+    fotce z telefonu/iPadu. Bez OpenCV vrátí obrázek beze změny.
+    """
+    try:
+        import cv2
+    except Exception:
+        return pil_image
+    try:
+        arr = cv2.cvtColor(np.array(pil_image.convert("RGB")), cv2.COLOR_RGB2GRAY)
+        arr = cv2.bilateralFilter(arr, 9, 75, 75)
+        arr = cv2.adaptiveThreshold(
+            arr, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 11
+        )
+        return Image.fromarray(arr)
+    except Exception:
+        return pil_image
+
+
+def _tesseract_boxy(pil_image):
+    """
+    Vrátí boxy ve STEJNÉM tvaru jako _easyocr_boxy ([{text, x1, x2, ycstred,
+    vyska}]), ale z Tesseractu (image_to_data místo image_to_string) — aby
+    cílená extrakce podle rozvržení dokladu (_jmeno_prijmeni_z_boxu) fungovala
+    i bez EasyOCR, ne jen slabší obecná extrakce z prostého textu.
+
+    Projde stejné předzpracování jako EasyOCR (ořez karty, zvětšení malých
+    fotek) plus navíc binarizaci (_pripravit_pro_tesseract), na kterou je
+    Tesseract narozdíl od neuronky citlivý.
+    """
+    pil_image = pil_image.convert("RGB")
+    karta = _orizni_kartu(pil_image)
+    if karta is not None:
+        pil_image = karta
+    if pil_image.width < 1000:
+        faktor = min(5, max(1, round(1200 / max(pil_image.width, 1))))
+        if faktor > 1:
+            pil_image = pil_image.resize(
+                (pil_image.width * faktor, pil_image.height * faktor), Image.LANCZOS
+            )
+    obraz = _pripravit_pro_tesseract(pil_image)
+
+    try:
+        data = pytesseract.image_to_data(obraz, lang="ces", output_type=pytesseract.Output.DICT)
+    except Exception:
+        try:
+            data = pytesseract.image_to_data(obraz, output_type=pytesseract.Output.DICT)
+        except Exception:
+            return None
+
+    boxy = []
+    for i in range(len(data.get("text", []))):
+        text = (data["text"][i] or "").strip()
+        if not text:
+            continue  # řádky bez textu jsou strukturní záznamy (page/block/para/line), ne slova
+        x, y = data["left"][i], data["top"][i]
+        w, h = data["width"][i], data["height"][i]
+        boxy.append({
+            "text":    text,
+            "x1":      float(x),
+            "x2":      float(x + w),
+            "ycstred": y + h / 2,
+            "vyska":   float(h),
+        })
+    return boxy or None
+
+
 def rozpoznej_text(pil_image):
     """
-    Vrátí (text, engine). Nejdřív zkusí EasyOCR (lokální neuronová síť), a když
-    není k dispozici nebo nic nevrátí, použije Tesseract. 'engine' říká, co
-    text nakonec přečetlo ('easyocr' / 'tesseract').
+    Vrátí (text, engine). Nejdřív zkusí EasyOCR (lokální neuronová síť), pak
+    Tesseract s boxy (stejná kvalita extrakce, jen jiný engine), a nakonec
+    prostý Tesseract text. 'engine' říká, co text nakonec přečetlo.
     """
     boxy = _easyocr_boxy(pil_image)
     if boxy is not None:
         text = "\n".join(b["text"] for b in boxy).strip()
         if text:
             return text, "easyocr"
+    boxy = _tesseract_boxy(pil_image)
+    if boxy is not None:
+        text = "\n".join(b["text"] for b in boxy).strip()
+        if text:
+            return text, "tesseract"
     return _ocr_tesseract(pil_image), "tesseract"
 
 
@@ -399,31 +476,49 @@ def _hodnota_radku(rb):
         slova.extend(_slova(b["text"]))
 
     skore = [_label_skore(w) for w in slova]
-    i = 0
-    if skore:
+    if skore and max(skore) >= 0.55:
+        # Popisek bývá dvouslovný (Příjmení + Surname) a obě slova mají
+        # podobně vysoké skóre – vezmeme POSLEDNÍ slovo blízko maxima
+        # (tolerance 0.05), ne jen tu úplně nejlepší shodu, aby se
+        # nepřeskočilo jen první z dvojice a druhé nezůstalo v hodnotě.
         maxskore = max(skore)
-        if maxskore >= 0.55:
-            # Popisek bývá dvouslovný (Příjmení + Surname) a obě slova mají
-            # podobně vysoké skóre – vezmeme POSLEDNÍ slovo blízko maxima
-            # (tolerance 0.05), ne jen tu úplně nejlepší shodu, aby se
-            # nepřeskočilo jen první z dvojice a druhé nezůstalo v hodnotě.
-            kandidati = [k for k, s in enumerate(skore) if s >= maxskore - 0.05]
-            i = max(kandidati) + 1
+        kandidati = [k for k, s in enumerate(skore) if s >= maxskore - 0.05]
+        i = max(kandidati) + 1
 
-    # Popisek je občas zkomolený NEROVNOMĚRNĚ – jedno jeho slovo může zůstat
-    # za skokem výše (např. "GIVEN" se přeskočí, ale "Nales" za NAMES ne).
-    # Dokud jsme NEZAČALI sbírat skutečnou hodnotu, takové zbytky popisku jen
-    # PŘESKOČÍME (nezastavujeme se) – teprve jakmile máme první opravdové
-    # jméno-slovo, další nejméně-jméno-podobné slovo znamená konec hodnoty
-    # (typicky začátek jiného pole na slitém/nakloněném řádku).
+        # Popisek je občas zkomolený NEROVNOMĚRNĚ – jedno jeho slovo může
+        # zůstat za skokem výše (např. "GIVEN" se přeskočí, ale "Nales" za
+        # NAMES ne). Dokud jsme NEZAČALI sbírat skutečnou hodnotu, takové
+        # zbytky popisku jen PŘESKOČÍME (nezastavujeme se) – teprve jakmile
+        # máme první opravdové jméno-slovo, další nejméně-jméno-podobné
+        # slovo znamená konec hodnoty (typicky začátek jiného pole na
+        # slitém/nakloněném řádku).
+        toks = []
+        for w in slova[i:]:
+            if _je_jmeno_token(w):
+                toks.append(w)
+                if len(toks) >= _MAX_SLOV_HODNOTY:
+                    break
+            elif toks:
+                break
+        return toks
+
+    # Ani jedno slovo v řádku nešlo s jistotou poznat jako popisek – typicky
+    # když je OCR rozbité natolik, že se ani jedno slovo popisku nedostane na
+    # práh 0.55 (reálně pozorováno: "PŘÍJMENÍ"->"ruvei", "SURNAME"->"Syaralr",
+    # skóre jen 0.46/0.29 – viz debug_ocr/sken_150622.png). Bez ukotvení podle
+    # popisku bychom předtím brali PRVNÍ jméno-like slovo zleva, což je skoro
+    # jistě zbytek popisku, ne hodnota. Popisek je na občance VŽDY vlevo a
+    # hodnota VPRAVO, takže bezpečnější odhad je poslední jméno-like slovo
+    # (slova) zprava.
     toks = []
-    for w in slova[i:]:
+    for w in reversed(slova):
         if _je_jmeno_token(w):
             toks.append(w)
             if len(toks) >= _MAX_SLOV_HODNOTY:
                 break
         elif toks:
             break
+    toks.reverse()
     return toks
 
 
@@ -548,14 +643,120 @@ def _jmeno_prijmeni_z_boxu(boxy):
     prijmeni = " ".join(prijmeni_radek["hod"]) if prijmeni_radek and prijmeni_radek["hod"] else ""
     jmeno    = " ".join(jmeno_radek["hod"]) if jmeno_radek and jmeno_radek["hod"] else ""
 
-    # Poziční doplnění chybějícího pole – jen když je v okně PŘESNĚ jeden další
-    # řádek s hodnotou (žádná nejednoznačnost mezi víc kandidáty).
-    ostatni = [r for r in okno if r["hod"] and r is not prijmeni_radek and r is not jmeno_radek]
-    if len(ostatni) == 1:
-        if not prijmeni and jmeno_radek is not None and ostatni[0]["y"] < jmeno_radek["y"]:
-            prijmeni = " ".join(ostatni[0]["hod"])
-        elif not jmeno and prijmeni_radek is not None and ostatni[0]["y"] > prijmeni_radek["y"]:
-            jmeno = " ".join(ostatni[0]["hod"])
+    # Poziční doplnění chybějícího pole. Řádek PŘÍJMENÍ je na občance VŽDY
+    # bezprostředně NAD řádkem JMÉNO (pevné rozvržení karty) – když se jeden
+    # popisek nepozná s jistotou (typicky OCR rozbité natolik, že žádné jeho
+    # slovo nedosáhne prahu v _klasifikuj_radek), ale ten druhý ano, je
+    # přímý soused ve výřezu spolehlivější odhad než "jediný další řádek v
+    # okně": po neúspěšné detekci popisku bývá takových řádků v okně víc,
+    # protože i nesouvisející řádky (datum narození apod.) teď taky vrátí
+    # nějakou hod hodnotu díky fallbacku v _hodnota_radku.
+    if not prijmeni and jmeno_radek is not None:
+        idx = okno.index(jmeno_radek)
+        if idx > 0 and okno[idx - 1]["hod"]:
+            prijmeni = " ".join(okno[idx - 1]["hod"])
+    if not jmeno and prijmeni_radek is not None:
+        idx = okno.index(prijmeni_radek)
+        if idx + 1 < len(okno) and okno[idx + 1]["hod"]:
+            jmeno = " ".join(okno[idx + 1]["hod"])
+
+    # Záložní varianta pro případ, že soused nepomohl (např. na kraji okna):
+    # když zbyl v okně přesně jeden řádek s hodnotou, je to poslední rozumný
+    # odhad (žádná nejednoznačnost mezi víc kandidáty).
+    if not prijmeni or not jmeno:
+        ostatni = [r for r in okno if r["hod"] and r is not prijmeni_radek and r is not jmeno_radek]
+        if len(ostatni) == 1:
+            if not prijmeni and jmeno_radek is not None and ostatni[0]["y"] < jmeno_radek["y"]:
+                prijmeni = " ".join(ostatni[0]["hod"])
+            elif not jmeno and prijmeni_radek is not None and ostatni[0]["y"] > prijmeni_radek["y"]:
+                jmeno = " ".join(ostatni[0]["hod"])
+
+    return jmeno, prijmeni
+
+
+# ── Evropský průkaz zdravotního pojištění (EHIC) ─────────────────────────────
+# Úplně jiné rozvržení než občanka: popisek je NAD hodnotou (ne vlevo od ní) a
+# pole jsou číslovaná (3 Příjmení, 4 Jméno, 5 Datum narození...). Formát je
+# ale v rámci EU jednotný a pořadí polí pevné – stejný princip jako u
+# občanky (tam víme, že Příjmení vždy předchází Jméno), jen tady navíc víme,
+# že popisek „4 Jméno" je vždy o dva řádky pod popiskem „3 Příjmení", i když
+# je OCR sám o sobě nerozpozná (reálně pozorováno: „4 Jméno" -> „uco", skóre
+# jistoty jen 0.25 – příliš rozbité na fuzzy match, ale pořadí polí je dané
+# šablonou karty, ne čitelností popisku).
+#
+# POZOR: "PRŮKAZ" tu záměrně NENÍ – to slovo je na OBOU typech dokladů
+# ("Občanský průkaz" i "Evropský průkaz zdravotního pojištění"), takže by
+# nerozlišilo nic (reálně chyceno: PRŮKAZ z OP skóroval 1.00 a syntetická
+# občanka se tak omylem vydávala za zdravotku).
+_HLAVICKA_ZDRAVOTKY = ("EVROPSKY", "ZDRAVOTNIHO", "POJISTENI")
+
+
+def _je_zdravotni_karta(boxy):
+    """Pozná se podle hlavičky karty ('EVROPSKÝ PRŮKAZ ZDRAVOTNÍHO POJIŠTĚNÍ')."""
+    for b in boxy:
+        for w in _slova(b["text"]):
+            n = _norm(w)
+            if n and max(_podobnost(n, h) for h in _HLAVICKA_ZDRAVOTKY) >= 0.75:
+                return True
+    return False
+
+
+def _hodnota_radku_zdravotky(r):
+    """První jméno-like slovo v řádku (řádek na zdravotce nese jen hodnotu, ne
+    popisek+hodnotu vedle sebe jako u občanky – stačí tedy první kandidát)."""
+    rb = sorted(r["boxy"], key=lambda b: b["x1"])
+    for b in rb:
+        for w in _slova(b["text"]):
+            if _je_jmeno_token(w):
+                return w
+    return ""
+
+
+def _jmeno_prijmeni_zdravotka(boxy):
+    """
+    Cílená extrakce pro EHIC. Najde řádek s popiskem „Příjmení" (pole 3) –
+    fuzzy match, stejný práh 0.55 jako u občanky. Hodnota je řádek hned pod
+    ním. Pole „Jméno" (4) je o dva řádky níž (mezi ním je popisek Jméno,
+    i když sám o sobě nejde poznat) – pořadí polí na EHIC je dané EU šablonou,
+    ne tím, jestli OCR přečetl popisek „Jméno" čitelně.
+    """
+    radky = sorted(_seskup_radky(boxy), key=lambda r: r["y"])
+
+    # Hlavička karty ("...ZDRAVOTNÍHO POJIŠTĚNÍ") náhodou fuzzy-skóruje docela
+    # vysoko i proti popisku PŘÍJMENÍ (POJIŠTĚNÍ~PŘÍJMENÍ, obě dost dlouhá
+    # slova se spoustou společných písmen) – bez přeskočení hlavičky by se
+    # popisek našel už na ní, ne na skutečném poli. Hledáme proto až za ní.
+    header_idx = -1
+    for idx, r in enumerate(radky):
+        rb = sorted(r["boxy"], key=lambda b: b["x1"])
+        for b in rb:
+            for w in _slova(b["text"]):
+                n = _norm(w)
+                if n and max(_podobnost(n, h) for h in _HLAVICKA_ZDRAVOTKY) >= 0.75:
+                    header_idx = idx
+
+    prijm_idx = None
+    for idx, r in enumerate(radky):
+        if idx <= header_idx:
+            continue
+        rb = sorted(r["boxy"], key=lambda b: b["x1"])
+        sp = _skore_label(rb, _KLICE_PRIJMENI)
+        sj = _skore_label(rb, _KLICE_JMENO)
+        if sp >= 0.55 and sp >= sj:
+            prijm_idx = idx
+            break
+
+    if prijm_idx is None or prijm_idx + 1 >= len(radky):
+        return "", ""
+
+    prijmeni = _hodnota_radku_zdravotky(radky[prijm_idx + 1])
+    jmeno = ""
+    if prijm_idx + 3 < len(radky):
+        jmeno = _hodnota_radku_zdravotky(radky[prijm_idx + 3])
+    if not jmeno and prijm_idx + 2 < len(radky):
+        # Kdyby se popisek Jméno OCR úplně ztratil a řádky se seskupily jinak
+        # (viz _seskup_radky), zkusit i o řádek dřív.
+        jmeno = _hodnota_radku_zdravotky(radky[prijm_idx + 2])
 
     return jmeno, prijmeni
 
@@ -583,16 +784,26 @@ def precti_doklad(pil_image):
 
 def _precti_doklad_bez_zamku(pil_image):
     boxy = _easyocr_boxy(pil_image)
+    engine = "easyocr"
+    if boxy is None:
+        boxy = _tesseract_boxy(pil_image)
+        engine = "tesseract"
+
     if boxy is not None:
         text = "\n".join(b["text"] for b in boxy).strip()
         znamy_jmeno, znamy_prijmeni = uroci_znamou_osobu(text)
         if znamy_jmeno:
-            return znamy_jmeno, znamy_prijmeni, text, "easyocr"
+            return znamy_jmeno, znamy_prijmeni, text, engine
         if STRIKTNI_WHITELIST:
-            return "", "", text, "easyocr"
-        jmeno, prijmeni = _jmeno_prijmeni_z_boxu(boxy)
-        return _titulek(jmeno), _titulek(prijmeni), text, "easyocr"
+            return "", "", text, engine
+        if _je_zdravotni_karta(boxy):
+            jmeno, prijmeni = _jmeno_prijmeni_zdravotka(boxy)
+        else:
+            jmeno, prijmeni = _jmeno_prijmeni_z_boxu(boxy)
+        return _titulek(jmeno), _titulek(prijmeni), text, engine
 
+    # Poslední záchrana: ani boxy se nepodařilo získat (např. Tesseract binárka
+    # úplně chybí) – prostý text bez souřadnic, slabší celotextová extrakce.
     text = _ocr_tesseract(pil_image)
     znamy_jmeno, znamy_prijmeni = uroci_znamou_osobu(text)
     if znamy_jmeno:
@@ -608,7 +819,10 @@ def _precti_doklad_bez_zamku(pil_image):
 # místo toho text proti PŘESNĚ TĚMTO lidem – stačí čitelné jméno NEBO příjmení
 # kdekoli v OCR textu a zapíše se rovnou správná (kanonická) hodnota. Přidat
 # dalšího člověka = přidat řádek sem.
-ZNAMI_LIDE = []
+ZNAMI_LIDE = [
+    {"jmeno": "Simon", "prijmeni": "Pistora"},
+    {"jmeno": "William", "prijmeni": "Varga"},
+]
 
 
 def _nejlepsi_shoda_v_textu(text, cil):
@@ -630,17 +844,28 @@ def uroci_znamou_osobu(text):
     """
     if not text:
         return None, None
-    nej_idx, nej_skore, druhe_skore = -1, 0.0, 0.0
+    nej_idx, nej_skore, nej_min, druhe_skore = -1, 0.0, 0.0, 0.0
     for i, osoba in enumerate(ZNAMI_LIDE):
-        skore = (_nejlepsi_shoda_v_textu(text, osoba["jmeno"])
-                 + _nejlepsi_shoda_v_textu(text, osoba["prijmeni"]))
+        sj = _nejlepsi_shoda_v_textu(text, osoba["jmeno"])
+        sp = _nejlepsi_shoda_v_textu(text, osoba["prijmeni"])
+        skore = sj + sp
         if skore > nej_skore:
             druhe_skore = nej_skore
             nej_skore = skore
+            nej_min = min(sj, sp)
             nej_idx = i
         elif skore > druhe_skore:
             druhe_skore = skore
-    if nej_idx >= 0 and nej_skore >= 1.1 and nej_skore - druhe_skore >= 0.2:
+    # Nestačí vysoký SOUČET – náhodný šum umí namíchat jedno vysoké a jedno
+    # nízké skóre a součet i tak přeleze práh, i když jde o úplně jiného
+    # člověka (reálně chyceno: zdravotní karta Ernesta Pešty – "PEŠTA"~
+    # "PISTORA" 0.67 náhodou + šumové "ioono"~"SIMON" 0.60 = součet 1.27,
+    # přitom na kartě není ani jméno, ani příjmení ze ZNAMI_LIDE). Skutečná
+    # shoda má OBĚ slova vysoko (u nás naměřeno 0.80–1.00 na 14 reálných
+    # fotkách), proto navíc vyžadujeme, aby i ta HORŠÍ z dvojice byla aspoň
+    # 0.7 – bez toho hrozí přiřazení cizí identity, což je horší než prázdné
+    # pole.
+    if nej_idx >= 0 and nej_skore >= 1.1 and nej_min >= 0.7 and nej_skore - druhe_skore >= 0.2:
         osoba = ZNAMI_LIDE[nej_idx]
         return osoba["jmeno"], osoba["prijmeni"]
     return None, None
