@@ -159,6 +159,9 @@ input[type=text].err{border-color:var(--red)}
     <button class="btn btn-blue" onclick="zahajit()" style="max-width:420px;padding:28px 32px;font-size:1.4rem">
       Zapsat příchod
     </button>
+    <button class="btn btn-ghost" onclick="zahajitOdchod()" style="max-width:420px;padding:20px 32px;font-size:1.1rem;margin-top:14px">
+      Odcházím – odepsat se
+    </button>
   </div>
 
   <!-- KROK 1 – SKEN DOKLADU ────────────────────────────────────────────── -->
@@ -202,7 +205,7 @@ input[type=text].err{border-color:var(--red)}
     </div>
     <div class="btn-row">
       <button class="btn btn-ghost" onclick="goScreen('screenScan')">← Sejmout znovu</button>
-      <button class="btn btn-blue" onclick="potvrditJmeno()">Pokračovat</button>
+      <button class="btn btn-blue" id="btnPokracovatJmeno" onclick="potvrditJmeno()">Pokračovat</button>
     </div>
   </div>
 
@@ -263,6 +266,7 @@ let camStream = null;
 let vybranyKontakt = null;   // {id, jmeno, oddeleni}
 let kontaktyCache = null;
 let uspechTimer = null;
+let rezimOdchodu = false;   // true = kiosek jede v odhlašovacím toku (sken → rovnou odchod, bez firmy/hostitele)
 
 // ── Navigace mezi obrazovkami ────────────────────────────────────────────
 const KROK_OBRAZOVKY = { screenScan: 1, screenName: 1, screenOrg: 2, screenHost: 3, screenFinal: 4 };
@@ -289,6 +293,21 @@ function skrytAlert(id) { document.getElementById(id).classList.add('hidden'); }
 
 // ── Start kiosku (z idle obrazovky) ──────────────────────────────────────
 function zahajit() {
+  rezimOdchodu = false;
+  document.getElementById('btnPokracovatJmeno').textContent = 'Pokračovat';
+  goScreen('screenScan');
+  spustKameru();
+}
+
+// ── Start odhlašovacího toku (z idle obrazovky) ──────────────────────────
+// Stejná obrazovka skenu a potvrzení jména jako u příchodu – jen se po
+// potvrzení jména nejde na firmu/hostitele, ale rovnou se zapíše odchod
+// (viz potvrditJmeno/zapsatOdchod). Doklad se skenuje znovu, ne kvůli OCR
+// samotné (jméno už appka jednou přečetla), ale protože je to jediný
+// způsob, jak bez přihlášení bezpečně zjistit, KDO se chce odhlásit.
+function zahajitOdchod() {
+  rezimOdchodu = true;
+  document.getElementById('btnPokracovatJmeno').textContent = 'Potvrdit odchod';
   goScreen('screenScan');
   spustKameru();
 }
@@ -376,16 +395,23 @@ function ostrostSnimku(ctx, w, h) {
 }
 
 async function ocrSnimek(dataUrl) {
+  // Timeout je nutný – bez něj by zaseknutý/pomalý server (např. studené
+  // načtení OCR modelu) appku zamrazil navždy na "Rozpoznávám doklad…", bez
+  // chyby, bez možnosti pokračovat. 15 s je dost i na pomalý první sken.
+  const ctrl = new AbortController();
+  const timeoutId = setTimeout(() => ctrl.abort(), 15000);
   try {
     const b64 = dataUrl.split(',')[1];
     const res = await fetch(API + '/ocr', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: b64 })
+      body: JSON.stringify({ image: b64 }),
+      signal: ctrl.signal
     });
     if (!res.ok) return null;
     const d = await res.json();
     return d.error ? null : d;
   } catch (e) { return null; }
+  finally { clearTimeout(timeoutId); }
 }
 
 async function udelFoto() {
@@ -394,46 +420,66 @@ async function udelFoto() {
   if (!v.videoWidth) return;
 
   document.getElementById('btnSnap').disabled = true;
-  c.width = v.videoWidth; c.height = v.videoHeight;
-  const ctx = c.getContext('2d');
-
-  const maleC = document.createElement('canvas');
-  const mw = 240, mh = Math.max(1, Math.round(240 * c.height / c.width));
-  maleC.width = mw; maleC.height = mh;
-  const maleCtx = maleC.getContext('2d');
-
-  const vyrezX = v.videoWidth  * 0.08, vyrezY = v.videoHeight * 0.10;
-  const vyrezW = v.videoWidth  * 0.84, vyrezH = v.videoHeight * 0.80;
-
-  zobrazAlert('ocrStatus', 'info', '');
-  document.getElementById('ocrStatus').classList.remove('hidden');
+  // POZOR: NEPOUŽÍVAT zobrazAlert() na #ocrStatus – ten dělá el.textContent =
+  // msg, což smaže vnořené <div class="spinner"> i <span id="ocrStatusText">
+  // (jsou to child uzly téhož elementu). Přesně tohle byla skutečná příčina
+  // "nekonečného skenování" – stText pak byl null a appka spadla na první
+  // TypeError bez zachycení. Třídu/viditelnost nastavujeme napřímo.
+  const ocrStatusEl = document.getElementById('ocrStatus');
+  ocrStatusEl.className = 'alert al-info';
+  ocrStatusEl.classList.remove('hidden');
   const stText = document.getElementById('ocrStatusText');
 
-  const snimky = [];
-  for (let i = 0; i < POCET_SNIMKU; i++) {
-    ctx.drawImage(v, 0, 0);
-    maleCtx.drawImage(v, vyrezX, vyrezY, vyrezW, vyrezH, 0, 0, mw, mh);
-    const ostrost = ostrostSnimku(maleCtx, mw, mh);
-    snimky.push({ dataUrl: c.toDataURL('image/jpeg', 0.92), ostrost });
-    stText.textContent = `Snímám doklad… ${i + 1}/${POCET_SNIMKU}`;
-    await pauza(PAUZA_MS);
-  }
-
-  stopKameru();
-  snimky.sort((a, b) => b.ostrost - a.ostrost);
-
+  // Celé tělo v try/catch/finally: cokoliv uvnitř selže (např. getImageData
+  // na iOS Safari), appka NESMÍ zůstat navždy zaseknutá na "Snímám/
+  // Rozpoznávám doklad…" bez možnosti pokračovat – vždy skončí buď
+  // výsledkem OCR, nebo výzvou k ručnímu zadání.
   let jmeno = '', prijmeni = '';
-  for (let i = 0; i < Math.min(MAX_OCR_POKUSU, snimky.length); i++) {
-    stText.textContent = `Rozpoznávám doklad… (${i + 1})`;
-    const d = await ocrSnimek(snimky[i].dataUrl);
-    if (!d) continue;
-    if (!jmeno && d.jmeno) jmeno = d.jmeno;
-    if (!prijmeni && d.prijmeni) prijmeni = d.prijmeni;
-    if (jmeno && prijmeni) break;
-  }
+  try {
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    const ctx = c.getContext('2d');
 
-  document.getElementById('ocrStatus').classList.add('hidden');
-  document.getElementById('btnSnap').disabled = false;
+    const maleC = document.createElement('canvas');
+    const mw = 240, mh = Math.max(1, Math.round(240 * c.height / c.width));
+    maleC.width = mw; maleC.height = mh;
+    const maleCtx = maleC.getContext('2d');
+
+    const vyrezX = v.videoWidth  * 0.08, vyrezY = v.videoHeight * 0.10;
+    const vyrezW = v.videoWidth  * 0.84, vyrezH = v.videoHeight * 0.80;
+
+    const snimky = [];
+    for (let i = 0; i < POCET_SNIMKU; i++) {
+      ctx.drawImage(v, 0, 0);
+      maleCtx.drawImage(v, vyrezX, vyrezY, vyrezW, vyrezH, 0, 0, mw, mh);
+      let ostrost = 0;
+      try { ostrost = ostrostSnimku(maleCtx, mw, mh); } catch (e) { /* zůstane 0, snímek se jen zařadí na konec */ }
+      snimky.push({ dataUrl: c.toDataURL('image/jpeg', 0.92), ostrost });
+      stText.textContent = `Snímám doklad… ${i + 1}/${POCET_SNIMKU}`;
+      await pauza(PAUZA_MS);
+    }
+
+    stopKameru();
+    snimky.sort((a, b) => b.ostrost - a.ostrost);
+
+    for (let i = 0; i < Math.min(MAX_OCR_POKUSU, snimky.length); i++) {
+      stText.textContent = `Rozpoznávám doklad… (${i + 1})`;
+      const d = await ocrSnimek(snimky[i].dataUrl);
+      if (!d) continue;
+      if (!jmeno && d.jmeno) jmeno = d.jmeno;
+      if (!prijmeni && d.prijmeni) prijmeni = d.prijmeni;
+      if (jmeno && prijmeni) break;
+    }
+  } catch (e) {
+    // Necháme jmeno/prijmeni na tom, co se stihlo rozpoznat (může být "") –
+    // dál pokračuje stejně jako běžné selhání OCR, jen ručním doplněním.
+    // Chybu logujeme do konzole pro budoucí ladění, ale návštěvníkovi
+    // zbytečně nestrašíme technickou hláškou.
+    console.error('udelFoto selhalo:', e);
+  } finally {
+    stopKameru();
+    document.getElementById('ocrStatus').classList.add('hidden');
+    document.getElementById('btnSnap').disabled = false;
+  }
 
   document.getElementById('rJmeno').value = jmeno;
   document.getElementById('rPrijmeni').value = prijmeni;
@@ -449,7 +495,7 @@ async function udelFoto() {
 }
 
 // ── Krok: potvrzení jména ────────────────────────────────────────────────
-function potvrditJmeno() {
+async function potvrditJmeno() {
   const jmenoEl = document.getElementById('rJmeno');
   const prijmeniEl = document.getElementById('rPrijmeni');
   const jmeno = jmenoEl.value.trim();
@@ -458,6 +504,10 @@ function potvrditJmeno() {
   prijmeniEl.classList.toggle('err', !prijmeni);
   if (!jmeno || !prijmeni) {
     zobrazAlert('ocrResultAlert', 'error', 'Vyplňte prosím jméno i příjmení.');
+    return;
+  }
+  if (rezimOdchodu) {
+    await zapsatOdchod(jmeno, prijmeni);
     return;
   }
   document.getElementById('rOrg').value = '';
@@ -527,6 +577,40 @@ function zobrazSouhrn() {
   skrytAlert('finalAlert');
 }
 
+// ── Odhlašovací tok: zápis odchodu rovnou po potvrzení jména ──────────────
+async function zapsatOdchod(jmeno, prijmeni) {
+  const btn = document.getElementById('btnPokracovatJmeno');
+  btn.disabled = true;
+  btn.textContent = 'Odhlašuji…';
+
+  try {
+    const res = await fetch(API + '/odchod', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jmeno, prijmeni })
+    });
+    let d = {};
+    try { d = await res.json(); } catch (e) { d = {}; }
+
+    if (res.ok) {
+      const h = Math.floor(d.trvani_minut / 60), m = d.trvani_minut % 60;
+      const trvani = h > 0 ? `${h} h ${m} min` : `${m} min`;
+      document.getElementById('succName').textContent = `${jmeno} ${prijmeni}`;
+      document.getElementById('succSub').textContent =
+        `Odchod zapsán. V budově jste strávili ${trvani}. Na shledanou!`;
+      goScreen('screenSuccess');
+      clearTimeout(uspechTimer);
+      uspechTimer = setTimeout(resetKiosk, 8000);
+    } else {
+      zobrazAlert('ocrResultAlert', 'error', d.error || `Chyba serveru (${res.status}).`);
+    }
+  } catch (e) {
+    zobrazAlert('ocrResultAlert', 'error', 'Spojení se systémem selhalo. Zkuste to prosím znovu.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Potvrdit odchod';
+}
+
 async function zapsat() {
   const jmeno = document.getElementById('rJmeno').value.trim();
   const prijmeni = document.getElementById('rPrijmeni').value.trim();
@@ -578,6 +662,8 @@ function resetKiosk() {
   clearTimeout(uspechTimer);
   stopKameru();
   vybranyKontakt = null;
+  rezimOdchodu = false;
+  document.getElementById('btnPokracovatJmeno').textContent = 'Pokračovat';
   ['rJmeno', 'rPrijmeni', 'rOrg'].forEach(id => document.getElementById(id).value = '');
   const hs = document.getElementById('hostSearch');
   if (hs) hs.value = '';

@@ -27,7 +27,7 @@ trap uklid EXIT INT TERM
 cd "$APP_DIR"
 [ -f cert/server.crt ] || ./nastav_https.sh
 
-PORT=5051 python3 backend_v2.py > /tmp/app.log 2>&1 &
+PORT=5051 OCR_STRICT_WHITELIST=0 EPT_OCR_DEBUG=1 python3 backend_v2.py > /tmp/app.log 2>&1 &
 APP_PID=$!
 for _ in $(seq 1 40); do
   curl -s -m 2 -o /dev/null "http://127.0.0.1:5051/" && break

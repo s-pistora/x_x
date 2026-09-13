@@ -17,6 +17,7 @@ except ImportError:
 import db_manager as db
 import ocr_processor as ocr
 from sms_notifier import validace_telefonu, send_sms_notification
+from email_notifier import send_arrival_email
 
 app = Flask(__name__)
 CORS(app)
@@ -89,13 +90,31 @@ def ipad():
 # ten se do stejného souboru jen naimportuje (žádná změna API/frontendu).
 KONTAKTY_PATH = os.path.join(os.path.dirname(__file__), "kontakty.json")
 
-@app.route("/api/kontakty", methods=["GET"])
-def api_kontakty():
+
+def nacti_kontakty():
     try:
         with open(KONTAKTY_PATH, "r", encoding="utf-8") as f:
-            return jsonify(json.load(f))
+            return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-        return jsonify([])
+        return []
+
+
+def najdi_kontakt_podle_jmena(jmeno):
+    """Přesná shoda – navstiva_koho posílá frontend rovnou jako 'jmeno' z kontakty.json."""
+    for k in nacti_kontakty():
+        if k.get("jmeno") == jmeno:
+            return k
+    return None
+
+
+@app.route("/api/kontakty", methods=["GET"])
+def api_kontakty():
+    # Bez emailu – veřejný, nepřihlášený endpoint (kiosek), email je jen pro
+    # serverové odeslání notifikace, nemá se dostat do frontendu.
+    return jsonify([
+        {"id": k.get("id"), "jmeno": k.get("jmeno"), "oddeleni": k.get("oddeleni")}
+        for k in nacti_kontakty()
+    ])
 
 # ── Adresa v místní síti ──────────────────────────────────────────────────────
 # Používá se pro výpis adres při startu serveru: sken se otevírá na telefonu,
@@ -313,6 +332,16 @@ def api_navstevnici():
             zprava = f"Ahoj {jmeno} {prijmeni}, byl jsi úspěšně přihlášen/a do systému dne {cas}."
             send_sms_notification(phone_number, zprava)
 
+        # E-mail hostiteli – jen z iPad kiosku (tam se jako jediném vybírá
+        # navstiva_koho). Bez shody v kontakty.json nebo bez vyplněného emailu
+        # (fiktivní testovací data) se prostě nic neděje.
+        navstiva_koho = (d.get("navstiva_koho") or "").strip()
+        if navstiva_koho:
+            kontakt = najdi_kontakt_podle_jmena(navstiva_koho)
+            if kontakt and kontakt.get("email"):
+                cas = datetime.now().strftime("%H:%M:%S")
+                send_arrival_email(kontakt["email"], jmeno, prijmeni, kontakt["jmeno"], cas)
+
         odpoved = {
             "status":       "ok",
             "id":           vysledek["id"],
@@ -424,6 +453,45 @@ def api_navstevnik_patch(nav_id):
             )
 
     return jsonify({"status": "ok"})
+
+
+# ── Samoobslužné odepsání (iPad kiosek) ─────────────────────────────────────────
+# Otevřené stejně jako POST /api/navstevnici – návštěvník se u odchodu
+# nepřihlašuje, jen znovu naskenuje doklad (stejná OCR cesta jako u příchodu),
+# appka podle jména dohledá jeho AKTIVNÍ návštěvu a zapíše čas odchodu.
+@app.route("/api/odchod", methods=["POST"])
+def api_odchod():
+    d = request.json or {}
+    jmeno = (d.get("jmeno") or "").strip()
+    prijmeni = (d.get("prijmeni") or "").strip()
+
+    if not jmeno or not prijmeni:
+        return jsonify({"error": "Jméno a příjmení jsou povinné."}), 400
+
+    with db.get_db() as conn:
+        row = db.najdi_aktivni_navstevu(conn, jmeno, prijmeni)
+        if not row:
+            return jsonify({
+                "error": f"Nenašli jsme aktivní návštěvu pro {jmeno} {prijmeni}. "
+                         f"Zkuste to prosím znovu, nebo se obraťte na recepci.",
+            }), 404
+
+        odchod_dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        conn.execute("UPDATE navstevnici SET odchod_dt=? WHERE id=?", (odchod_dt, row["id"]))
+        db.zapis_audit(conn, row["id"], "odchod_zapsan", "samoobslužně přes iPad kiosek")
+        conn.commit()
+
+        prichod = datetime.strptime(row["prichod_dt"], "%Y-%m-%d %H:%M:%S")
+        odchod = datetime.strptime(odchod_dt, "%Y-%m-%d %H:%M:%S")
+        minuty = int((odchod - prichod).total_seconds() // 60)
+
+    return jsonify({
+        "status": "ok",
+        "prichod_dt": row["prichod_dt"],
+        "odchod_dt": odchod_dt,
+        "trvani_minut": minuty,
+    })
+
 
 # ── Start ─────────────────────────────────────────────────────────────────────
 # init_db() se volá výš, při importu — pod WSGI se tenhle blok nespustí.

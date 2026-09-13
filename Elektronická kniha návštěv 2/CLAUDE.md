@@ -70,6 +70,8 @@ Před backendem (jen pro demo/produkci s HTTPS):
   občanky; whitelist známých osob pro testovací provoz.
 - `sms_notifier.py` — validace telefonu, odeslání SMS (mock do konzole,
   nebo ostrá Twilio integrace) s rate-limitem (cooldown).
+- `email_notifier.py` — e-mail hostiteli při odbavení na iPad kiosku (mock
+  do konzole, nebo ostrá Resend integrace přes jejich REST API).
 - `tls_proxy.py` — jednoduché TLS zakončení ze standardní knihovny
   (přelévá bajty do Flasku na localhostu), protože Flaskův dev server
   se s `ssl_context` ukázal nespolehlivý.
@@ -82,6 +84,9 @@ Před backendem (jen pro demo/produkci s HTTPS):
   ve smyčce (bez přihlášení). Viz sekce „iPad kiosek" níže.
 - `kontakty.json` — seznam osob k výběru v kroku „za kým jdete" na iPad
   kiosku (aktuálně fiktivní data; nahradí se skutečným seznamem od firmy).
+  Pole `email` (nepovinné, prázdné = neposílá se nic) — na něj jde
+  notifikace přes `email_notifier.py`, když si návštěvník tuhle osobu
+  vybere. Nikdy se neposílá do frontendu, viz `GET /api/kontakty`.
 - `static/` — loga a CSS (`ept-theme.css`, `ept-fonts.css`) sdílené
   frontendy.
 - `nastav_https.sh` — vygeneruje self-signed TLS certifikát pro
@@ -185,6 +190,7 @@ sám sebe.
 | `/api/ocr` | POST | — (bez přihlášení, používá i sken-kiosek) | `{image: "<base64>"}` → `{text, jmeno, prijmeni, engine}` |
 | `/api/kontakty` | GET | — (bez přihlášení, používá iPad kiosek) | seznam osob pro krok „za kým jdete" — čte se z `kontakty.json` |
 | `/api/navstevnici` | POST | — (otevřené, zapisuje i recepce, sken-kiosek i iPad kiosek) | `{jmeno, prijmeni, organizace?, spz?, phone_number?, navstiva_koho?}` → zápis příchodu; `409` při duplicitě aktivní návštěvy |
+| `/api/odchod` | POST | — (otevřené, jen iPad kiosek) | `{jmeno, prijmeni}` → dohledá aktivní návštěvu a zapíše odchod; `404` bez shody |
 | `/api/navstevnici` | GET | admin/správce | seznam s filtrováním: `filter=aktivni\|dnes\|vse\|hledat`, `q` (jméno/příjmení), `datum`, `hodina_od`, `hodina_do` |
 | `/api/navstevnici/<id>` | PATCH | admin/správce | `{odchod: true}` zapíše odchod; nebo `{organizace?, spz?, phone_number?}` upraví záznam |
 | `/api/stats` | GET | jakýkoli přihlášený | `{aktivni, dnes, celkem}` |
@@ -353,9 +359,23 @@ návštěvník po druhém, bez účtu (stejně jako `sken.html`). Krokový prův
 6. **Úspěch** (`screenSuccess`) — potvrzení a automatický návrat na krok 1
    po 8 s (nebo tlačítkem hned) — kiosek je tak připravený na dalšího
    návštěvníka bez zásahu obsluhy.
+- **Samoobslužný odchod** — tlačítko „Odcházím – odepsat se" na úvodní
+  obrazovce (`zahajitOdchod()`) spustí STEJNOU obrazovku skenu/potvrzení
+  jména (`rezimOdchodu = true`), ale po potvrzení jména se místo firmy/
+  hostitele rovnou zavolá `POST /api/odchod` (`zapsatOdchod()`) — appka
+  dohledá AKTIVNÍ návštěvu podle jména (`db.najdi_aktivni_navstevu`,
+  fuzzy na diakritiku/velikost písmen) a zapíše `odchod_dt`. Bez shody
+  (jiné jméno, nebo osoba už odešla) vrátí `404` s chybovou hláškou,
+  appka to ukáže jako alert a nechá zkusit znovu. Úspěšná obrazovka
+  ukáže, kolik minut/hodin byla osoba v budově.
 - Nepoužívá přepínač světlý/tmavý režim ani `localStorage` z recepce —
   veřejná obrazovka vždy jede ve světlém režimu bez ohledu na to, co má
   recepce nastavené pro sebe.
+- **Zaseknutí skenu**: `udelFoto()` je celá obalená try/catch/finally a
+  `fetch` na `/api/ocr` má 15s timeout (`AbortController`) — appka se
+  nikdy nezasekne natrvalo na "Snímám/Rozpoznávám doklad…" bez možnosti
+  pokračovat, i kdyby OCR na serveru selhalo nebo se zaseklo (viz
+  poznámka o torch/EasyOCR threading rizicích u `backend_v2.py` výš).
 
 ### Sdílené statické zdroje (`static/`)
 `ept-theme.css`, `ept-fonts.css` a loga (`ept_logo.*`, `praut_logo.*`)
@@ -371,6 +391,29 @@ návštěvník po druhém, bez účtu (stejně jako `sken.html`). Krokový prův
   přeskočí (`status: "cooldown"`), stav žije jen v paměti procesu.
 - Odesílá se při úspěšném zápisu příchodu (pokud je vyplněný telefon) a
   při změně telefonu na existujícím záznamu.
+
+## E-mail hostiteli (`email_notifier.py`)
+- Jen z **iPad kiosku** — tam se jako jediném vybírá `navstiva_koho`
+  (krok „za kým jdete"). Recepce/sken tohle pole neposílají, takže tam
+  se e-mail nikdy neodešle.
+- Po úspěšném zápisu příchodu (ne při `409 jiz_prihlasen`) se `navstiva_koho`
+  dohledá v `kontakty.json` podle přesné shody `jmeno` (`najdi_kontakt_podle_jmena`
+  v `backend_v2.py`) a pokud má kontakt vyplněný `email`, pošle se mu
+  zpráva, že mu dorazila návštěva. Bez shody nebo bez emailu se nic
+  neděje — žádná chyba, jen ticho (u fiktivních kontaktů bez emailu je to
+  čekaný stav).
+- **`email` v `kontakty.json` se NIKDY neposílá do frontendu** —
+  `GET /api/kontakty` (veřejný, nepřihlášený endpoint pro kiosek) vrací jen
+  `id`/`jmeno`/`oddeleni`. Email čte jen server, pro odeslání notifikace.
+- Bez `EMAIL_ENABLED=true` se e-mail jen vypíše do konzole/logu (mock, bez
+  nutnosti Resend účtu) — bezpečný výchozí stav pro vývoj.
+- Ostrá integrace: **Gmail SMTP** (`smtplib` + `email.message` ze
+  standardní knihovny, žádná závislost navíc), ne transakční API služba.
+  Důvod přechodu z Resendu: Resend (a podobné služby jako SendGrid) bez
+  vlastní ověřené domény pustí e-mail JEN na adresu vlastníka účtu — reálně
+  ověřeno, viz commit historie. Gmail SMTP po přihlášení (`GMAIL_ADDRESS` +
+  `GMAIL_APP_PASSWORD` z myaccount.google.com/apppasswords) žádné takové
+  omezení nemá, jde poslat komukoliv.
 
 ## TLS / HTTPS (`tls_proxy.py`, `nastav_https.sh`)
 Prohlížeče pustí kameru (`getUserMedia`) jen na zabezpečeném původu.

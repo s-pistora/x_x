@@ -4,3 +4,5 @@ demo.log
 tls-proxy.log
 node_modules/
 package-lock.json
+.DS_Store
+docs/x_x.tar.gz

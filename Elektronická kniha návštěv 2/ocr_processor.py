@@ -692,12 +692,22 @@ _HLAVICKA_ZDRAVOTKY = ("EVROPSKY", "ZDRAVOTNIHO", "POJISTENI")
 
 
 def _je_zdravotni_karta(boxy):
-    """Pozná se podle hlavičky karty ('EVROPSKÝ PRŮKAZ ZDRAVOTNÍHO POJIŠTĚNÍ')."""
+    """
+    Pozná se podle hlavičky karty ('EVROPSKÝ PRŮKAZ ZDRAVOTNÍHO POJIŠTĚNÍ'),
+    nebo – když je hlavička OCR rozbitá natolik, že žádné slovo nedosáhne
+    prahu jistoty (reálně pozorováno) – podle formátu data. Občanka datum
+    VŽDY píše s TEČKAMI (29.04.2007), zdravotka s LOMÍTKY (12/12/1970).
+    Lomítko je krátký, jednoznačný znak, který OCR čte spolehlivě i když
+    okolní slova rozbije – mnohem tvrdší signál než rozeznání celého slova.
+    """
     for b in boxy:
         for w in _slova(b["text"]):
             n = _norm(w)
             if n and max(_podobnost(n, h) for h in _HLAVICKA_ZDRAVOTKY) >= 0.75:
                 return True
+    for b in boxy:
+        if re.search(r"\d{1,2}/\d{1,2}/\d{2,4}", b["text"]):
+            return True
     return False
 
 
@@ -712,15 +722,41 @@ def _hodnota_radku_zdravotky(r):
     return ""
 
 
+_DATUM_LOMITKO_RE = re.compile(r"\d{1,2}/\d{1,2}/\d{2,4}")
+
+
 def _jmeno_prijmeni_zdravotka(boxy):
     """
-    Cílená extrakce pro EHIC. Najde řádek s popiskem „Příjmení" (pole 3) –
-    fuzzy match, stejný práh 0.55 jako u občanky. Hodnota je řádek hned pod
-    ním. Pole „Jméno" (4) je o dva řádky níž (mezi ním je popisek Jméno,
-    i když sám o sobě nejde poznat) – pořadí polí na EHIC je dané EU šablonou,
-    ne tím, jestli OCR přečetl popisek „Jméno" čitelně.
+    Cílená extrakce pro EHIC. Dvě metody, v pořadí spolehlivosti:
+
+    1) Kotva o datum narození (pole 5). Pořadí polí na EHIC je dané pevnou
+       EU šablonou: hodnota PŘÍJMENÍ (pole 3) je vždy přesně o 4 řádky NAD
+       řádkem s datem narození, hodnota JMÉNO (pole 4) o 2 řádky nad ním.
+       Datum samotné (lomítka, viz _je_zdravotni_karta) čte OCR spolehlivě
+       i když okolní slova rozbije – MNOHEM tvrdší kotva než popisek
+       „Příjmení"/„Jméno", který bývá na špatně nasvícené/nakloněné fotce
+       zkomolený natolik, že nedosáhne ani žádného rozumného prahu jistoty
+       (reálně pozorováno: „Phmmed" skóruje jen 0.43, pod prahem 0.55 –
+       a některé šumové řádky skórují dokonce VÝŠ).
+    2) Fallback: řádek s popiskem „Příjmení" (fuzzy, práh 0.55) + pevný
+       odstup polí, pro fotky bez čitelného data.
     """
     radky = sorted(_seskup_radky(boxy), key=lambda r: r["y"])
+
+    datum_idx = None
+    for idx, r in enumerate(radky):
+        for b in r["boxy"]:
+            if _DATUM_LOMITKO_RE.search(b["text"]):
+                datum_idx = idx
+                break
+        if datum_idx is not None:
+            break
+
+    if datum_idx is not None and datum_idx - 4 >= 0:
+        prijmeni = _hodnota_radku_zdravotky(radky[datum_idx - 4])
+        jmeno = _hodnota_radku_zdravotky(radky[datum_idx - 2]) if datum_idx - 2 >= 0 else ""
+        if jmeno or prijmeni:
+            return jmeno, prijmeni
 
     # Hlavička karty ("...ZDRAVOTNÍHO POJIŠTĚNÍ") náhodou fuzzy-skóruje docela
     # vysoko i proti popisku PŘÍJMENÍ (POJIŠTĚNÍ~PŘÍJMENÍ, obě dost dlouhá
@@ -822,6 +858,8 @@ def _precti_doklad_bez_zamku(pil_image):
 ZNAMI_LIDE = [
     {"jmeno": "Simon", "prijmeni": "Pistora"},
     {"jmeno": "William", "prijmeni": "Varga"},
+    {"jmeno": "Tomáš", "prijmeni": "Musil"},
+    {"jmeno": "Lukáš", "prijmeni": "Gombár"},
 ]
 
 
